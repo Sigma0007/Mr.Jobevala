@@ -56,24 +56,27 @@ export default function UserProfile() {
       setSaving(true);
       const dataToSave = {
         ...profile,
-        skills: profile.skills.split(",").map((s) => s.trim()).filter((s) => s),
+        skills: profile.skills
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s),
       };
       const res = await customerservice.updateUserProfile(dataToSave);
       if (res.success) {
         toast.success("Profile updated successfully!");
         if (res.data) {
-           setProfile({
-             name: res.data.name || "",
-             phone: res.data.phone || "",
-             title: res.data.title || "",
-             location: res.data.location || "",
-             bio: res.data.bio || "",
-             skills: res.data.skills ? res.data.skills.join(", ") : "",
-             experience: res.data.experience || 0,
-             education: res.data.education || "",
-             resume: res.data.resume || "",
-             profileImage: res.data.profileImage || "",
-           });
+          setProfile({
+            name: res.data.name || "",
+            phone: res.data.phone || "",
+            title: res.data.title || "",
+            location: res.data.location || "",
+            bio: res.data.bio || "",
+            skills: res.data.skills ? res.data.skills.join(", ") : "",
+            experience: res.data.experience || 0,
+            education: res.data.education || "",
+            resume: res.data.resume || "",
+            profileImage: res.data.profileImage || "",
+          });
         }
       }
     } catch (error) {
@@ -105,7 +108,11 @@ export default function UserProfile() {
           <label className="cursor-pointer">
             <div className="bg-brand-50 w-16 h-16 rounded-full flex items-center justify-center text-brand-600 overflow-hidden relative group">
               {profile.profileImage ? (
-                <img src={profile.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                <img
+                  src={profile.profileImage}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <User className="w-8 h-8" />
               )}
@@ -113,15 +120,18 @@ export default function UserProfile() {
                 <UploadCloud className="w-5 h-5 text-white" />
               </div>
             </div>
-            <input 
-              type="file" 
-              accept="image/*" 
-              className="hidden" 
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) {
-                  setProfile({ ...profile, profileImage: URL.createObjectURL(e.target.files[0]) });
+                  setProfile({
+                    ...profile,
+                    profileImage: URL.createObjectURL(e.target.files[0]),
+                  });
                 }
-              }} 
+              }}
             />
           </label>
           <div>
@@ -277,15 +287,18 @@ export default function UserProfile() {
             Click to upload or drag and drop
           </p>
           <p className="text-xs text-slate-500 mt-1">PDF, DOCX up to 5MB</p>
-          <input 
-            type="file" 
-            accept=".pdf,.doc,.docx" 
-            className="hidden" 
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx"
+            className="hidden"
             onChange={(e) => {
               if (e.target.files && e.target.files[0]) {
-                setProfile({ ...profile, resume: URL.createObjectURL(e.target.files[0]) });
+                setProfile({
+                  ...profile,
+                  resume: URL.createObjectURL(e.target.files[0]),
+                });
               }
-            }} 
+            }}
           />
         </label>
 
@@ -295,12 +308,16 @@ export default function UserProfile() {
               <FileText className="w-5 h-5 text-brand-600" />
               <div>
                 <p className="text-sm font-medium text-slate-900 truncate max-w-[200px]">
-                  {profile.resume.startsWith('blob:') ? 'New_Resume_Uploaded.pdf' : profile.resume.substring(profile.resume.lastIndexOf('/') + 1) || 'Resume Document'}
+                  {profile.resume.startsWith("blob:")
+                    ? "New_Resume_Uploaded.pdf"
+                    : profile.resume.substring(
+                        profile.resume.lastIndexOf("/") + 1,
+                      ) || "Resume Document"}
                 </p>
                 <p className="text-xs text-slate-500">Ready</p>
               </div>
             </div>
-            <button 
+            <button
               type="button"
               onClick={() => setProfile({ ...profile, resume: "" })}
               className="text-xs font-medium text-red-500 hover:text-red-600"
