@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import UserProfile from "../models/UserProfile.js";
 
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
@@ -23,7 +24,6 @@ const sendAuthResponse = (
         email: user.email,
         phone: user.phone,
         role: user.role,
-        avatar: user.avatar,
         isActive: user.isActive,
     };
 
@@ -43,7 +43,6 @@ export const register = catchAsync(
             password,
             phone,
             role,
-            companyName,
         } = req.body;
 
         if (!name || !email || !password) {
@@ -94,14 +93,15 @@ export const register = catchAsync(
             role: userRole,
         };
 
-        if (userRole === "provider") {
-            userData.providerProfile = {
-                companyName: companyName || null,
-            };
-        }
-
         const user =
             await User.create(userData);
+
+        if (userRole === "user") {
+            await UserProfile.create({
+                user: user._id,
+                phone: phone || "",
+            });
+        }
 
         sendAuthResponse(
             user,
