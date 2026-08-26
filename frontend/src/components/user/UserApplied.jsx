@@ -8,7 +8,7 @@ import {
   Users,
 } from "lucide-react";
 
-export default function CandidateApplied() {
+export default function UserApplied() {
   const applications = [
     {
       id: 1,

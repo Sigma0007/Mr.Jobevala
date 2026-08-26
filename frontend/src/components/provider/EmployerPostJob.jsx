@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import customerservise from "../../customer/customerservise";
+import customerservice from "../../customer/customerservice";
 
 export default function EmployerPostJob() {
   const navigate = useNavigate();
@@ -69,7 +69,7 @@ export default function EmployerPostJob() {
         applicationDeadline: formData.applicationDeadline || null,
       };
 
-      const res = await customerservise.createJob(payload);
+      const res = await customerservice.createJob(payload);
 
       if (res.success) {
         toast.success("Job posted successfully");

@@ -5,7 +5,7 @@ import { Briefcase, Building, Star } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 
-import customerservise from "../customer/customerservise";
+import customerservice from "../customer/customerservice";
 import { loginUser } from "../Redux/Auth/AuthAction";
 
 export default function Login() {
@@ -42,38 +42,30 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const res =
-        await customerservise.loginUser(data);
+      const res = await customerservice.loginUser(data);
 
       console.log("Login Response:", res);
 
       if (res.success === true) {
         if (res.token) {
-          localStorage.setItem(
-            "token",
-            res.token
-          );
+          localStorage.setItem("token", res.token);
         }
 
         dispatch(loginUser(res));
 
-        toast.success(
-          `Welcome back, ${res.user.name}!`
-        );
+        toast.success(`Welcome back, ${res.user.name}!`);
 
         redirectByRole(res.user.role);
       } else {
-        toast.error(
-          res.message || "Login failed"
-        );
+        toast.error(res.message || "Login failed");
       }
     } catch (error) {
       console.log("Login Error:", error);
 
       toast.error(
         error?.response?.data?.message ||
-        error?.message ||
-        "Something went wrong"
+          error?.message ||
+          "Something went wrong",
       );
     } finally {
       setLoading(false);
@@ -101,7 +93,7 @@ export default function Login() {
       admin: {
         email: "admin@gmail.com",
         password: "Admin@123",
-      }
+      },
     };
 
     await login(quickAccounts[role]);
@@ -130,7 +122,6 @@ export default function Login() {
 
           <p className="mt-2 text-center text-sm text-slate-500">
             Don't have an account?{" "}
-
             <Link
               to="/register"
               className="font-medium text-brand-600 hover:text-brand-500 transition-colors"
@@ -140,10 +131,7 @@ export default function Login() {
           </p>
         </div>
 
-        <form
-          className="mt-8 space-y-6"
-          onSubmit={handleSubmit}
-        >
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             {/* EMAIL */}
             <div>
@@ -186,9 +174,7 @@ export default function Login() {
             disabled={loading}
             className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading
-              ? "Signing in..."
-              : "Sign in"}
+            {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
@@ -202,39 +188,30 @@ export default function Login() {
             <button
               type="button"
               disabled={loading}
-              onClick={() =>
-                quickLogin("user")
-              }
+              onClick={() => quickLogin("user")}
               className="flex items-center justify-center gap-2 w-full py-2.5 px-4 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
             >
               <Briefcase className="w-4 h-4 text-brand-500" />
-
               Candidate
             </button>
 
             <button
               type="button"
               disabled={loading}
-              onClick={() =>
-                quickLogin("provider")
-              }
+              onClick={() => quickLogin("provider")}
               className="flex items-center justify-center gap-2 w-full py-2.5 px-4 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
             >
               <Building className="w-4 h-4 text-brand-500" />
-
               Employer
             </button>
 
             <button
               type="button"
               disabled={loading}
-              onClick={() =>
-                quickLogin("admin")
-              }
+              onClick={() => quickLogin("admin")}
               className="flex items-center justify-center gap-2 w-full py-2.5 px-4 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
             >
               <Star className="w-4 h-4 text-brand-500" />
-
               Admin
             </button>
           </div>

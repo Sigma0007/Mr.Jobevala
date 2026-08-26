@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import { Edit, Trash2, Plus, Eye } from "lucide-react";
-import customerservise from "../../customer/customerservise";
+import customerservice from "../../customer/customerservice";
 
 export default function EmployerJobs() {
   const [jobs, setJobs] = useState([]);
@@ -16,7 +16,7 @@ export default function EmployerJobs() {
     try {
       setLoading(true);
 
-      const res = await customerservise.getMyJobs();
+      const res = await customerservice.getMyJobs();
 
       if (res.success) {
         setJobs(res.data);
@@ -40,7 +40,7 @@ export default function EmployerJobs() {
     if (!confirmDelete) return;
 
     try {
-      const res = await customerservise.deleteJob(id);
+      const res = await customerservice.deleteJob(id);
 
       if (res.success) {
         toast.success("Job deleted successfully");
@@ -54,7 +54,7 @@ export default function EmployerJobs() {
 
   const changeStatus = async (id, status) => {
     try {
-      const res = await customerservise.updateJobStatus(id, { status });
+      const res = await customerservice.updateJobStatus(id, { status });
 
       if (res.success) {
         toast.success("Job status updated");

@@ -100,6 +100,7 @@ export const register = catchAsync(
             await UserProfile.create({
                 user: user._id,
                 phone: phone || "",
+                name: name || "",
             });
         }
 

@@ -1,14 +1,10 @@
 import { useState } from "react";
-import {
-  User,
-  FileText,
-  Bookmark,
-} from "lucide-react";
+import { User, FileText, Bookmark } from "lucide-react";
 
 // Candidate Components
-import CandidateProfile from "./CandidateProfile";
-import CandidateApplied from "./CandidateApplied";
-import CandidateSaved from "./CandidateSaved";
+import UserApplied from "./UserApplied";
+import UserSaved from "./UserSaved";
+import UserProfile from "./UserProfile";
 
 export function UserDashboard() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -38,14 +34,16 @@ export function UserDashboard() {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${isActive
-                      ? "bg-brand-600 text-white shadow-[0_4px_14px_0_rgb(37,99,235,0.39)]"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-brand-600 text-white shadow-[0_4px_14px_0_rgb(37,99,235,0.39)]"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    }`}
                   >
                     <Icon
-                      className={`w-5 h-5 ${isActive ? "text-white" : "text-slate-400"
-                        }`}
+                      className={`w-5 h-5 ${
+                        isActive ? "text-white" : "text-slate-400"
+                      }`}
                     />
                     {item.name}
                   </button>
@@ -56,9 +54,9 @@ export function UserDashboard() {
 
           {/* Dynamic Main Content Area */}
           <div className="flex-1">
-            {activeTab === "profile" && <CandidateProfile />}
-            {activeTab === "applied" && <CandidateApplied />}
-            {activeTab === "saved" && <CandidateSaved />}
+            {activeTab === "profile" && <UserProfile />}
+            {activeTab === "applied" && <UserApplied />}
+            {activeTab === "saved" && <UserSaved />}
           </div>
         </div>
       </div>

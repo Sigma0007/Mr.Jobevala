@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Bookmark, MapPin, DollarSign } from "lucide-react";
 import toast from "react-hot-toast";
 
-export default function CandidateSaved() {
+export default function UserSaved() {
   const savedJobs = [
     {
       id: 1,

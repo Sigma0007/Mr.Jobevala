@@ -3,6 +3,7 @@ import cors from "cors";
 
 import authRoutes from "./routes/authRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
+import userProfileRoutes from "./routes/userProfileRoutes.js";
 
 import { errorHandler } from "./middleware/errorMiddleware.js";
 
@@ -28,8 +29,8 @@ app.get("/", (req, res) => {
 
 
 app.use("/api/auth", authRoutes);
-
 app.use("/api/jobs", jobRoutes);
+app.use("/api/userprofile", userProfileRoutes);
 
 app.use(errorHandler);
 

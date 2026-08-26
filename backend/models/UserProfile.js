@@ -8,6 +8,13 @@ const userProfileSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
+        name: {
+            type: String,
+            required: [true, "Name is required"],
+            trim: true,
+            minlength: 2,
+            maxlength: 100,
+        },
         phone: {
             type: String,
             default: "",
