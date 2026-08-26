@@ -1,21 +1,64 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { Building2, Upload } from "lucide-react";
+import customerService from "../../customer/customerservice";
 
 export default function EmployerProfile() {
   const [profile, setProfile] = useState({
-    companyName: "TechCorp Global",
-    website: "https://techcorp.io",
-    industry: "Software & Technology",
-    size: "50-200 employees",
-    bio: "Building next-generation SaaS tools for modern enterprises.",
+    name: "",
+    companyName: "",
+    location: "",
+    phone: "",
+    logo: "",
+    website: "",
+    industry: "",
+    companySize: "",
+    aboutCompany: "",
   });
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleSave = (e) => {
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await customerService.getCompanyProfile();
+        if (response.success && response.data) {
+          setProfile({
+            name: response.data.name || "",
+            companyName: response.data.companyName || "",
+            location: response.data.location || "",
+            phone: response.data.phone || "",
+            logo: response.data.logo || "",
+            website: response.data.website || "",
+            industry: response.data.industry || "",
+            companySize: response.data.companySize || "",
+            aboutCompany: response.data.aboutCompany || "",
+          });
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Failed to load company profile");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    toast.success("Company profile updated successfully!");
+    try {
+      const response = await customerService.updateCompanyProfile(profile);
+      if (response.success) {
+        toast.success("Company profile updated successfully!");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    }
   };
+
+  if (isLoading) {
+    return <div className="flex justify-center p-8">Loading profile...</div>;
+  }
 
   return (
     <motion.div
@@ -27,7 +70,7 @@ export default function EmployerProfile() {
       <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-8 pb-6 border-b border-slate-100">
         <div className="relative group cursor-pointer">
           <img
-            src="https://images.unsplash.com/photo-1549924293-3b909efef92d?w=150&q=80"
+            src={profile.logo || "https://images.unsplash.com/photo-1549924293-3b909efef92d?w=150&q=80"}
             alt="Company Logo"
             className="w-20 h-20 rounded-2xl object-cover border border-slate-200 group-hover:opacity-75 transition-opacity"
           />
@@ -49,6 +92,20 @@ export default function EmployerProfile() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
+              Contact Name *
+            </label>
+            <input
+              type="text"
+              required
+              value={profile.name}
+              onChange={(e) =>
+                setProfile({ ...profile, name: e.target.value })
+              }
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
               Company Name
             </label>
             <input
@@ -60,6 +117,38 @@ export default function EmployerProfile() {
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Phone
+            </label>
+            <input
+              type="text"
+              value={profile.phone}
+              onChange={(e) =>
+                setProfile({ ...profile, phone: e.target.value })
+              }
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Location
+            </label>
+            <input
+              type="text"
+              value={profile.location}
+              onChange={(e) =>
+                setProfile({ ...profile, location: e.target.value })
+              }
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Website
@@ -73,9 +162,6 @@ export default function EmployerProfile() {
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Industry
@@ -89,14 +175,17 @@ export default function EmployerProfile() {
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
             />
           </div>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Company Size
             </label>
             <input
               type="text"
-              value={profile.size}
-              onChange={(e) => setProfile({ ...profile, size: e.target.value })}
+              value={profile.companySize}
+              onChange={(e) => setProfile({ ...profile, companySize: e.target.value })}
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
             />
           </div>
@@ -108,8 +197,8 @@ export default function EmployerProfile() {
           </label>
           <textarea
             rows="4"
-            value={profile.bio}
-            onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+            value={profile.aboutCompany}
+            onChange={(e) => setProfile({ ...profile, aboutCompany: e.target.value })}
             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all resize-none"
           ></textarea>
         </div>
@@ -117,7 +206,8 @@ export default function EmployerProfile() {
         <div className="flex justify-end pt-6 border-t border-slate-100">
           <button
             type="submit"
-            className="bg-brand-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-brand-700 shadow-[0_4px_14px_0_rgb(37,99,235,0.39)] transition-all hover:-translate-y-0.5"
+            disabled={isLoading}
+            className="bg-brand-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-brand-700 shadow-[0_4px_14px_0_rgb(37,99,235,0.39)] transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:pointer-events-none"
           >
             Save Changes
           </button>

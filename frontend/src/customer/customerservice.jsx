@@ -66,6 +66,16 @@ const updateUserProfile = (data = {}) => {
   return Auth(endpoint, data, "PUT");
 };
 
+const getCompanyProfile = () => {
+  const endpoint = `/companyprofile`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const updateCompanyProfile = (data = {}) => {
+  const endpoint = `/companyprofile`;
+  return Auth(endpoint, data, "PUT");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -81,4 +91,6 @@ export default {
   updateJobStatus,
   getUserProfile,
   updateUserProfile,
+  getCompanyProfile,
+  updateCompanyProfile,
 };

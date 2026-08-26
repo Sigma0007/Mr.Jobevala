@@ -1,3 +1,4 @@
+import CompanyProfile from "../models/CompanyProfile.js";
 import User from "../models/User.js";
 import UserProfile from "../models/UserProfile.js";
 
@@ -98,6 +99,14 @@ export const register = catchAsync(
 
         if (userRole === "user") {
             await UserProfile.create({
+                user: user._id,
+                phone: phone || "",
+                name: name || "",
+            });
+        }
+
+        if (userRole === "provider") {
+            await CompanyProfile.create({
                 user: user._id,
                 phone: phone || "",
                 name: name || "",
