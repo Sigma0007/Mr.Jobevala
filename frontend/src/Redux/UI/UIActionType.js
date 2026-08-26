@@ -1,0 +1,2 @@
+export const TOGGLE_THEME = 'TOGGLE_THEME';
+export const SET_SIDEBAR_OPEN = 'SET_SIDEBAR_OPEN';

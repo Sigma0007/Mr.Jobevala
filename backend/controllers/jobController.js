@@ -1,0 +1,173 @@
+import Job from "../models/Job.js";
+
+import AppError from "../utils/AppError.js";
+import catchAsync from "../utils/catchAsync.js";
+
+// CREATE JOB
+export const createJob = catchAsync(async (req, res, next) => {
+    const {
+        title,
+        companyName,
+        description,
+        skills,
+        jobType,
+        experience,
+        salary,
+        location,
+        vacancies,
+        status,
+        applicationDeadline,
+    } = req.body;
+
+    if (!title || !companyName || !description || !location?.city) {
+        return next(
+            new AppError(
+                "Title, company name, description and city are required",
+                400,
+            ),
+        );
+    }
+
+    const job = await Job.create({
+        provider: req.user._id,
+
+        title,
+        companyName,
+        description,
+        skills,
+        jobType,
+        experience,
+        salary,
+        location,
+        vacancies,
+        status,
+        applicationDeadline,
+    });
+
+    res.status(201).json({
+        success: true,
+        message: "Job created successfully",
+        data: job,
+    });
+});
+
+// GET PROVIDER JOBS
+export const getMyJobs = catchAsync(async (req, res) => {
+    const jobs = await Job.find({
+        provider: req.user._id,
+    }).sort({
+        createdAt: -1,
+    });
+
+    res.status(200).json({
+        success: true,
+        total: jobs.length,
+        data: jobs,
+    });
+});
+
+// GET SINGLE PROVIDER JOB
+export const getMyJobById = catchAsync(async (req, res, next) => {
+    const job = await Job.findOne({
+        _id: req.params.id,
+        provider: req.user._id,
+    });
+
+    if (!job) {
+        return next(new AppError("Job not found", 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        data: job,
+    });
+});
+
+// UPDATE JOB
+export const updateJob = catchAsync(async (req, res, next) => {
+    const job = await Job.findOne({
+        _id: req.params.id,
+        provider: req.user._id,
+    });
+
+    if (!job) {
+        return next(
+            new AppError("Job not found or you don't have permission", 404),
+        );
+    }
+
+    const allowedFields = [
+        "title",
+        "companyName",
+        "description",
+        "skills",
+        "jobType",
+        "experience",
+        "salary",
+        "location",
+        "vacancies",
+        "status",
+        "applicationDeadline",
+    ];
+
+    allowedFields.forEach((field) => {
+        if (req.body[field] !== undefined) {
+            job[field] = req.body[field];
+        }
+    });
+
+    await job.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Job updated successfully",
+        data: job,
+    });
+});
+
+// DELETE JOB
+export const deleteJob = catchAsync(async (req, res, next) => {
+    const job = await Job.findOne({
+        _id: req.params.id,
+        provider: req.user._id,
+    });
+
+    if (!job) {
+        return next(new AppError("Job not found", 404));
+    }
+
+    await job.deleteOne();
+
+    res.status(200).json({
+        success: true,
+        message: "Job deleted successfully",
+    });
+});
+
+// CHANGE JOB STATUS
+export const updateJobStatus = catchAsync(async (req, res, next) => {
+    const { status } = req.body;
+
+    if (!["active", "closed", "draft"].includes(status)) {
+        return next(new AppError("Invalid job status", 400));
+    }
+
+    const job = await Job.findOne({
+        _id: req.params.id,
+        provider: req.user._id,
+    });
+
+    if (!job) {
+        return next(new AppError("Job not found", 404));
+    }
+
+    job.status = status;
+
+    await job.save();
+
+    res.status(200).json({
+        success: true,
+        message: `Job ${status} successfully`,
+        data: job,
+    });
+});

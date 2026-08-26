@@ -1,0 +1,382 @@
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Search,
+  MapPin,
+  Briefcase,
+  Star,
+  ChevronDown,
+  CheckCircle2,
+  Mail,
+  Award,
+  Clock,
+  ShieldCheck,
+} from "lucide-react";
+
+// Premium Dummy Data
+const candidates = [
+  {
+    id: 1,
+    name: "Alex Rivera",
+    role: "Senior Full-Stack Developer",
+    location: "San Francisco, CA (Remote)",
+    experience: "8 Years",
+    rate: "$120k - $150k",
+    rating: 4.9,
+    avatar:
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=faces&q=80",
+    skills: ["React", "Node.js", "TypeScript", "AWS"],
+    available: true,
+    bio: "Ex-Google engineer specializing in scalable cloud architectures and high-performance React applications.",
+  },
+  {
+    id: 2,
+    name: "Sarah Chen",
+    role: "Lead Product Designer",
+    location: "New York, NY",
+    experience: "6 Years",
+    rate: "$110k - $140k",
+    rating: 5.0,
+    avatar:
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=faces&q=80",
+    skills: ["Figma", "Design Systems", "UX Research", "Prototyping"],
+    available: false,
+    bio: "Obsessed with pixel-perfect designs and accessible user experiences. Built the core design system for a Series B fintech startup.",
+  },
+  {
+    id: 3,
+    name: "Marcus Johnson",
+    role: "DevOps Engineer",
+    location: "Austin, TX (Remote)",
+    experience: "5 Years",
+    rate: "$130k - $160k",
+    rating: 4.8,
+    avatar:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=faces&q=80",
+    skills: ["Kubernetes", "Docker", "CI/CD", "Terraform"],
+    available: true,
+    bio: "Infrastructure automation expert. Reduced deployment times by 70% at my previous company using advanced CI/CD pipelines.",
+  },
+  {
+    id: 4,
+    name: "Elena Rodriguez",
+    role: "Frontend Architect",
+    location: "London, UK",
+    experience: "10 Years",
+    rate: "$140k - $180k",
+    rating: 4.9,
+    avatar:
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=faces&q=80",
+    skills: ["Vue.js", "Next.js", "Tailwind CSS", "WebGL"],
+    available: true,
+    bio: "Award-winning creative developer pushing the boundaries of what is possible on the modern web.",
+  },
+];
+
+// Framer Motion Variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 300, damping: 24 },
+  },
+};
+
+export default function FindCandidates() {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] font-sans selection:bg-blue-100 selection:text-blue-900">
+      {/* Premium Hero Section with Photographic Background & Overlap Layout */}
+      <div className="relative w-full pt-28 pb-52 overflow-hidden bg-slate-900">
+        {/* Unsplash Background Image */}
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage:
+              'url("https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=2850&q=80")',
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+
+        {/* Premium Blue Gradient Overlay to ensure text readability */}
+        <div className="absolute inset-0 bg-blue-900/85 z-0" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/60 via-blue-800/80 to-slate-900/90 z-0" />
+
+        {/* Subtle Background Pattern for texture */}
+        <div className="absolute inset-0 z-0 opacity-[0.05] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent bg-[length:24px_24px]" />
+
+        {/* Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-8">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-6"
+          >
+            Discover Top Talent
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
+            className="text-blue-50 text-lg md:text-xl max-w-2xl mx-auto font-medium tracking-wide"
+          >
+            Connect with pre-vetted professionals ready to elevate your team.
+          </motion.p>
+        </div>
+      </div>
+
+      {/* Main Content Area - Overlaps the Hero */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-20 pb-20">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Sidebar - Filters */}
+          <div className="w-full lg:w-72 flex-shrink-0">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] sticky top-8"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+                  Filters
+                </h2>
+                <button className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                  Clear All
+                </button>
+              </div>
+
+              {/* Search Box */}
+              <div className="mb-8">
+                <label className="block text-xs font-bold tracking-wider text-slate-400 uppercase mb-3">
+                  Search
+                </label>
+                <div className="relative group">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                  <input
+                    type="text"
+                    placeholder="Role or keyword..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all duration-200"
+                  />
+                </div>
+              </div>
+
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-8" />
+
+              {/* Job Category */}
+              <div className="mb-8">
+                <label className="block text-xs font-bold tracking-wider text-slate-400 uppercase mb-4">
+                  Expertise
+                </label>
+                <div className="space-y-3.5">
+                  {[
+                    "Software Engineering",
+                    "Product Design",
+                    "Marketing",
+                    "Data Science",
+                  ].map((cat) => (
+                    <label
+                      key={cat}
+                      className="flex items-center gap-3 cursor-pointer group"
+                    >
+                      <div className="w-4 h-4 rounded border border-slate-300 group-hover:border-blue-500 flex items-center justify-center transition-colors bg-white">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+                        {cat}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-8" />
+
+              {/* Experience */}
+              <div>
+                <label className="block text-xs font-bold tracking-wider text-slate-400 uppercase mb-4">
+                  Experience Level
+                </label>
+                <div className="space-y-3.5">
+                  {[
+                    "Entry Level (0-2 yrs)",
+                    "Mid Level (3-5 yrs)",
+                    "Senior (5+ yrs)",
+                    "Director+",
+                  ].map((exp) => (
+                    <label
+                      key={exp}
+                      className="flex items-center gap-3 cursor-pointer group"
+                    >
+                      <div className="w-4 h-4 rounded-full border border-slate-300 group-hover:border-blue-500 flex items-center justify-center transition-colors bg-white">
+                        <div className="w-2 h-2 rounded-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+                        {exp}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Right Main Content - Candidate List */}
+          <div className="flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
+              <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider pl-2">
+                <span className="text-blue-600">{candidates.length}</span>{" "}
+                Candidates Available
+              </h2>
+              <div className="flex items-center gap-2 pr-2">
+                <span className="text-sm font-medium text-slate-500">
+                  Sort by:
+                </span>
+                <button className="flex items-center gap-1 text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 hover:border-blue-100">
+                  Relevance <ChevronDown className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+              className="space-y-5"
+            >
+              <AnimatePresence>
+                {candidates.map((candidate) => (
+                  <motion.div
+                    key={candidate.id}
+                    variants={itemVariants}
+                    whileHover={{ y: -2 }}
+                    className="group bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:border-blue-200 transition-all duration-300"
+                  >
+                    <div className="flex flex-col md:flex-row gap-6">
+                      {/* Avatar & Status */}
+                      <div className="flex-shrink-0 flex flex-col items-center gap-4">
+                        <div className="relative">
+                          <div className="absolute inset-0 rounded-2xl bg-blue-500 blur opacity-20 group-hover:opacity-40 transition-opacity duration-300" />
+                          <img
+                            src={candidate.avatar}
+                            alt={candidate.name}
+                            className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-4 border-white shadow-sm"
+                          />
+                          {candidate.available ? (
+                            <div className="absolute -bottom-2 -right-2 flex items-center justify-center w-8 h-8 bg-white rounded-full shadow-sm">
+                              <div
+                                className="w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"
+                                title="Available to hire"
+                              />
+                            </div>
+                          ) : (
+                            <div className="absolute -bottom-2 -right-2 flex items-center justify-center w-8 h-8 bg-white rounded-full shadow-sm">
+                              <Clock
+                                className="w-4 h-4 text-amber-500"
+                                title="Currently busy"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-center gap-1.5 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 shadow-sm w-full">
+                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          {candidate.rating}
+                        </div>
+                      </div>
+
+                      {/* Core Info */}
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div>
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-2">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
+                                  {candidate.name}
+                                </h3>
+                                <ShieldCheck
+                                  className="w-5 h-5 text-blue-500"
+                                  title="Identity Verified"
+                                />
+                              </div>
+                              <p className="text-blue-600 font-semibold text-sm sm:text-base mb-4">
+                                {candidate.role}
+                              </p>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-3 flex-shrink-0">
+                              <motion.button
+                                whileTap={{ scale: 0.97 }}
+                                className="flex-1 sm:flex-none px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Mail className="w-4 h-4" />{" "}
+                                <span className="hidden sm:inline">
+                                  Message
+                                </span>
+                              </motion.button>
+                              <motion.button
+                                whileTap={{ scale: 0.97 }}
+                                className="flex-1 sm:flex-none px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all shadow-[0_4px_14px_0_rgb(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)]"
+                              >
+                                View Profile
+                              </motion.button>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-sm text-slate-500 mb-5">
+                            <span className="flex items-center gap-1.5 font-medium">
+                              <MapPin className="w-4 h-4 text-slate-400" />
+                              {candidate.location}
+                            </span>
+                            <span className="flex items-center gap-1.5 font-medium">
+                              <Briefcase className="w-4 h-4 text-slate-400" />
+                              {candidate.experience}
+                            </span>
+                            <span className="flex items-center gap-1.5 font-semibold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200/60">
+                              {candidate.rate}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Bio & Skills */}
+                        <div>
+                          <p className="text-slate-600 text-sm leading-relaxed mb-5 max-w-3xl">
+                            {candidate.bio}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {candidate.skills.map((skill) => (
+                              <span
+                                key={skill}
+                                className="px-3 py-1.5 bg-blue-50/50 text-blue-700 border border-blue-100/50 rounded-lg text-xs font-semibold hover:border-blue-200 hover:bg-blue-50 transition-colors cursor-default"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
