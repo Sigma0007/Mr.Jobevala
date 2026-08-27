@@ -36,7 +36,9 @@ export default function EmployerProfile() {
           });
         }
       } catch (error) {
-        toast.error(error.response?.data?.message || "Failed to load company profile");
+        toast.error(
+          error.response?.data?.message || "Failed to load company profile",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -69,14 +71,34 @@ export default function EmployerProfile() {
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-8 pb-6 border-b border-slate-100">
         <div className="relative group cursor-pointer">
-          <img
-            src={profile.logo || "https://images.unsplash.com/photo-1549924293-3b909efef92d?w=150&q=80"}
-            alt="Company Logo"
-            className="w-20 h-20 rounded-2xl object-cover border border-slate-200 group-hover:opacity-75 transition-opacity"
-          />
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Upload className="w-6 h-6 text-slate-900 drop-shadow-md" />
-          </div>
+          <label className="cursor-pointer block">
+            <img
+              src={
+                profile.logo ||
+                "https://images.unsplash.com/photo-1549924293-3b909efef92d?w=150&q=80"
+              }
+              alt="Company Logo"
+              className="w-20 h-20 rounded-2xl object-cover border border-slate-200 group-hover:opacity-75 transition-opacity"
+            />
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-2xl">
+              <Upload className="w-6 h-6 text-white drop-shadow-md" />
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setProfile({ ...profile, logo: reader.result });
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+          </label>
         </div>
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">
@@ -98,9 +120,7 @@ export default function EmployerProfile() {
               type="text"
               required
               value={profile.name}
-              onChange={(e) =>
-                setProfile({ ...profile, name: e.target.value })
-              }
+              onChange={(e) => setProfile({ ...profile, name: e.target.value })}
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
             />
           </div>
@@ -176,7 +196,7 @@ export default function EmployerProfile() {
             />
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -185,7 +205,9 @@ export default function EmployerProfile() {
             <input
               type="text"
               value={profile.companySize}
-              onChange={(e) => setProfile({ ...profile, companySize: e.target.value })}
+              onChange={(e) =>
+                setProfile({ ...profile, companySize: e.target.value })
+              }
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
             />
           </div>
@@ -198,7 +220,9 @@ export default function EmployerProfile() {
           <textarea
             rows="4"
             value={profile.aboutCompany}
-            onChange={(e) => setProfile({ ...profile, aboutCompany: e.target.value })}
+            onChange={(e) =>
+              setProfile({ ...profile, aboutCompany: e.target.value })
+            }
             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all resize-none"
           ></textarea>
         </div>

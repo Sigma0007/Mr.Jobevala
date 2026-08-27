@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -13,149 +13,23 @@ import {
   ChevronDown,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import customerservice from "../customer/customerservice";
 
-const dummyJobs = [
-  {
-    id: 1,
-    title: "Senior Frontend Engineer",
-    company: "Google",
-    location: "Mountain View, CA",
-    type: "Full-Time",
-    mode: "Hybrid",
-    salary: "$160k - $210k",
-    salaryMin: 160000,
-    posted: "2 hours ago",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg",
-    description:
-      "We are looking for a Senior Frontend Engineer to build high-performance web applications for Google Workspace. You will lead UI architecture, mentor junior developers, and establish frontend best practices for our rapidly scaling enterprise product.",
-    reqs: [
-      "5+ years of React/Angular experience",
-      "Expertise in TypeScript",
-      "Advanced State Management",
-      "Experience with large-scale distributed systems",
-    ],
-  },
-  {
-    id: 2,
-    title: "Lead Product Designer",
-    company: "Microsoft",
-    location: "Redmond, WA",
-    type: "Full-Time",
-    mode: "Hybrid",
-    salary: "$150k - $190k",
-    salaryMin: 150000,
-    posted: "5 hours ago",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg",
-    description:
-      "Design beautiful, intuitive experiences for our core enterprise platform. You will work closely with product and engineering to take complex workflows and turn them into elegant, user-friendly interfaces.",
-    reqs: [
-      "Exceptional portfolio demonstrating enterprise design",
-      "Mastery of Figma and prototyping tools",
-      "Deep understanding of UX research methodologies",
-      "Experience building design systems",
-    ],
-  },
-  {
-    id: 3,
-    title: "Backend Node.js Developer",
-    company: "Spotify",
-    location: "London, UK",
-    type: "Full-Time",
-    mode: "Hybrid",
-    salary: "$120k - $150k",
-    salaryMin: 120000,
-    posted: "1 day ago",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg",
-    description:
-      "Help scale our core audio processing systems. You will be building resilient, secure microservices that handle millions of streams daily with high throughput and low latency.",
-    reqs: [
-      "Strong Node.js and Express experience",
-      "Proficiency with PostgreSQL and Redis",
-      "Experience with AWS or GCP",
-      "Knowledge of high-volume streaming architecture",
-    ],
-  },
-  {
-    id: 4,
-    title: "Frontend Developer",
-    company: "Airbnb",
-    location: "San Francisco, CA",
-    type: "Contract",
-    mode: "Remote",
-    salary: "$80 - $100/hr",
-    salaryMin: 160000,
-    posted: "2 days ago",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg",
-    description:
-      "Join our Guest Experience team to build stunning, high-converting interfaces. You will own the frontend implementation from zero to launch using React and modern CSS architecture.",
-    reqs: [
-      "Strong React fundamentals",
-      "Expertise in modern CSS/Tailwind",
-      "Experience with Next.js",
-      "Ability to move fast and iterate perfectly to spec",
-    ],
-  },
-  {
-    id: 5,
-    title: "Machine Learning Engineer",
-    company: "Netflix",
-    location: "Los Gatos, CA",
-    type: "Full-Time",
-    mode: "Hybrid",
-    salary: "$200k - $250k",
-    salaryMin: 200000,
-    posted: "3 days ago",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/0/0c/Netflix_2015_N_logo.svg",
-    description:
-      "Join our core Personalization team to develop and deploy recommendation models. You will optimize inference pipelines and work on cutting-edge machine learning implementations.",
-    reqs: [
-      "Python, PyTorch, or TensorFlow",
-      "Experience deploying models to production",
-      "Strong background in statistics and linear algebra",
-      "Experience with CUDA/GPU optimization",
-    ],
-  },
-  {
-    id: 6,
-    title: "Marketing Website Developer",
-    company: "Slack",
-    location: "Denver, CO",
-    type: "Freelance",
-    mode: "Remote",
-    salary: "$70 - $90/hr",
-    salaryMin: 145000,
-    posted: "1 week ago",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg",
-    description:
-      "We need a highly skilled freelance developer to build stunning, high-converting marketing landing pages with Framer and Webflow, ensuring perfect responsiveness.",
-    reqs: [
-      "Framer and Webflow mastery",
-      "Strong eye for high-end web design",
-      "Understanding of SEO best practices",
-      "Basic knowledge of React/Next.js",
-    ],
-  },
-  {
-    id: 7,
-    title: "Cloud Infrastructure Engineer",
-    company: "Amazon",
-    location: "Seattle, WA",
-    type: "Full-Time",
-    mode: "On-site",
-    salary: "$165k - $200k",
-    salaryMin: 165000,
-    posted: "Just now",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Amazon_icon.svg",
-    description:
-      "Own our AWS infrastructure scale. You will manage large-scale Kubernetes clusters, refine CI/CD pipelines, and ensure 99.999% uptime across AWS core services.",
-    reqs: [
-      "Deep knowledge of Kubernetes and Docker",
-      "Terraform and Infrastructure as Code",
-      "CI/CD (GitHub Actions, AWS CodePipeline)",
-      "Strong Linux administration skills",
-    ],
-  },
-];
+const timeAgo = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (diffInSeconds < 60) return "Just now";
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 30) return `${diffInDays}d ago`;
+  return date.toLocaleDateString();
+};
 
 const RequirementItem = ({ text }) => (
   <motion.li
@@ -178,30 +52,40 @@ export default function FindJobs() {
   const [selectedModes, setSelectedModes] = useState([]);
   const [salaryRange, setSalaryRange] = useState("Any");
   const [sortBy, setSortBy] = useState("newest");
+  const [jobsData, setJobsData] = useState([]);
 
   const filteredJobs = useMemo(() => {
-    let result = dummyJobs.filter((job) => {
+    let result = jobsData.filter((job) => {
       const matchesSearch =
-        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.company.toLowerCase().includes(searchQuery.toLowerCase());
+        job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.companyProfileId?.companyName
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase());
 
-      const matchesLocation = job.location
-        .toLowerCase()
-        .includes(locationQuery.toLowerCase());
+      const locationString =
+        `${job.location?.city || ""} ${job.location?.state || ""} ${job.location?.country || ""}`.toLowerCase();
+      const matchesLocation =
+        locationString.includes(locationQuery.toLowerCase()) ||
+        (locationQuery.toLowerCase() === "remote" && job.location?.isRemote);
 
       const matchesType =
-        selectedTypes.length === 0 || selectedTypes.includes(job.type);
+        selectedTypes.length === 0 ||
+        selectedTypes.some(
+          (type) => type.toLowerCase() === job.jobType?.toLowerCase(),
+        );
 
+      const mode = job.location?.isRemote ? "Remote" : "On-site";
       const matchesMode =
-        selectedModes.length === 0 || selectedModes.includes(job.mode);
+        selectedModes.length === 0 || selectedModes.includes(mode);
 
       let matchesSalary = true;
-      if (salaryRange === "$50k - $80k") {
-        matchesSalary = job.salaryMin >= 50000 && job.salaryMin < 80000;
-      } else if (salaryRange === "$80k - $120k") {
-        matchesSalary = job.salaryMin >= 80000 && job.salaryMin < 120000;
-      } else if (salaryRange === "$120k+") {
-        matchesSalary = job.salaryMin >= 120000;
+      const salaryMin = job.salary?.min || 0;
+      if (salaryRange === "₹30k - ₹60k") {
+        matchesSalary = salaryMin >= 30000 && salaryMin <= 60000;
+      } else if (salaryRange === "₹60k - ₹100k") {
+        matchesSalary = salaryMin > 60000 && salaryMin <= 100000;
+      } else if (salaryRange === "₹100k+") {
+        matchesSalary = salaryMin > 100000;
       }
 
       return (
@@ -214,11 +98,14 @@ export default function FindJobs() {
     });
 
     if (sortBy === "highest") {
-      result.sort((a, b) => b.salaryMin - a.salaryMin);
+      result.sort((a, b) => (b.salary?.min || 0) - (a.salary?.min || 0));
+    } else if (sortBy === "newest") {
+      result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
     return result;
   }, [
+    jobsData,
     searchQuery,
     locationQuery,
     selectedTypes,
@@ -244,13 +131,26 @@ export default function FindJobs() {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
+    hidden: { opacity: 1, y: 15 },
     show: {
       opacity: 1,
       y: 0,
       transition: { type: "spring", stiffness: 300, damping: 24 },
     },
   };
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      const response = await customerservice.getAllJobs();
+      if (response.success) {
+        setJobsData(response.data);
+      }
+      console.log("response", response);
+    };
+    fetchJobs();
+  }, []);
+
+  console.log("filteredJobs", filteredJobs);
 
   return (
     <div className="min-h-screen pt-24 md:pt-28 pb-16 bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
@@ -416,9 +316,9 @@ export default function FindJobs() {
                           className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 hover:border-slate-200 rounded-xl text-[15px] font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-all cursor-pointer text-slate-700 appearance-none"
                         >
                           <option>Any Salary</option>
-                          <option>$50k - $80k</option>
-                          <option>$80k - $120k</option>
-                          <option>$120k+</option>
+                          <option>₹30k - ₹60k</option>
+                          <option>₹60k - ₹100k</option>
+                          <option>₹100k+</option>
                         </select>
                         <ChevronDown className="w-5 h-5 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
@@ -468,54 +368,60 @@ export default function FindJobs() {
                 {filteredJobs.map((job) => (
                   <motion.div
                     variants={itemVariants}
-                    key={job.id}
+                    key={job._id}
                     onClick={() => setSelectedJob(job)}
                     className="bg-white p-5 md:p-6 rounded-[1.5rem] border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:border-blue-200 transition-all cursor-pointer group flex flex-col sm:flex-row gap-5 md:gap-6 relative overflow-hidden"
                   >
                     {/* Hover indicator strip */}
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600 opacity-1 group-hover:opacity-100 transition-opacity" />
 
                     <img
-                      src={job.logo}
-                      alt={job.company}
+                      src={
+                        job.companyProfileId?.logo ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(job.companyProfileId?.companyName || "C")}&background=random`
+                      }
+                      alt={job.companyProfileId?.companyName}
                       className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-contain p-2 md:p-3 border border-slate-100 shadow-sm shrink-0 bg-white"
                     />
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2 mb-1">
                         <div>
-                          <h3 className="text-lg md:text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                          <h3 className="text-lg md:text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors capitalize">
                             {job.title}
                           </h3>
                           <div className="flex items-center gap-2 mt-1 text-slate-500">
                             <Building2 className="w-4 h-4 shrink-0" />
-                            <p className="text-sm md:text-[15px] font-medium">
-                              {job.company}
+                            <p className="text-sm md:text-[15px] font-medium capitalize">
+                              {job.companyProfileId?.companyName}
                             </p>
                           </div>
                         </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-4 text-xs md:text-[13px] font-medium text-slate-600">
-                        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg">
+                        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg capitalize">
                           <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />{" "}
-                          {job.location}
+                          {job.location?.city}
+                          {job.location?.state ? `, ${job.location.state}` : ""}
                         </span>
                         <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50/50 text-blue-700 border border-blue-100/50 rounded-lg">
                           <DollarSign className="w-3.5 h-3.5 text-blue-500 shrink-0" />{" "}
-                          {job.salary}
+                          {job.salary?.currency === "INR" ? "₹" : "$"}
+                          {job.salary?.min?.toLocaleString()} -{" "}
+                          {job.salary?.max?.toLocaleString()}
                         </span>
-                        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg">
+                        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg capitalize">
                           <Briefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />{" "}
-                          {job.type}
+                          {job.jobType}
                         </span>
                         <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg">
-                          {job.mode}
+                          {job.location?.isRemote ? "Remote" : "On-site"}
                         </span>
 
                         <span className="flex items-center gap-1.5 text-slate-400 ml-auto pt-2 md:pt-0">
                           <Clock className="w-3.5 h-3.5 shrink-0" />{" "}
-                          {job.posted}
+                          {timeAgo(job.createdAt)}
                         </span>
                       </div>
                     </div>
@@ -589,29 +495,41 @@ export default function FindJobs() {
 
                 <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 relative z-10 pr-8 sm:pr-12">
                   <img
-                    src={selectedJob.logo}
+                    src={
+                      selectedJob.companyProfileId?.logo ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedJob.companyProfileId?.companyName || "C")}&background=random`
+                    }
                     alt="logo"
                     className="w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-[1.25rem] object-contain p-2 sm:p-3 border-2 border-white shadow-md bg-white shrink-0"
                   />
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight mb-1 sm:mb-2">
+                    <h2 className="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight mb-1 sm:mb-2 capitalize">
                       {selectedJob.title}
                     </h2>
-                    <p className="text-sm sm:text-lg font-medium text-slate-500 flex items-center gap-2">
+                    <p className="text-sm sm:text-lg font-medium text-slate-500 flex items-center gap-2 capitalize">
                       <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 shrink-0" />
-                      {selectedJob.company}
+                      {selectedJob.companyProfileId?.companyName}
                     </p>
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-3 sm:mt-4 text-xs sm:text-[14px] font-medium text-slate-600">
-                      <span className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 bg-white border border-slate-200 rounded-md shadow-sm">
+                      <span className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 bg-white border border-slate-200 rounded-md shadow-sm capitalize">
                         <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 shrink-0" />{" "}
-                        {selectedJob.location}
+                        {selectedJob.location?.city}
+                        {selectedJob.location?.state
+                          ? `, ${selectedJob.location.state}`
+                          : ""}
                       </span>
                       <span className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 bg-white border border-slate-200 rounded-md shadow-sm">
                         <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 shrink-0" />{" "}
-                        {selectedJob.salary}
+                        {selectedJob.salary?.currency === "INR" ? "₹" : "$"}
+                        {selectedJob.salary?.min?.toLocaleString()} -{" "}
+                        {selectedJob.salary?.max?.toLocaleString()}
                       </span>
                       <span className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 bg-white border border-slate-200 rounded-md shadow-sm">
-                        {selectedJob.mode}
+                        {selectedJob.location?.isRemote ? "Remote" : "On-site"}
+                      </span>
+                      <span className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 bg-white border border-slate-200 rounded-md shadow-sm capitalize">
+                        <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 shrink-0" />{" "}
+                        {selectedJob.jobType}
                       </span>
                     </div>
                   </div>
@@ -631,11 +549,11 @@ export default function FindJobs() {
 
                 <div>
                   <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2">
-                    Requirements
+                    Requirements & Skills
                   </h3>
                   <ul className="space-y-3 sm:space-y-4">
-                    {selectedJob.reqs.map((req, i) => (
-                      <RequirementItem key={i} text={req} />
+                    {selectedJob.skills?.map((skill, i) => (
+                      <RequirementItem key={i} text={skill} />
                     ))}
                   </ul>
                 </div>

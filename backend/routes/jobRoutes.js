@@ -7,6 +7,7 @@ import {
     updateJob,
     deleteJob,
     updateJobStatus,
+    getAllJobs,
 } from "../controllers/jobController.js";
 
 import {
@@ -19,40 +20,49 @@ import {
 
 const router = express.Router();
 
-router.use(protect);
+router.get(
+    "/getAllJobs",
+    getAllJobs
+);
 
 router.post(
     "/",
+    protect,
     authorize("provider"),
     createJob
 );
 
 router.get(
     "/my-jobs",
+    protect,
     authorize("provider"),
     getMyJobs
 );
 
 router.get(
     "/my-jobs/:id",
+    protect,
     authorize("provider"),
     getMyJobById
 );
 
 router.put(
     "/:id",
+    protect,
     authorize("provider"),
     updateJob
 );
 
 router.delete(
     "/:id",
+    protect,
     authorize("provider"),
     deleteJob
 );
 
 router.patch(
     "/:id/status",
+    protect,
     authorize("provider"),
     updateJobStatus
 );

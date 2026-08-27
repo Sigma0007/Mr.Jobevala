@@ -125,11 +125,16 @@ export default function UserProfile() {
               accept="image/*"
               className="hidden"
               onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setProfile({
-                    ...profile,
-                    profileImage: URL.createObjectURL(e.target.files[0]),
-                  });
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setProfile({
+                      ...profile,
+                      profileImage: reader.result,
+                    });
+                  };
+                  reader.readAsDataURL(file);
                 }
               }}
             />

@@ -60,6 +60,18 @@ export const createJob = catchAsync(async (req, res, next) => {
     });
 });
 
+export const getAllJobs = catchAsync(async (req, res) => {
+    const jobs = await Job.find({}).populate("companyProfileId").sort({
+        createdAt: -1,
+    });
+
+    res.status(200).json({
+        success: true,
+        total: jobs.length,
+        data: jobs,
+    });
+});
+
 // GET PROVIDER JOBS
 export const getMyJobs = catchAsync(async (req, res) => {
     const jobs = await Job.find({

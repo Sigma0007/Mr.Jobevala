@@ -76,6 +76,11 @@ const updateCompanyProfile = (data = {}) => {
   return Auth(endpoint, data, "PUT");
 };
 
+const getAllJobs = () => {
+  const endpoint = `/jobs/getAllJobs`;
+  return Auth(endpoint, {}, "GET");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -93,4 +98,5 @@ export default {
   updateUserProfile,
   getCompanyProfile,
   updateCompanyProfile,
+  getAllJobs,
 };
