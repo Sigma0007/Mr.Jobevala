@@ -4,9 +4,7 @@ import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import FindJobs from "./pages/FindJobs";
 import Footer from "./components/Footer";
-import {
-  UserDashboard,
-} from "./components/user/UserDashboard";
+import { UserDashboard } from "./components/user/UserDashboard";
 
 // Import your brand new HomePage
 import HomePage from "./pages/HomePage";
@@ -70,48 +68,42 @@ export default function App() {
           <Route
             path="/admin/dashboard"
             element={
-              <ProtectedRoute
-                allowedRoles={[
-                  "admin",
-                ]}
-              >
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminDashboard />
               </ProtectedRoute>
             }
           />
-
 
           {/* PROVIDER */}
 
           <Route
             path="/provider/dashboard"
             element={
-              <ProtectedRoute
-                allowedRoles={[
-                  "provider",
-                ]}
-              >
+              <ProtectedRoute allowedRoles={["provider"]}>
                 <EmployerDashboard />
               </ProtectedRoute>
             }
           />
 
+          <Route
+            path="/provider/jobs/:id/edit"
+            element={
+              <ProtectedRoute allowedRoles={["provider"]}>
+                <EmployerDashboard />
+              </ProtectedRoute>
+            }
+          />
 
           {/* USER */}
 
           <Route
             path="/user/dashboard"
             element={
-              <ProtectedRoute
-                allowedRoles={[
-                  "user",
-                ]}
-              >
+              <ProtectedRoute allowedRoles={["user"]}>
                 <UserDashboard />
               </ProtectedRoute>
             }
           />
-
         </Routes>
         <Footer />
       </div>

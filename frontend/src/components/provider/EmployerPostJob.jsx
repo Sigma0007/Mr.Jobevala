@@ -1,11 +1,19 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import customerservice from "../../customer/customerservice";
+import { clearSelectedJob } from "../../Redux/Job/JobAction";
 
 export default function EmployerPostJob() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const dispatch = useDispatch();
+  const selectedJob = useSelector((state) => state.job?.selectedJob);
+  const isEditMode = Boolean(id);
+
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(isEditMode);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -23,6 +31,56 @@ export default function EmployerPostJob() {
     vacancies: 1,
     applicationDeadline: "",
   });
+
+  useEffect(() => {
+    const fetchJobData = async () => {
+      let jobToEdit = selectedJob;
+
+      // If no job in Redux but we have an ID (e.g. page refresh), fetch it
+      if (isEditMode && !jobToEdit) {
+        try {
+          const res = await customerservice.getMyJobById(id);
+          if (res.success) {
+            jobToEdit = res.data;
+          } else {
+            throw new Error("Job not found");
+          }
+        } catch (error) {
+          toast.error("Failed to load job details.");
+          navigate("/provider/jobs");
+          return;
+        }
+      }
+
+      if (jobToEdit) {
+        setFormData({
+          title: jobToEdit.title || "",
+          description: jobToEdit.description || "",
+          skills: jobToEdit.skills ? jobToEdit.skills.join(", ") : "",
+          jobType: jobToEdit.jobType || "full-time",
+          experienceMin: jobToEdit.experience?.min || "",
+          experienceMax: jobToEdit.experience?.max || "",
+          salaryMin: jobToEdit.salary?.min || "",
+          salaryMax: jobToEdit.salary?.max || "",
+          city: jobToEdit.location?.city || "",
+          state: jobToEdit.location?.state || "",
+          country: jobToEdit.location?.country || "India",
+          isRemote: jobToEdit.location?.isRemote || false,
+          vacancies: jobToEdit.vacancies || 1,
+          applicationDeadline: jobToEdit.applicationDeadline ? jobToEdit.applicationDeadline.split('T')[0] : "",
+        });
+      }
+      setPageLoading(false);
+    };
+
+    fetchJobData();
+
+    return () => {
+      if (isEditMode) {
+        dispatch(clearSelectedJob());
+      }
+    };
+  }, [id, isEditMode, selectedJob, navigate, dispatch]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -67,27 +125,36 @@ export default function EmployerPostJob() {
         applicationDeadline: formData.applicationDeadline || null,
       };
 
-      const res = await customerservice.createJob(payload);
+      let res;
+      if (isEditMode) {
+        res = await customerservice.updateJob(id, payload);
+      } else {
+        res = await customerservice.createJob(payload);
+      }
 
       if (res.success) {
-        toast.success("Job posted successfully");
+        toast.success(isEditMode ? "Job updated successfully" : "Job posted successfully");
 
         navigate("/provider/jobs");
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to create job");
+      toast.error(error?.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} job`);
     } finally {
       setLoading(false);
     }
   };
 
+  if (pageLoading) {
+    return <div className="p-8">Loading job details...</div>;
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Post a New Job</h1>
+        <h1 className="text-3xl font-bold text-slate-900">{isEditMode ? "Edit Job" : "Post a New Job"}</h1>
 
         <p className="text-slate-500 mt-2">
-          Find the right candidate for your company.
+          {isEditMode ? "Update your job details below." : "Find the right candidate for your company."}
         </p>
       </div>
 
@@ -288,7 +355,7 @@ export default function EmployerPostJob() {
             disabled={loading}
             className="px-6 py-3 bg-brand-600 text-white rounded-xl"
           >
-            {loading ? "Posting..." : "Post Job"}
+            {loading ? (isEditMode ? "Updating..." : "Posting...") : (isEditMode ? "Update Job" : "Post Job")}
           </button>
         </div>
       </form>
