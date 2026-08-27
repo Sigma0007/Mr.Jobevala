@@ -81,6 +81,11 @@ const getAllJobs = () => {
   return Auth(endpoint, {}, "GET");
 };
 
+const getAllUserProfiles = () => {
+  const endpoint = `/userprofile/get/all`;
+  return Auth(endpoint, {}, "GET");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -99,4 +104,5 @@ export default {
   getCompanyProfile,
   updateCompanyProfile,
   getAllJobs,
+  getAllUserProfiles,
 };

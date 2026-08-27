@@ -27,9 +27,37 @@ const userProfileSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        salary: {
+            min: {
+                type: Number,
+                default: 0,
+            },
+            max: {
+                type: Number,
+                default: 0,
+            },
+            currency: {
+                type: String,
+                default: "INR",
+            },
+        },
         location: {
-            type: String,
-            default: "",
+            city: {
+                type: String,
+                default: "",
+            },
+            state: {
+                type: String,
+                default: "",
+            },
+            country: {
+                type: String,
+                default: "India",
+            },
+            isRemote: {
+                type: Boolean,
+                default: false,
+            },
         },
         skills: [
             {

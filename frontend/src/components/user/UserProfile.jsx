@@ -9,7 +9,17 @@ export default function UserProfile() {
     name: "",
     phone: "",
     title: "",
-    location: "",
+    location: {
+      city: "",
+      state: "",
+      country: "India",
+      isRemote: false,
+    },
+    salary: {
+      min: 0,
+      max: 0,
+      currency: "INR",
+    },
     bio: "",
     skills: "",
     experience: 0,
@@ -33,7 +43,17 @@ export default function UserProfile() {
           name: res.data.name || "",
           phone: res.data.phone || "",
           title: res.data.title || "",
-          location: res.data.location || "",
+          location: res.data.location || {
+            city: "",
+            state: "",
+            country: "India",
+            isRemote: false,
+          },
+          salary: res.data.salary || {
+            min: 0,
+            max: 0,
+            currency: "INR",
+          },
           bio: res.data.bio || "",
           skills: res.data.skills ? res.data.skills.join(", ") : "",
           experience: res.data.experience || 0,
@@ -69,7 +89,17 @@ export default function UserProfile() {
             name: res.data.name || "",
             phone: res.data.phone || "",
             title: res.data.title || "",
-            location: res.data.location || "",
+            location: res.data.location || {
+              city: "",
+              state: "",
+              country: "India",
+              isRemote: false,
+            },
+            salary: res.data.salary || {
+              min: 0,
+              max: 0,
+              currency: "INR",
+            },
             bio: res.data.bio || "",
             skills: res.data.skills ? res.data.skills.join(", ") : "",
             experience: res.data.experience || 0,
@@ -78,6 +108,8 @@ export default function UserProfile() {
             profileImage: res.data.profileImage || "",
           });
         }
+      } else {
+        toast.error(res.message || "Failed to update profile");
       }
     } catch (error) {
       console.error(error);
@@ -213,18 +245,132 @@ export default function UserProfile() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Location
+                City
               </label>
               <input
                 type="text"
-                value={profile.location}
+                value={profile.location.city}
                 onChange={(e) =>
-                  setProfile({ ...profile, location: e.target.value })
+                  setProfile({
+                    ...profile,
+                    location: { ...profile.location, city: e.target.value },
+                  })
                 }
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                State
+              </label>
+              <input
+                type="text"
+                value={profile.location.state}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    location: { ...profile.location, state: e.target.value },
+                  })
+                }
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Country
+              </label>
+              <input
+                type="text"
+                value={profile.location.country}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    location: { ...profile.location, country: e.target.value },
+                  })
+                }
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+              />
+            </div>
+            <div className="flex flex-col justify-center mt-2">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={profile.location.isRemote}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      location: { ...profile.location, isRemote: e.target.checked },
+                    })
+                  }
+                  className="w-5 h-5 text-brand-600 bg-slate-50 border-slate-300 rounded focus:ring-brand-500"
+                />
+                <span className="text-sm font-medium text-slate-700">Open to Remote Work</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Min Salary
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={profile.salary.min}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    salary: { ...profile.salary, min: Number(e.target.value) },
+                  })
+                }
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Max Salary
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={profile.salary.max}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    salary: { ...profile.salary, max: Number(e.target.value) },
+                  })
+                }
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Currency
+              </label>
+              <select
+                value={profile.salary.currency}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    salary: { ...profile.salary, currency: e.target.value },
+                  })
+                }
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+              >
+                <option value="INR">INR</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Education
               </label>

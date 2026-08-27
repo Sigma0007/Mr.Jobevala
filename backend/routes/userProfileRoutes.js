@@ -1,21 +1,25 @@
 import express from "express";
-import { getUserProfile, updateUserProfile } from "../controllers/userProfileController.js";
+import { getAllUserProfile, getUserProfile, updateUserProfile } from "../controllers/userProfileController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
-// Apply protect middleware to all routes in this router
-router.use(protect);
+router.get(
+    "/get/all",
+    getAllUserProfile
+);
 
 router.get(
     "/",
+    protect,
     authorize("user", "admin"),
     getUserProfile
 );
 
 router.put(
     "/",
+    protect,
     authorize("user"),
     updateUserProfile
 );

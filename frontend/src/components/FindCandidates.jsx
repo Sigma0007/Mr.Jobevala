@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -12,66 +12,7 @@ import {
   Clock,
   ShieldCheck,
 } from "lucide-react";
-
-// Premium Dummy Data
-const candidates = [
-  {
-    id: 1,
-    name: "Alex Rivera",
-    role: "Senior Full-Stack Developer",
-    location: "San Francisco, CA (Remote)",
-    experience: "8 Years",
-    rate: "$120k - $150k",
-    rating: 4.9,
-    avatar:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=faces&q=80",
-    skills: ["React", "Node.js", "TypeScript", "AWS"],
-    available: true,
-    bio: "Ex-Google engineer specializing in scalable cloud architectures and high-performance React applications.",
-  },
-  {
-    id: 2,
-    name: "Sarah Chen",
-    role: "Lead Product Designer",
-    location: "New York, NY",
-    experience: "6 Years",
-    rate: "$110k - $140k",
-    rating: 5.0,
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=faces&q=80",
-    skills: ["Figma", "Design Systems", "UX Research", "Prototyping"],
-    available: false,
-    bio: "Obsessed with pixel-perfect designs and accessible user experiences. Built the core design system for a Series B fintech startup.",
-  },
-  {
-    id: 3,
-    name: "Marcus Johnson",
-    role: "DevOps Engineer",
-    location: "Austin, TX (Remote)",
-    experience: "5 Years",
-    rate: "$130k - $160k",
-    rating: 4.8,
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=faces&q=80",
-    skills: ["Kubernetes", "Docker", "CI/CD", "Terraform"],
-    available: true,
-    bio: "Infrastructure automation expert. Reduced deployment times by 70% at my previous company using advanced CI/CD pipelines.",
-  },
-  {
-    id: 4,
-    name: "Elena Rodriguez",
-    role: "Frontend Architect",
-    location: "London, UK",
-    experience: "10 Years",
-    rate: "$140k - $180k",
-    rating: 4.9,
-    avatar:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=faces&q=80",
-    skills: ["Vue.js", "Next.js", "Tailwind CSS", "WebGL"],
-    available: true,
-    bio: "Award-winning creative developer pushing the boundaries of what is possible on the modern web.",
-  },
-];
+import customerservice from "../customer/customerservice";
 
 // Framer Motion Variants
 const containerVariants = {
@@ -93,6 +34,22 @@ const itemVariants = {
 
 export default function FindCandidates() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [candidatesData, setCandidatesData] = useState([]);
+
+  const fetchCandidates = async () => {
+    try {
+      const response = await customerservice.getAllUserProfiles();
+      if (response.success) {
+        setCandidatesData(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching candidates:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCandidates();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -238,7 +195,7 @@ export default function FindCandidates() {
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
               <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider pl-2">
-                <span className="text-blue-600">{candidates.length}</span>{" "}
+                <span className="text-blue-600">{candidatesData.length}</span>{" "}
                 Candidates Available
               </h2>
               <div className="flex items-center gap-2 pr-2">
@@ -258,9 +215,9 @@ export default function FindCandidates() {
               className="space-y-5"
             >
               <AnimatePresence>
-                {candidates.map((candidate) => (
+                {candidatesData.map((candidate) => (
                   <motion.div
-                    key={candidate.id}
+                    key={candidate._id}
                     variants={itemVariants}
                     whileHover={{ y: -2 }}
                     className="group bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:border-blue-200 transition-all duration-300"
@@ -271,30 +228,24 @@ export default function FindCandidates() {
                         <div className="relative">
                           <div className="absolute inset-0 rounded-2xl bg-blue-500 blur opacity-20 group-hover:opacity-40 transition-opacity duration-300" />
                           <img
-                            src={candidate.avatar}
+                            src={
+                              candidate.profileImage ||
+                              "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=faces&q=80"
+                            }
                             alt={candidate.name}
                             className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-4 border-white shadow-sm"
                           />
-                          {candidate.available ? (
-                            <div className="absolute -bottom-2 -right-2 flex items-center justify-center w-8 h-8 bg-white rounded-full shadow-sm">
-                              <div
-                                className="w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"
-                                title="Available to hire"
-                              />
-                            </div>
-                          ) : (
-                            <div className="absolute -bottom-2 -right-2 flex items-center justify-center w-8 h-8 bg-white rounded-full shadow-sm">
-                              <Clock
-                                className="w-4 h-4 text-amber-500"
-                                title="Currently busy"
-                              />
-                            </div>
-                          )}
+                          <div className="absolute -bottom-2 -right-2 flex items-center justify-center w-8 h-8 bg-white rounded-full shadow-sm">
+                            <div
+                              className="w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"
+                              title="Available to hire"
+                            />
+                          </div>
                         </div>
 
                         <div className="flex items-center justify-center gap-1.5 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 shadow-sm w-full">
                           <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                          {candidate.rating}
+                          4.9
                         </div>
                       </div>
 
@@ -313,7 +264,7 @@ export default function FindCandidates() {
                                 />
                               </div>
                               <p className="text-blue-600 font-semibold text-sm sm:text-base mb-4">
-                                {candidate.role}
+                                {candidate.title}
                               </p>
                             </div>
 
@@ -340,14 +291,21 @@ export default function FindCandidates() {
                           <div className="flex flex-wrap items-center gap-y-2 gap-x-5 text-sm text-slate-500 mb-5">
                             <span className="flex items-center gap-1.5 font-medium">
                               <MapPin className="w-4 h-4 text-slate-400" />
-                              {candidate.location}
+                              {candidate.location?.city
+                                ? `${candidate.location.city}, ${candidate.location.state}`
+                                : "Location Not Specified"}
+                              {candidate.location?.isRemote ? " (Remote)" : ""}
                             </span>
                             <span className="flex items-center gap-1.5 font-medium">
                               <Briefcase className="w-4 h-4 text-slate-400" />
-                              {candidate.experience}
+                              {candidate.experience
+                                ? `${candidate.experience} Years`
+                                : "Fresher"}
                             </span>
                             <span className="flex items-center gap-1.5 font-semibold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200/60">
-                              {candidate.rate}
+                              {candidate.salary?.min
+                                ? `${candidate.salary.currency === "INR" ? "₹" : candidate.salary.currency || "$"}${candidate.salary.min} - ${candidate.salary.max}`
+                                : "Not Disclosed"}
                             </span>
                           </div>
                         </div>
@@ -355,12 +313,12 @@ export default function FindCandidates() {
                         {/* Bio & Skills */}
                         <div>
                           <p className="text-slate-600 text-sm leading-relaxed mb-5 max-w-3xl">
-                            {candidate.bio}
+                            {candidate.bio || "No bio available."}
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            {candidate.skills.map((skill) => (
+                            {candidate.skills?.map((skill, idx) => (
                               <span
-                                key={skill}
+                                key={idx}
                                 className="px-3 py-1.5 bg-blue-50/50 text-blue-700 border border-blue-100/50 rounded-lg text-xs font-semibold hover:border-blue-200 hover:bg-blue-50 transition-colors cursor-default"
                               >
                                 {skill}

@@ -19,6 +19,19 @@ export const getUserProfile = catchAsync(async (req, res, next) => {
     });
 });
 
+// @desc    Get all user profiles
+// @route   GET /api/userprofiles
+// @access  Public
+export const getAllUserProfile = catchAsync(async (req, res, next) => {
+    const profiles = await UserProfile.find();
+
+    res.status(200).json({
+        success: true,
+        data: profiles,
+    });
+});
+
+
 // @desc    Update current user profile
 // @route   PUT /api/userprofile
 // @access  Private
