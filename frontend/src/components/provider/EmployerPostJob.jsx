@@ -9,7 +9,6 @@ export default function EmployerPostJob() {
 
   const [formData, setFormData] = useState({
     title: "",
-    companyName: "",
     description: "",
     skills: "",
     jobType: "full-time",
@@ -41,7 +40,6 @@ export default function EmployerPostJob() {
 
       const payload = {
         title: formData.title,
-        companyName: formData.companyName,
         description: formData.description,
         skills: formData.skills
           .split(",")
@@ -107,19 +105,6 @@ export default function EmployerPostJob() {
               onChange={handleChange}
               required
               placeholder="React Developer"
-              className="w-full border rounded-xl px-4 py-3"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2">Company Name</label>
-
-            <input
-              name="companyName"
-              value={formData.companyName}
-              onChange={handleChange}
-              required
-              placeholder="Company Name"
               className="w-full border rounded-xl px-4 py-3"
             />
           </div>

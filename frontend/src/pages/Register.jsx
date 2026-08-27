@@ -131,7 +131,7 @@ export default function Register() {
               </select>
             </div>
 
-            {/* COMPANY */}
+            {/* COMPANY
             {formData.role === "provider" && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -148,7 +148,7 @@ export default function Register() {
                   placeholder="Enter company name"
                 />
               </div>
-            )}
+            )} */}
 
             {/* PHONE */}
             <div>

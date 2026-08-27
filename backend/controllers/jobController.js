@@ -1,3 +1,4 @@
+import CompanyProfile from "../models/CompanyProfile.js";
 import Job from "../models/Job.js";
 
 import AppError from "../utils/AppError.js";
@@ -7,7 +8,6 @@ import catchAsync from "../utils/catchAsync.js";
 export const createJob = catchAsync(async (req, res, next) => {
     const {
         title,
-        companyName,
         description,
         skills,
         jobType,
@@ -19,7 +19,7 @@ export const createJob = catchAsync(async (req, res, next) => {
         applicationDeadline,
     } = req.body;
 
-    if (!title || !companyName || !description || !location?.city) {
+    if (!title || !description || !location?.city) {
         return next(
             new AppError(
                 "Title, company name, description and city are required",
@@ -27,12 +27,21 @@ export const createJob = catchAsync(async (req, res, next) => {
             ),
         );
     }
+    const companyData = await CompanyProfile.findOne({ user: req.user.id });
+    if (!companyData) {
+        return next(
+            new AppError(
+                "Company profile not found",
+                404,
+            ),
+        );
+    }
 
     const job = await Job.create({
         provider: req.user._id,
+        companyProfileId: companyData?._id,
 
         title,
-        companyName,
         description,
         skills,
         jobType,
@@ -98,7 +107,6 @@ export const updateJob = catchAsync(async (req, res, next) => {
 
     const allowedFields = [
         "title",
-        "companyName",
         "description",
         "skills",
         "jobType",
