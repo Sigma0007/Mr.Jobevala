@@ -1,7 +1,13 @@
 import { motion } from "framer-motion";
 import { Briefcase, Users, UserCheck, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
+import customerservice from "../../customer/customerservice";
 
 export default function EmployerOverview() {
+  const [applicantsData, setApplicantsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const stats = [
     {
       title: "Active Job Postings",
@@ -13,52 +19,45 @@ export default function EmployerOverview() {
     {
       title: "Total Applications",
       value: "128",
-      change: "+24 today",
+      change: "+24 this week",
       icon: Users,
       color: "text-indigo-600 bg-indigo-50",
     },
     {
       title: "Candidates Hired",
       value: "12",
-      change: "+3 this month",
+      change: "+3 this week",
       icon: UserCheck,
       color: "text-emerald-600 bg-emerald-50",
     },
     {
       title: "Profile Views",
       value: "1,420",
-      change: "+18%",
+      change: "+18% this week",
       icon: TrendingUp,
       color: "text-brand-600 bg-brand-50",
     },
   ];
 
-  const recentApplicants = [
-    {
-      name: "Sarah Jenkins",
-      role: "Senior Frontend Engineer",
-      date: "2 hours ago",
-      status: "Reviewing",
-      image:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80",
-    },
-    {
-      name: "Michael Chang",
-      role: "Product Manager",
-      date: "5 hours ago",
-      status: "Shortlisted",
-      image:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80",
-    },
-    {
-      name: "Elena Rostova",
-      role: "UI/UX Designer",
-      date: "1 day ago",
-      status: "Interviewing",
-      image:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80",
-    },
-  ];
+  useEffect(() => {
+    async function loadApplicants() {
+      try {
+        setLoading(true);
+        const response = await customerservice.getProviderApplications();
+        if (response.success) {
+          setApplicantsData(response.data);
+        } else {
+          setError(response.message || "Failed to load applications");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Error loading applications");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadApplicants();
+  }, []);
 
   return (
     <motion.div
@@ -111,34 +110,49 @@ export default function EmployerOverview() {
           </span>
         </div>
         <div className="divide-y divide-slate-100">
-          {recentApplicants.map((app, i) => (
-            <div
-              key={i}
-              className="py-4 flex items-center justify-between first:pt-0 last:pb-0"
-            >
-              <div className="flex items-center gap-4">
-                <img
-                  src={app.image}
-                  alt={app.name}
-                  className="w-12 h-12 rounded-full object-cover border border-slate-100"
-                />
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900">
-                    {app.name}
-                  </h4>
-                  <p className="text-xs text-slate-500">{app.role}</p>
+          {loading ? (
+            <div className="py-8 text-center text-sm text-slate-500">
+              Loading applications...
+            </div>
+          ) : error ? (
+            <div className="py-8 text-center text-sm text-red-500">{error}</div>
+          ) : applicantsData.length === 0 ? (
+            <div className="py-8 text-center text-sm text-slate-500">
+              No applications found.
+            </div>
+          ) : (
+            applicantsData.map((app, i) => (
+              <div
+                key={app._id || i}
+                className="py-4 flex items-center justify-between first:pt-0 last:pb-0"
+              >
+                <div className="flex items-center gap-4">
+                  <img
+                    src={
+                      app.userProfile?.profileImage ||
+                      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80"
+                    }
+                    alt={app.userProfile?.name || "Applicant"}
+                    className="w-12 h-12 rounded-full object-cover border border-slate-100"
+                  />
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">
+                      {app.userProfile?.name}
+                    </h4>
+                    <p className="text-xs text-slate-500">{app.job?.title}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-xs font-medium px-3 py-1 bg-brand-50 text-brand-600 rounded-full capitalize">
+                    {app.status}
+                  </span>
+                  <span className="hidden sm:inline-block text-xs text-slate-400">
+                    {new Date(app.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-medium px-3 py-1 bg-brand-50 text-brand-600 rounded-full">
-                  {app.status}
-                </span>
-                <span className="hidden sm:inline-block text-xs text-slate-400">
-                  {app.date}
-                </span>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </motion.div>
