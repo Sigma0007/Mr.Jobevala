@@ -5,6 +5,7 @@ import authRoutes from "./routes/authRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import userProfileRoutes from "./routes/userProfileRoutes.js";
 import companyProfileRoutes from "./routes/companyProfileRoutes.js";
+import applicationRoutes from "./routes/applicationRoutes.js";
 
 import { errorHandler } from "./middleware/errorMiddleware.js";
 
@@ -34,6 +35,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/userprofile", userProfileRoutes);
 app.use("/api/companyprofile", companyProfileRoutes);
+app.use("/api/applications", applicationRoutes);
 
 app.use(errorHandler);
 

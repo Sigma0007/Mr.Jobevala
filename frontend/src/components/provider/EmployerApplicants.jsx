@@ -17,7 +17,8 @@ import {
   Clock,
   XCircle,
   ExternalLink,
-  Bookmark, // <-- Added Bookmark here
+  Bookmark,
+  Eye, // <-- Added Bookmark here
 } from "lucide-react";
 
 // Dummy Data - Replace with real API data
@@ -27,7 +28,7 @@ const initialApplicants = [
     name: "Sarah Jenkins",
     role: "Senior Frontend Engineer",
     appliedDate: "Oct 24, 2023",
-    status: "Reviewing",
+    status: "pending",
     avatar: "https://i.pravatar.cc/150?u=sarah",
     email: "sarah.j@example.com",
     phone: "+1 (555) 123-4567",
@@ -44,7 +45,7 @@ const initialApplicants = [
     name: "Michael Chang",
     role: "Product Manager",
     appliedDate: "Oct 23, 2023",
-    status: "Shortlisted",
+    status: "reviewed",
     avatar: "https://i.pravatar.cc/150?u=michael",
     email: "m.chang@example.com",
     phone: "+1 (555) 987-6543",
@@ -61,7 +62,7 @@ const initialApplicants = [
     name: "Elena Rostova",
     role: "UI/UX Designer",
     appliedDate: "Oct 21, 2023",
-    status: "Interviewing",
+    status: "interview",
     avatar: "https://i.pravatar.cc/150?u=elena",
     email: "elena.design@example.com",
     phone: "+44 7700 900077",
@@ -76,20 +77,36 @@ const initialApplicants = [
 ];
 
 const statusConfig = {
-  Reviewing: { color: "bg-blue-50 text-blue-600 border-blue-100", icon: Clock },
-  Shortlisted: {
-    color: "bg-purple-50 text-purple-600 border-purple-100",
-    icon: Bookmark,
+  pending: {
+    color: "bg-blue-50 text-blue-600 border-blue-100",
+    icon: Clock,
+    name: "Pending",
   },
-  Interviewing: {
+  reviewed: {
+    color: "bg-purple-50 text-purple-600 border-purple-100",
+    icon: Eye,
+    name: "Reviewed",
+  },
+  shortlisted: {
+    color: "bg-yellow-50 text-yellow-600 border-yellow-100",
+    icon: Bookmark,
+    name: "Shortlisted",
+  },
+  interview: {
     color: "bg-amber-50 text-amber-600 border-amber-100",
     icon: Calendar,
+    name: "Interview",
   },
-  Hired: {
+  hired: {
     color: "bg-emerald-50 text-emerald-600 border-emerald-100",
     icon: CheckCircle2,
+    name: "Hired",
   },
-  Rejected: { color: "bg-red-50 text-red-600 border-red-100", icon: XCircle },
+  Rejected: {
+    color: "bg-red-50 text-red-600 border-red-100",
+    icon: XCircle,
+    name: "Rejected",
+  },
 };
 
 export default function EmployerApplicants() {
@@ -147,6 +164,7 @@ export default function EmployerApplicants() {
       <div className="grid grid-cols-1 gap-4">
         {filteredApplicants.map((applicant) => {
           const StatusIcon = statusConfig[applicant.status].icon;
+          const StatusText = statusConfig[applicant.status].name;
           return (
             <motion.div
               key={applicant.id}
@@ -182,7 +200,7 @@ export default function EmployerApplicants() {
                   }`}
                 >
                   <StatusIcon className="w-3.5 h-3.5" />
-                  {applicant.status}
+                  {StatusText}
                 </span>
                 <button className="text-brand-600 font-medium text-sm hover:text-brand-700 px-4 py-2 bg-brand-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
                   View Profile

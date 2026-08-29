@@ -101,6 +101,26 @@ const removeSavedJob = (id) => {
   return Auth(endpoint, {}, "DELETE");
 };
 
+const createApplication = (data = {}) => {
+  const endpoint = `/applications`;
+  return Auth(endpoint, data, "POST");
+};
+
+const getMyApplications = () => {
+  const endpoint = `/applications/my-applications`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getJobApplications = (id) => {
+  const endpoint = `/applications/job/${id}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const updateApplicationStatus = (id, data = {}) => {
+  const endpoint = `/applications/${id}/status`;
+  return Auth(endpoint, data, "PATCH");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -123,4 +143,8 @@ export default {
   saveJob,
   getSavedJobs,
   removeSavedJob,
+  createApplication,
+  getMyApplications,
+  getJobApplications,
+  updateApplicationStatus,
 };

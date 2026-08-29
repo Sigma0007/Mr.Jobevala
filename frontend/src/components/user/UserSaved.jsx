@@ -1,9 +1,19 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Bookmark, MapPin, DollarSign, Loader2, X, Building2, Briefcase, CheckCircle } from "lucide-react";
+import {
+  Bookmark,
+  MapPin,
+  DollarSign,
+  Loader2,
+  X,
+  Building2,
+  Briefcase,
+  CheckCircle,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import React, { useState, useEffect } from "react";
 import customerservice from "../../customer/customerservice";
 import { useNavigate } from "react-router-dom";
+import ApplyJobModal from "../Modals/ApplyJobModal";
 
 const RequirementItem = ({ text }) => (
   <motion.li
@@ -20,6 +30,7 @@ export default function UserSaved() {
   const [savedJobs, setSavedJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,6 +66,22 @@ export default function UserSaved() {
     } catch (error) {
       console.error("Error removing saved job:", error);
       toast.error("An error occurred");
+    }
+  };
+
+  const handleApplySubmit = async (formData) => {
+    try {
+      const response = await customerservice.createApplication(formData);
+      if (response.success) {
+        toast.success("Application Submitted Successfully! 🎉");
+        setIsApplyModalOpen(false);
+        setSelectedJob(null);
+      } else {
+        toast.error(response?.message);
+      }
+    } catch (error) {
+      console.error("Error applying for job:", error);
+      toast.error("An error occurred while applying for job");
     }
   };
 
@@ -110,7 +137,7 @@ export default function UserSaved() {
                     src={
                       job.companyProfileId?.logo ||
                       `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        job.companyProfileId?.companyName || "C"
+                        job.companyProfileId?.companyName || "C",
                       )}&background=random`
                     }
                     alt={job.companyProfileId?.companyName || "Company"}
@@ -135,7 +162,7 @@ export default function UserSaved() {
                     </span>
                   </div>
                   <div className="mt-auto">
-                    <button 
+                    <button
                       onClick={() => setSelectedJob(job)}
                       className="w-full py-2.5 bg-brand-600 text-white rounded-xl text-sm font-medium hover:bg-brand-700 transition-colors"
                     >
@@ -259,10 +286,7 @@ export default function UserSaved() {
                   Unsave
                 </button>
                 <button
-                  onClick={() => {
-                    toast.success("Application Submitted Successfully! 🎉");
-                    setSelectedJob(null);
-                  }}
+                  onClick={() => setIsApplyModalOpen(true)}
                   className="w-full sm:w-auto flex-1 bg-brand-600 text-white py-3 sm:py-3.5 rounded-xl font-bold shadow-[0_4px_20px_0_rgb(37,99,235,0.3)] hover:bg-brand-700 hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm transition-all text-center text-sm sm:text-[15px]"
                 >
                   Apply Now
@@ -272,6 +296,13 @@ export default function UserSaved() {
           </div>
         )}
       </AnimatePresence>
+
+      <ApplyJobModal
+        isOpen={isApplyModalOpen}
+        onClose={() => setIsApplyModalOpen(false)}
+        job={selectedJob}
+        onSubmit={handleApplySubmit}
+      />
 
       <style
         dangerouslySetInnerHTML={{

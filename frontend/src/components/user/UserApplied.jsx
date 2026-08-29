@@ -7,71 +7,78 @@ import {
   XCircle,
   Users,
 } from "lucide-react";
+import customerservice from "../../customer/customerservice";
+import toast from "react-hot-toast";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function UserApplied() {
-  const applications = [
-    {
-      id: 1,
-      role: "Senior React Developer",
-      company: "TechFlow",
-      date: "Aug 4, 2026",
-      status: "Interviewing",
-      logo: "https://images.unsplash.com/photo-1549924293-3b909efef92d?w=150&q=80",
-    },
-    {
-      id: 2,
-      role: "Frontend Architect",
-      company: "Nexus API",
-      date: "Aug 1, 2026",
-      status: "Approved",
-      logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=150&q=80",
-    },
-    {
-      id: 3,
-      role: "UI/UX Developer",
-      company: "Studio Creative",
-      date: "Jul 28, 2026",
-      status: "Pending",
-      logo: "https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=150&q=80",
-    },
-    {
-      id: 4,
-      role: "Fullstack Engineer",
-      company: "GlobalData",
-      date: "Jul 20, 2026",
-      status: "Rejected",
-      logo: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=150&q=80",
-    },
-  ];
+  const [appliedJobs, setAppliedJobs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const navigate = useNavigate();
 
   const getStatusBadge = (status) => {
-    switch (status) {
-      case "Interviewing":
-        return (
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full">
-            <Users className="w-3.5 h-3.5" /> Interviewing
-          </span>
-        );
-      case "Approved":
-        return (
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 text-xs font-semibold rounded-full">
-            <CheckCircle className="w-3.5 h-3.5" /> Approved
-          </span>
-        );
-      case "Pending":
+    switch (status?.toLowerCase()) {
+      case "pending":
         return (
           <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 text-xs font-semibold rounded-full">
             <Clock className="w-3.5 h-3.5" /> Pending
           </span>
         );
-      case "Rejected":
+      case "reviewed":
+        return (
+          <span className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-semibold rounded-full">
+            <CheckCircle className="w-3.5 h-3.5" /> Reviewed
+          </span>
+        );
+      case "shortlisted":
+        return (
+          <span className="flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-600 text-xs font-semibold rounded-full">
+            <CheckCircle className="w-3.5 h-3.5" /> Shortlisted
+          </span>
+        );
+      case "interview":
+        return (
+          <span className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full">
+            <Users className="w-3.5 h-3.5" /> Interview
+          </span>
+        );
+      case "rejected":
         return (
           <span className="flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 text-xs font-semibold rounded-full">
             <XCircle className="w-3.5 h-3.5" /> Rejected
           </span>
         );
+      case "hired":
+        return (
+          <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 text-xs font-semibold rounded-full">
+            <CheckCircle className="w-3.5 h-3.5" /> Hired
+          </span>
+        );
       default:
         return null;
+    }
+  };
+
+  useEffect(() => {
+    fetchAppliedJobs();
+  }, []);
+
+  const fetchAppliedJobs = async () => {
+    setIsLoading(true);
+    try {
+      const response = await customerservice.getMyApplications();
+      if (response.success) {
+        setAppliedJobs(response.data);
+      } else {
+        toast.error("Failed to load applied jobs");
+      }
+    } catch (error) {
+      console.error("Error fetching applied jobs:", error);
+      toast.error("An error occurred while fetching applied jobs");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -92,36 +99,52 @@ export default function UserApplied() {
       </div>
 
       <div className="space-y-4">
-        {applications.map((app) => (
-          <div
-            key={app.id}
-            className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-slate-100 rounded-2xl hover:border-brand-100 transition-colors bg-white"
-          >
-            <div className="flex items-center gap-4">
-              <img
-                src={app.logo}
-                alt={app.company}
-                className="w-12 h-12 rounded-xl object-cover border border-slate-100"
-              />
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  {app.role}
-                </h3>
-                <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 font-medium">
-                  <span className="flex items-center gap-1">
-                    <Building2 className="w-3.5 h-3.5" /> {app.company}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" /> Applied: {app.date}
-                  </span>
+        {isLoading ? (
+          <p className="text-slate-500 text-sm">Loading applications...</p>
+        ) : appliedJobs.length === 0 ? (
+          <p className="text-slate-500 text-sm">No applications found.</p>
+        ) : (
+          appliedJobs.map((app) => (
+            <div
+              key={app._id}
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-slate-100 rounded-2xl hover:border-brand-100 transition-colors bg-white"
+            >
+              <div className="flex items-center gap-4">
+                <img
+                  src={
+                    app.job?.companyProfileId?.logo ||
+                    "https://images.unsplash.com/photo-1549924293-3b909efef92d?w=150&q=80"
+                  }
+                  alt={app.job?.companyProfileId?.companyName || "Company Logo"}
+                  className="w-12 h-12 rounded-xl object-cover border border-slate-100"
+                />
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    {app.job?.title}
+                  </h3>
+                  <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 font-medium">
+                    <span className="flex items-center gap-1">
+                      <Building2 className="w-3.5 h-3.5" />{" "}
+                      {app.job?.companyProfileId?.companyName ||
+                        "Unknown Company"}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" /> Applied:{" "}
+                      {new Date(app.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
                 </div>
               </div>
+              <div className="mt-4 sm:mt-0 flex items-center justify-end">
+                {getStatusBadge(app.status)}
+              </div>
             </div>
-            <div className="mt-4 sm:mt-0 flex items-center justify-end">
-              {getStatusBadge(app.status)}
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </motion.div>
   );

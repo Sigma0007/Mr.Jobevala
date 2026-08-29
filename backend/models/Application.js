@@ -15,12 +15,54 @@ const applicationSchema =
                 required: true,
             },
 
+            userProfile: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "UserProfile",
+                required: true,
+            },
+
+            provider: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                required: true,
+            },
+
             coverLetter: {
                 type: String,
                 default: "",
             },
 
-            resume: {
+            location: {
+                type: String,
+                default: "",
+            },
+
+            totalExperience: {
+                type: Number,
+                default: 0,
+            },
+
+            noticePeriod: {
+                type: String,
+                default: "",
+            },
+
+            currentCTC: {
+                type: String,
+                default: "",
+            },
+
+            expectedCTC: {
+                type: Number,
+                default: 0,
+            },
+
+            currentCompany: {
+                type: String,
+                default: "",
+            },
+
+            currentRole: {
                 type: String,
                 default: "",
             },
@@ -32,8 +74,9 @@ const applicationSchema =
                     "pending",
                     "reviewed",
                     "shortlisted",
+                    "interview",
                     "rejected",
-                    "accepted",
+                    "hired",
                 ],
 
                 default: "pending",
