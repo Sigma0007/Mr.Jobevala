@@ -1,5 +1,6 @@
 import CompanyProfile from "../models/CompanyProfile.js";
 import Job from "../models/Job.js";
+import SavedJob from "../models/SavedJob.js";
 
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
@@ -189,5 +190,73 @@ export const updateJobStatus = catchAsync(async (req, res, next) => {
         success: true,
         message: `Job ${status} successfully`,
         data: job,
+    });
+});
+
+// SAVE JOB
+export const saveJob = catchAsync(async (req, res, next) => {
+    const job = await Job.findById(req.params.id);
+
+    if (!job) {
+        return next(new AppError("Job not found", 404));
+    }
+
+    const alreadySaved = await SavedJob.findOne({
+        user: req.user._id,
+        job: req.params.id,
+    });
+
+    if (alreadySaved) {
+        return next(new AppError("Job already saved", 200));
+    }
+
+    const savedJob = await SavedJob.create({
+        user: req.user._id,
+        job: req.params.id,
+    });
+
+    res.status(201).json({
+        success: true,
+        message: "Job saved successfully",
+        data: savedJob,
+    });
+});
+
+// GET SAVED JOBS
+export const getSavedJobs = catchAsync(async (req, res) => {
+    const savedJobs = await SavedJob.find({
+        user: req.user._id,
+    }).populate({
+        path: "job",
+        populate: {
+            path: "companyProfileId"
+        }
+    }).sort({
+        createdAt: -1,
+    });
+
+    res.status(200).json({
+        success: true,
+        total: savedJobs.length,
+        data: savedJobs,
+    });
+});
+
+// REMOVE SAVED JOB
+export const removeSavedJob = catchAsync(async (req, res, next) => {
+    const savedJob = await SavedJob.findOne({
+        job: req.params.id,
+        user: req.user._id,
+    });
+
+    if (!savedJob) {
+        return next(new AppError("Saved job not found", 404));
+    }
+
+    await savedJob.deleteOne();
+
+    res.status(200).json({
+        success: true,
+        message: "Saved job removed successfully",
     });
 });

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   MapPin,
@@ -11,6 +12,7 @@ import {
   CheckCircle,
   Building2,
   ChevronDown,
+  Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import customerservice from "../customer/customerservice";
@@ -43,8 +45,36 @@ const RequirementItem = ({ text }) => (
 );
 
 export default function FindJobs() {
+  const navigate = useNavigate();
   const [selectedJob, setSelectedJob] = useState(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [isSavingJob, setIsSavingJob] = useState(false);
+
+  const handleSaveJob = async (jobId) => {
+    if (!jobId) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login to save jobs");
+      navigate("/login");
+      return;
+    }
+
+    setIsSavingJob(true);
+    try {
+      const response = await customerservice.saveJob(jobId);
+      if (response.success) {
+        toast.success("Saved to your shortlist!", { icon: "🔖" });
+      } else {
+        toast.error(response.message || "Failed to save job");
+      }
+    } catch (error) {
+      toast.error("Failed to save job");
+      console.error("Error saving job:", error);
+    } finally {
+      setIsSavingJob(false);
+    }
+  };
 
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
@@ -562,12 +592,18 @@ export default function FindJobs() {
               {/* Modal Footer - Fixed shrink issue */}
               <div className="shrink-0 p-4 sm:p-6 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
                 <button
-                  onClick={() => {
-                    toast.success("Saved to your shortlist!", { icon: "🔖" });
-                  }}
-                  className="w-full sm:w-auto px-6 py-3 sm:py-3.5 bg-white border-2 border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all text-center text-sm sm:text-base"
+                  onClick={() => handleSaveJob(selectedJob._id)}
+                  disabled={isSavingJob}
+                  className="w-full sm:w-auto px-6 py-3 sm:py-3.5 bg-white border-2 border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all text-center text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Save for later
+                  {isSavingJob ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save for later"
+                  )}
                 </button>
                 <button
                   onClick={() => {

@@ -8,6 +8,9 @@ import {
     deleteJob,
     updateJobStatus,
     getAllJobs,
+    saveJob,
+    getSavedJobs,
+    removeSavedJob,
 } from "../controllers/jobController.js";
 
 import {
@@ -23,6 +26,27 @@ const router = express.Router();
 router.get(
     "/getAllJobs",
     getAllJobs
+);
+
+router.get(
+    "/saved",
+    protect,
+    authorize("user"),
+    getSavedJobs
+);
+
+router.post(
+    "/:id/save",
+    protect,
+    authorize("user"),
+    saveJob
+);
+
+router.delete(
+    "/saved/:id",
+    protect,
+    authorize("user"),
+    removeSavedJob
 );
 
 router.post(

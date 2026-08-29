@@ -86,6 +86,21 @@ const getAllUserProfiles = () => {
   return Auth(endpoint, {}, "GET");
 };
 
+const saveJob = (id) => {
+  const endpoint = `/jobs/${id}/save`;
+  return Auth(endpoint, {}, "POST");
+};
+
+const getSavedJobs = () => {
+  const endpoint = `/jobs/saved`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const removeSavedJob = (id) => {
+  const endpoint = `/jobs/saved/${id}`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -105,4 +120,7 @@ export default {
   updateCompanyProfile,
   getAllJobs,
   getAllUserProfiles,
+  saveJob,
+  getSavedJobs,
+  removeSavedJob,
 };
