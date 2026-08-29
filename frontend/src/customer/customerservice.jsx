@@ -126,6 +126,11 @@ const getProviderApplications = () => {
   return Auth(endpoint, {}, "GET");
 };
 
+const getProviderStats = () => {
+  const endpoint = `/jobs/provider-state-overview`;
+  return Auth(endpoint, {}, "GET");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -153,4 +158,5 @@ export default {
   getJobApplications,
   updateApplicationStatus,
   getProviderApplications,
+  getProviderStats,
 };

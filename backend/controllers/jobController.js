@@ -1,6 +1,7 @@
 import CompanyProfile from "../models/CompanyProfile.js";
 import Job from "../models/Job.js";
 import SavedJob from "../models/SavedJob.js";
+import Application from "../models/Application.js";
 
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
@@ -258,5 +259,66 @@ export const removeSavedJob = catchAsync(async (req, res, next) => {
     res.status(200).json({
         success: true,
         message: "Saved job removed successfully",
+    });
+});
+
+// GET PROVIDER STATS
+export const getProviderStats = catchAsync(async (req, res) => {
+    const providerId = req.user._id;
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    // 1. Active Job Postings
+    const activeJobsCount = await Job.countDocuments({
+        provider: providerId,
+        status: "active"
+    });
+    const activeJobsThisWeek = await Job.countDocuments({
+        provider: providerId,
+        status: "active",
+        createdAt: { $gte: oneWeekAgo }
+    });
+
+    // 2. Total Applications
+    const totalApplicationsCount = await Application.countDocuments({
+        provider: providerId
+    });
+    const applicationsThisWeek = await Application.countDocuments({
+        provider: providerId,
+        createdAt: { $gte: oneWeekAgo }
+    });
+
+    // 3. Candidates Hired
+    const hiredCount = await Application.countDocuments({
+        provider: providerId,
+        status: "hired"
+    });
+    const hiredThisWeek = await Application.countDocuments({
+        provider: providerId,
+        status: "hired",
+        updatedAt: { $gte: oneWeekAgo }
+    });
+
+    const stats = [
+        {
+            id: 'activeJobs',
+            value: activeJobsCount.toString(),
+            change: activeJobsThisWeek,
+        },
+        {
+            id: 'totalApplications',
+            value: totalApplicationsCount.toString(),
+            change: applicationsThisWeek,
+        },
+        {
+            id: "hiredCandidates",
+            value: hiredCount.toString(),
+            change: hiredThisWeek,
+        },
+    ];
+
+    res.status(200).json({
+        success: true,
+        data: stats,
     });
 });

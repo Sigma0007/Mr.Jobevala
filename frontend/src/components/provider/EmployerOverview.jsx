@@ -7,37 +7,40 @@ export default function EmployerOverview() {
   const [applicantsData, setApplicantsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const stats = [
+  const [stats, setStats] = useState([
     {
+      id: "activeJobs",
       title: "Active Job Postings",
-      value: "4",
-      change: "+1 this week",
+      value: "0",
+      change: "0",
       icon: Briefcase,
       color: "text-blue-600 bg-blue-50",
     },
     {
+      id: "totalApplications",
       title: "Total Applications",
-      value: "128",
-      change: "+24 this week",
+      value: "0",
+      change: "0",
       icon: Users,
       color: "text-indigo-600 bg-indigo-50",
     },
     {
+      id: "hiredCandidates",
       title: "Candidates Hired",
-      value: "12",
-      change: "+3 this week",
+      value: "0",
+      change: "0",
       icon: UserCheck,
       color: "text-emerald-600 bg-emerald-50",
     },
     {
+      id: "profileViews",
       title: "Profile Views",
       value: "1,420",
-      change: "+18% this week",
+      change: "18%",
       icon: TrendingUp,
       color: "text-brand-600 bg-brand-50",
     },
-  ];
+  ]);
 
   useEffect(() => {
     async function loadApplicants() {
@@ -56,7 +59,33 @@ export default function EmployerOverview() {
         setLoading(false);
       }
     }
+
+    async function loadStats() {
+      try {
+        const response = await customerservice.getProviderStats();
+        if (response.success) {
+          const fetchedStats = response.data;
+          setStats((prevStats) =>
+            prevStats.map((stat) => {
+              const fetchedStat = fetchedStats.find((s) => s.id === stat.id);
+              if (fetchedStat) {
+                return {
+                  ...stat,
+                  value: fetchedStat.value,
+                  change: fetchedStat.change,
+                };
+              }
+              return stat;
+            }),
+          );
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
     loadApplicants();
+    loadStats();
   }, []);
 
   return (
@@ -88,7 +117,7 @@ export default function EmployerOverview() {
                   <Icon className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
-                  {stat.change}
+                  +{stat.change} this week
                 </span>
               </div>
               <h3 className="text-2xl font-bold text-slate-900 tracking-tight">

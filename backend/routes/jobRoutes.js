@@ -11,6 +11,7 @@ import {
     saveJob,
     getSavedJobs,
     removeSavedJob,
+    getProviderStats,
 } from "../controllers/jobController.js";
 
 import {
@@ -61,6 +62,13 @@ router.get(
     protect,
     authorize("provider"),
     getMyJobs
+);
+
+router.get(
+    "/provider-state-overview",
+    protect,
+    authorize("provider"),
+    getProviderStats
 );
 
 router.get(
