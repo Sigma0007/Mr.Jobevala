@@ -12,3 +12,16 @@ export const clearSelectedJob = () => {
         type: ActionTypes.CLEAR_SELECTED_JOB
     };
 };
+
+export const setJobApplications = (applications) => {
+    return {
+        type: ActionTypes.SET_JOB_APPLICATIONS,
+        payload: applications
+    };
+};
+
+export const clearJobApplications = () => {
+    return {
+        type: ActionTypes.CLEAR_JOB_APPLICATIONS
+    };
+};

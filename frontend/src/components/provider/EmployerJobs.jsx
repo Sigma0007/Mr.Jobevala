@@ -275,13 +275,16 @@ export default function EmployerJobs({ setActiveTab }) {
                   )}
                 </div>
 
-                <Link
-                  to={`/provider/jobs/${job._id}/applications`}
+                <button
+                  onClick={() => {
+                    dispatch(setSelectedJob(job));
+                    navigate(`/provider/jobs/${job._id}/applications`);
+                  }}
                   className="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-brand-700 transition-colors flex items-center gap-2"
                 >
                   <Eye size={16} />
                   View Applications
-                </Link>
+                </button>
               </div>
             </div>
           ))}

@@ -16,6 +16,7 @@ import AdminDashboard from "./components/admin/AdminDashboard";
 import EmployerDashboard from "./components/provider/EmployerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Register from "./pages/Register";
+import JobApplications from "./components/provider/JobApplications";
 
 export default function App() {
   return (
@@ -90,6 +91,15 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["provider"]}>
                 <EmployerDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/provider/jobs/:id/applications"
+            element={
+              <ProtectedRoute allowedRoles={["provider"]}>
+                <JobApplications />
               </ProtectedRoute>
             }
           />

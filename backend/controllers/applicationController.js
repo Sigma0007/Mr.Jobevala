@@ -130,7 +130,7 @@ export const updateApplicationStatus = async (req, res, next) => {
             return res.status(403).json({ success: false, message: "Not authorized to update this application" });
         }
 
-        const validStatuses = ["pending", "reviewed", "shortlisted", "rejected", "accepted"];
+        const validStatuses = ["pending", "reviewed", "shortlisted", "rejected", "interview", "hired"];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({ success: false, message: "Invalid status value" });
         }
