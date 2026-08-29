@@ -5,6 +5,7 @@ import {
     getUserApplications,
     getJobApplications,
     updateApplicationStatus,
+    getProviderApplications,
 } from "../controllers/applicationController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -41,5 +42,11 @@ router.patch(
     authorize("provider"),
     updateApplicationStatus
 );
+
+router.get(
+    "/provider-applications",
+    protect,
+    authorize("provider"),
+    getProviderApplications)
 
 export default router;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
@@ -19,62 +19,10 @@ import {
   ExternalLink,
   Bookmark,
   Eye, // <-- Added Bookmark here
+  Loader2,
 } from "lucide-react";
-
-// Dummy Data - Replace with real API data
-const initialApplicants = [
-  {
-    id: 1,
-    name: "Sarah Jenkins",
-    role: "Senior Frontend Engineer",
-    appliedDate: "Oct 24, 2023",
-    status: "pending",
-    avatar: "https://i.pravatar.cc/150?u=sarah",
-    email: "sarah.j@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    experience: "6 Years",
-    education: "B.S. Computer Science, UC Berkeley",
-    skills: ["React", "TypeScript", "Next.js", "Framer Motion", "Tailwind CSS"],
-    about:
-      "Passionate UI engineer with a track record of building high-performance, accessible web applications. Led frontend architecture at my previous startup, improving rendering performance by 40%.",
-    portfolio: "sarahjenkins.dev",
-  },
-  {
-    id: 2,
-    name: "Michael Chang",
-    role: "Product Manager",
-    appliedDate: "Oct 23, 2023",
-    status: "reviewed",
-    avatar: "https://i.pravatar.cc/150?u=michael",
-    email: "m.chang@example.com",
-    phone: "+1 (555) 987-6543",
-    location: "New York, NY",
-    experience: "8 Years",
-    education: "MBA, Stern School of Business",
-    skills: ["Agile", "Jira", "User Research", "Data Analytics", "Roadmapping"],
-    about:
-      "Data-driven Product Manager with experience scaling SaaS products from $1M to $10M ARR. Adept at cross-functional leadership and translating user needs into technical specs.",
-    portfolio: "linkedin.com/in/mchang",
-  },
-  {
-    id: 3,
-    name: "Elena Rostova",
-    role: "UI/UX Designer",
-    appliedDate: "Oct 21, 2023",
-    status: "interview",
-    avatar: "https://i.pravatar.cc/150?u=elena",
-    email: "elena.design@example.com",
-    phone: "+44 7700 900077",
-    location: "London, UK (Remote)",
-    experience: "4 Years",
-    education: "B.A. Graphic Design, Central Saint Martins",
-    skills: ["Figma", "Prototyping", "Wireframing", "User Testing", "CSS"],
-    about:
-      "Detail-oriented designer obsessed with creating intuitive, pixel-perfect user experiences. Strong background in design systems and accessibility standards.",
-    portfolio: "dribbble.com/elenar",
-  },
-];
+import customerservice from "../../customer/customerservice";
+import toast from "react-hot-toast";
 
 const statusConfig = {
   pending: {
@@ -102,7 +50,7 @@ const statusConfig = {
     icon: CheckCircle2,
     name: "Hired",
   },
-  Rejected: {
+  rejected: {
     color: "bg-red-50 text-red-600 border-red-100",
     icon: XCircle,
     name: "Rejected",
@@ -110,24 +58,69 @@ const statusConfig = {
 };
 
 export default function EmployerApplicants() {
-  const [applicants, setApplicants] = useState(initialApplicants);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedApplicant, setSelectedApplicant] = useState(null);
+  const [applicantsData, setApplicantsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(null);
 
-  const filteredApplicants = applicants.filter(
-    (app) =>
-      app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.role.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredApplicants = applicantsData.filter((app) => {
+    const nameMatch = app.userProfile?.name
+      ?.toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const roleMatch = app.job?.title
+      ?.toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    return nameMatch || roleMatch;
+  });
 
-  const handleStatusChange = (id, newStatus) => {
-    setApplicants((prev) =>
-      prev.map((app) => (app.id === id ? { ...app, status: newStatus } : app)),
-    );
-    if (selectedApplicant && selectedApplicant.id === id) {
-      setSelectedApplicant({ ...selectedApplicant, status: newStatus });
+  const handleStatusChange = async (id, newStatus) => {
+    setUpdatingStatus(newStatus);
+    try {
+      const response = await customerservice.updateApplicationStatus(id, {
+        status: newStatus,
+      });
+      if (response.success) {
+        toast.success("Application status updated successfully");
+        setApplicantsData((prev) =>
+          prev.map((app) =>
+            app._id === id ? { ...app, status: newStatus } : app,
+          ),
+        );
+        if (selectedApplicant && selectedApplicant._id === id) {
+          setSelectedApplicant({ ...selectedApplicant, status: newStatus });
+        }
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      toast.error("Error updating application status");
+    } finally {
+      setUpdatingStatus(null);
     }
   };
+
+  useEffect(() => {
+    async function loadApplicants() {
+      try {
+        setLoading(true);
+        const response = await customerservice.getProviderApplications();
+        if (response.success) {
+          setApplicantsData(response.data);
+        } else {
+          setError(response.message || "Failed to load applications");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Error loading applications");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadApplicants();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -162,54 +155,74 @@ export default function EmployerApplicants() {
 
       {/* Applicant List Grid */}
       <div className="grid grid-cols-1 gap-4">
-        {filteredApplicants.map((applicant) => {
-          const StatusIcon = statusConfig[applicant.status].icon;
-          const StatusText = statusConfig[applicant.status].name;
-          return (
-            <motion.div
-              key={applicant.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              onClick={() => setSelectedApplicant(applicant)}
-              className="group bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-brand-100 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-4">
-                <img
-                  src={applicant.avatar}
-                  alt={applicant.name}
-                  className="w-14 h-14 rounded-full object-cover border border-slate-100"
-                />
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
-                    {applicant.name}
-                  </h3>
-                  <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
-                    <span className="font-medium text-slate-700">
-                      {applicant.role}
-                    </span>
-                    <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                    <span>Applied {applicant.appliedDate}</span>
+        {loading ? (
+          <div className="text-center py-12 bg-white rounded-3xl border border-slate-100">
+            <p className="text-slate-500">Loading applicants...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12 bg-white rounded-3xl border border-slate-100">
+            <p className="text-red-500">{error}</p>
+          </div>
+        ) : (
+          filteredApplicants.map((applicant) => {
+            const statusKey = (applicant.status || "pending").toLowerCase();
+            const StatusIcon =
+              statusConfig[statusKey]?.icon || statusConfig.pending.icon;
+            const StatusText =
+              statusConfig[statusKey]?.name || applicant.status;
+            return (
+              <motion.div
+                key={applicant._id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={() => setSelectedApplicant(applicant)}
+                className="group bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-brand-100 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4"
+              >
+                <div className="flex items-center gap-4">
+                  <img
+                    src={
+                      applicant.userProfile?.profileImage ||
+                      "https://via.placeholder.com/150"
+                    }
+                    alt={applicant.userProfile?.name || "Applicant"}
+                    className="w-14 h-14 rounded-full object-cover border border-slate-100"
+                  />
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
+                      {applicant.userProfile?.name || "Unknown Applicant"}
+                    </h3>
+                    <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
+                      <span className="font-medium text-slate-700">
+                        {applicant.job?.title || "Unknown Role"}
+                      </span>
+                      <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                      <span>
+                        Applied{" "}
+                        {new Date(applicant.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-4 md:ml-auto">
-                <span
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-                    statusConfig[applicant.status].color
-                  }`}
-                >
-                  <StatusIcon className="w-3.5 h-3.5" />
-                  {StatusText}
-                </span>
-                <button className="text-brand-600 font-medium text-sm hover:text-brand-700 px-4 py-2 bg-brand-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
-                  View Profile
-                </button>
-              </div>
-            </motion.div>
-          );
-        })}
-        {filteredApplicants.length === 0 && (
+                <div className="flex items-center gap-4 md:ml-auto">
+                  <span
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                      statusConfig[statusKey]?.color ||
+                      statusConfig.pending.color
+                    }`}
+                  >
+                    <StatusIcon className="w-3.5 h-3.5" />
+                    {StatusText}
+                  </span>
+                  <button className="text-brand-600 font-medium text-sm hover:text-brand-700 px-4 py-2 bg-brand-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
+                    View Profile
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })
+        )}
+        {!loading && filteredApplicants.length === 0 && (
           <div className="text-center py-12 bg-white rounded-3xl border border-slate-100">
             <p className="text-slate-500">
               No applicants found matching your search.
@@ -239,25 +252,31 @@ export default function EmployerApplicants() {
               <div className="flex-shrink-0 border-b border-slate-100 bg-white px-8 py-6 flex items-start justify-between sticky top-0 z-10">
                 <div className="flex items-center gap-5">
                   <img
-                    src={selectedApplicant.avatar}
-                    alt={selectedApplicant.name}
+                    src={
+                      selectedApplicant.userProfile?.profileImage ||
+                      "https://via.placeholder.com/150"
+                    }
+                    alt={selectedApplicant.userProfile?.name || "Applicant"}
                     className="w-20 h-20 rounded-full object-cover border-4 border-slate-50 shadow-sm"
                   />
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900">
-                      {selectedApplicant.name}
+                      {selectedApplicant.userProfile?.name ||
+                        "Unknown Applicant"}
                     </h2>
                     <p className="text-brand-600 font-medium mt-1">
-                      {selectedApplicant.role}
+                      {selectedApplicant.job?.title || "Unknown Role"}
                     </p>
                     <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
                       <span className="flex items-center gap-1.5">
                         <MapPin className="w-4 h-4" />{" "}
-                        {selectedApplicant.location}
+                        {selectedApplicant.location || "Not specified"}
                       </span>
                       <span className="flex items-center gap-1.5">
                         <Clock className="w-4 h-4" /> Applied{" "}
-                        {selectedApplicant.appliedDate}
+                        {new Date(
+                          selectedApplicant.createdAt,
+                        ).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -278,10 +297,11 @@ export default function EmployerApplicants() {
                     {/* About Section */}
                     <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                       <h3 className="text-base font-bold text-slate-900 mb-3">
-                        Professional Summary
+                        Cover Letter / Summary
                       </h3>
                       <p className="text-slate-600 leading-relaxed text-sm">
-                        {selectedApplicant.about}
+                        {selectedApplicant.coverLetter ||
+                          "No cover letter provided."}
                       </p>
                     </div>
 
@@ -293,7 +313,10 @@ export default function EmployerApplicants() {
                           Experience Level
                         </h3>
                         <p className="text-slate-700 font-medium text-sm pl-7">
-                          {selectedApplicant.experience} total experience
+                          {selectedApplicant.userProfile?.experience ||
+                            selectedApplicant.totalExperience ||
+                            "0"}{" "}
+                          total experience
                         </p>
                       </div>
                       <div className="w-full h-px bg-slate-100"></div>
@@ -303,7 +326,8 @@ export default function EmployerApplicants() {
                           Education Background
                         </h3>
                         <p className="text-slate-700 font-medium text-sm pl-7">
-                          {selectedApplicant.education}
+                          {selectedApplicant.userProfile?.education ||
+                            "Not specified"}
                         </p>
                       </div>
                     </div>
@@ -314,14 +338,20 @@ export default function EmployerApplicants() {
                         Top Skills
                       </h3>
                       <div className="flex flex-wrap gap-2">
-                        {selectedApplicant.skills.map((skill) => (
-                          <span
-                            key={skill}
-                            className="px-3 py-1.5 bg-slate-50 text-slate-700 rounded-lg text-sm font-medium border border-slate-100"
-                          >
-                            {skill}
+                        {selectedApplicant.userProfile?.skills?.map(
+                          (skill, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1.5 bg-slate-50 text-slate-700 rounded-lg text-sm font-medium border border-slate-100"
+                            >
+                              {skill}
+                            </span>
+                          ),
+                        ) || (
+                          <span className="text-sm text-slate-500">
+                            No skills listed.
                           </span>
-                        ))}
+                        )}
                       </div>
                     </div>
                   </div>
@@ -337,28 +367,50 @@ export default function EmployerApplicants() {
                         {Object.keys(statusConfig).map((status) => (
                           <button
                             key={status}
+                            disabled={updatingStatus !== null}
                             onClick={() =>
-                              handleStatusChange(selectedApplicant.id, status)
+                              handleStatusChange(selectedApplicant._id, status)
                             }
                             className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                              selectedApplicant.status === status
+                              (
+                                selectedApplicant.status || "pending"
+                              ).toLowerCase() === status
                                 ? "bg-slate-900 text-white shadow-md"
                                 : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                            }`}
+                            } ${updatingStatus !== null ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
-                            {status}
-                            {selectedApplicant.status === status && (
-                              <CheckCircle2 className="w-4 h-4" />
+                            {statusConfig[status].name}
+                            {updatingStatus === status ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              (selectedApplicant.status || "pending").toLowerCase() === status && (
+                                <CheckCircle2 className="w-4 h-4" />
+                              )
                             )}
                           </button>
                         ))}
                       </div>
 
                       <div className="pt-4 mt-4 border-t border-slate-100">
-                        <button className="w-full flex items-center justify-center gap-2 bg-brand-50 text-brand-600 hover:bg-brand-100 hover:text-brand-700 px-4 py-3 rounded-xl text-sm font-bold transition-colors">
-                          <Download className="w-4 h-4" />
-                          Download Resume
-                        </button>
+                        {selectedApplicant.userProfile?.resume ? (
+                          <a
+                            href={selectedApplicant.userProfile?.resume}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="w-full flex items-center justify-center gap-2 bg-brand-50 text-brand-600 hover:bg-brand-100 hover:text-brand-700 px-4 py-3 rounded-xl text-sm font-bold transition-colors"
+                          >
+                            <Download className="w-4 h-4" />
+                            Download Resume
+                          </a>
+                        ) : (
+                          <button
+                            disabled
+                            className="w-full flex items-center justify-center gap-2 bg-slate-50 text-slate-400 px-4 py-3 rounded-xl text-sm font-bold cursor-not-allowed"
+                          >
+                            <Download className="w-4 h-4" />
+                            No Resume Available
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -368,33 +420,22 @@ export default function EmployerApplicants() {
                         Contact Info
                       </h3>
                       <a
-                        href={`mailto:${selectedApplicant.email}`}
+                        href={`mailto:${selectedApplicant.user?.email}`}
                         className="flex items-center gap-3 text-sm text-slate-600 hover:text-brand-600 transition-colors group"
                       >
                         <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-brand-50 transition-colors">
                           <Mail className="w-4 h-4" />
                         </div>
-                        {selectedApplicant.email}
+                        {selectedApplicant.user?.email || "No Email"}
                       </a>
                       <a
-                        href={`tel:${selectedApplicant.phone}`}
+                        href={`tel:${selectedApplicant.userProfile?.phone}`}
                         className="flex items-center gap-3 text-sm text-slate-600 hover:text-brand-600 transition-colors group"
                       >
                         <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-brand-50 transition-colors">
                           <Phone className="w-4 h-4" />
                         </div>
-                        {selectedApplicant.phone}
-                      </a>
-                      <a
-                        href={`https://${selectedApplicant.portfolio}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-3 text-sm text-brand-600 font-medium hover:text-brand-700 transition-colors group"
-                      >
-                        <div className="p-2 bg-brand-50 rounded-lg group-hover:bg-brand-100 transition-colors">
-                          <ExternalLink className="w-4 h-4" />
-                        </div>
-                        {selectedApplicant.portfolio}
+                        {selectedApplicant.userProfile?.phone || "No Phone"}
                       </a>
                     </div>
                   </div>

@@ -121,6 +121,11 @@ const updateApplicationStatus = (id, data = {}) => {
   return Auth(endpoint, data, "PATCH");
 };
 
+const getProviderApplications = () => {
+  const endpoint = `/applications/provider-applications`;
+  return Auth(endpoint, {}, "GET");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -147,4 +152,5 @@ export default {
   getMyApplications,
   getJobApplications,
   updateApplicationStatus,
+  getProviderApplications,
 };

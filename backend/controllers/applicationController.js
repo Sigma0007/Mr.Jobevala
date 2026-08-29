@@ -147,3 +147,30 @@ export const updateApplicationStatus = async (req, res, next) => {
         next(error);
     }
 };
+
+
+export const getProviderApplications = async (req, res, next) => {
+    try {
+        const applications = await Application.find({ provider: req.user._id })
+            .populate("job", "title location companyProfileId")
+            .populate({
+                path: "job",
+                populate: {
+                    path: "companyProfileId",
+                    select: "companyName logo"
+                }
+            })
+            .populate("userProfile", "name phone title profileImage resume experience skills education")
+            .populate("user", "email")
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: applications.length,
+            data: applications,
+        });
+    } catch (error) {
+        next(error);
+    }
+
+}
