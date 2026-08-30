@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import customerservice from "../../customer/customerservice";
 import { setJobApplications } from "../../Redux/Job/JobAction";
 import toast from "react-hot-toast";
-import { statusConfig } from "../../Utility/utilites";
+import { statusConfig, workModeType } from "../../Utility/utilites";
 import {
   Briefcase,
   MapPin,
@@ -136,8 +136,14 @@ const JobApplications = () => {
                   {selectedJob.location?.city}
                   {selectedJob.location?.state
                     ? `, ${selectedJob.location.state}`
-                    : ""}
-                  {selectedJob.location?.isRemote && " (Remote)"}
+                    : ""}{" "}
+                  (
+                  {
+                    workModeType.find(
+                      (mode) => mode.value === selectedJob.location?.workMode,
+                    )?.label
+                  }
+                  )
                 </p>
               </div>
             </div>

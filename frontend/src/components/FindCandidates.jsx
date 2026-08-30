@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import customerservice from "../customer/customerservice";
+import { workModeType } from "../Utility/utilites";
 
 // Framer Motion Variants
 const containerVariants = {
@@ -294,7 +295,15 @@ export default function FindCandidates() {
                               {candidate.location?.city
                                 ? `${candidate.location.city}, ${candidate.location.state}`
                                 : "Location Not Specified"}
-                              {candidate.location?.isRemote ? " (Remote)" : ""}
+                              <span className="ml-2">
+                                {
+                                  workModeType.find(
+                                    (mode) =>
+                                      mode.value ===
+                                      candidate.location?.workMode,
+                                  )?.label
+                                }
+                              </span>
                             </span>
                             <span className="flex items-center gap-1.5 font-medium">
                               <Briefcase className="w-4 h-4 text-slate-400" />

@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import customerservice from "../../customer/customerservice";
 import { clearSelectedJob } from "../../Redux/Job/JobAction";
+import { workModeType } from "../../Utility/utilites";
 
 export default function EmployerPostJob() {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ export default function EmployerPostJob() {
     city: "",
     state: "",
     country: "India",
-    isRemote: false,
+    workMode: "on-site",
     vacancies: 1,
     applicationDeadline: "",
   });
@@ -65,9 +66,11 @@ export default function EmployerPostJob() {
           city: jobToEdit.location?.city || "",
           state: jobToEdit.location?.state || "",
           country: jobToEdit.location?.country || "India",
-          isRemote: jobToEdit.location?.isRemote || false,
+          workMode: jobToEdit.location?.workMode || "on-site",
           vacancies: jobToEdit.vacancies || 1,
-          applicationDeadline: jobToEdit.applicationDeadline ? jobToEdit.applicationDeadline.split('T')[0] : "",
+          applicationDeadline: jobToEdit.applicationDeadline
+            ? jobToEdit.applicationDeadline.split("T")[0]
+            : "",
         });
       }
       setPageLoading(false);
@@ -83,10 +86,10 @@ export default function EmployerPostJob() {
   }, [id, isEditMode, selectedJob, navigate, dispatch]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
   };
 
@@ -118,7 +121,7 @@ export default function EmployerPostJob() {
           city: formData.city,
           state: formData.state,
           country: formData.country,
-          isRemote: formData.isRemote,
+          workMode: formData.workMode,
         },
         vacancies: Number(formData.vacancies),
         status: "active",
@@ -133,12 +136,17 @@ export default function EmployerPostJob() {
       }
 
       if (res.success) {
-        toast.success(isEditMode ? "Job updated successfully" : "Job posted successfully");
+        toast.success(
+          isEditMode ? "Job updated successfully" : "Job posted successfully",
+        );
 
         navigate("/provider/jobs");
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} job`);
+      toast.error(
+        error?.response?.data?.message ||
+          `Failed to ${isEditMode ? "update" : "create"} job`,
+      );
     } finally {
       setLoading(false);
     }
@@ -151,10 +159,14 @@ export default function EmployerPostJob() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">{isEditMode ? "Edit Job" : "Post a New Job"}</h1>
+        <h1 className="text-3xl font-bold text-slate-900">
+          {isEditMode ? "Edit Job" : "Post a New Job"}
+        </h1>
 
         <p className="text-slate-500 mt-2">
-          {isEditMode ? "Update your job details below." : "Find the right candidate for your company."}
+          {isEditMode
+            ? "Update your job details below."
+            : "Find the right candidate for your company."}
         </p>
       </div>
 
@@ -311,18 +323,23 @@ export default function EmployerPostJob() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            name="isRemote"
-            checked={formData.isRemote}
-            onChange={handleChange}
-          />
+        <div className="grid md:grid-cols-3 gap-5">
+          <div>
+            <label className="block mb-2">Work Mode</label>
 
-          <label>This is a remote job</label>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-5">
+            <select
+              name="workMode"
+              value={formData.workMode}
+              onChange={handleChange}
+              className="w-full border rounded-xl px-4 py-3"
+            >
+              {workModeType.map((mode) => (
+                <option key={mode.value} value={mode.value}>
+                  {mode.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div>
             <label className="block mb-2">Vacancies</label>
 
@@ -355,7 +372,13 @@ export default function EmployerPostJob() {
             disabled={loading}
             className="px-6 py-3 bg-brand-600 text-white rounded-xl"
           >
-            {loading ? (isEditMode ? "Updating..." : "Posting...") : (isEditMode ? "Update Job" : "Post Job")}
+            {loading
+              ? isEditMode
+                ? "Updating..."
+                : "Posting..."
+              : isEditMode
+                ? "Update Job"
+                : "Post Job"}
           </button>
         </div>
       </form>

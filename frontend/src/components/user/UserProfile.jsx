@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { User, UploadCloud, FileText, Loader2 } from "lucide-react";
 import customerservice from "../../customer/customerservice";
+import { workModeType } from "../../Utility/utilites";
 
 export default function UserProfile() {
   const [profile, setProfile] = useState({
@@ -13,7 +14,7 @@ export default function UserProfile() {
       city: "",
       state: "",
       country: "India",
-      isRemote: false,
+      workMode: "on-site",
     },
     salary: {
       min: 0,
@@ -47,7 +48,7 @@ export default function UserProfile() {
             city: "",
             state: "",
             country: "India",
-            isRemote: false,
+            workMode: "on-site",
           },
           salary: res.data.salary || {
             min: 0,
@@ -93,7 +94,7 @@ export default function UserProfile() {
               city: "",
               state: "",
               country: "India",
-              isRemote: false,
+              workMode: "on-site",
             },
             salary: res.data.salary || {
               min: 0,
@@ -294,21 +295,26 @@ export default function UserProfile() {
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
               />
             </div>
-            <div className="flex flex-col justify-center mt-2">
-              <label className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={profile.location.isRemote}
-                  onChange={(e) =>
-                    setProfile({
-                      ...profile,
-                      location: { ...profile.location, isRemote: e.target.checked },
-                    })
-                  }
-                  className="w-5 h-5 text-brand-600 bg-slate-50 border-slate-300 rounded focus:ring-brand-500"
-                />
-                <span className="text-sm font-medium text-slate-700">Open to Remote Work</span>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Work Mode
               </label>
+              <select
+                value={profile.location.workMode}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    location: { ...profile.location, workMode: e.target.value },
+                  })
+                }
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+              >
+                {workModeType.map((mode) => (
+                  <option key={mode.value} value={mode.value}>
+                    {mode.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

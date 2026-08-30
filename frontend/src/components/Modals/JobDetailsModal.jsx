@@ -12,6 +12,7 @@ import {
   Bookmark,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { workModeType } from "../../Utility/utilites";
 
 const RequirementItem = ({ text }) => (
   <motion.li
@@ -98,7 +99,12 @@ export default function JobDetailsModal({
                       {selectedJob.salary?.max?.toLocaleString()}
                     </span>
                     <span className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 bg-white border border-slate-200 rounded-md shadow-sm">
-                      {selectedJob.location?.isRemote ? "Remote" : "On-site"}
+                      {
+                        workModeType.find(
+                          (mode) =>
+                            mode.value === selectedJob.location?.workMode,
+                        )?.label
+                      }
                     </span>
                     <span className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 bg-white border border-slate-200 rounded-md shadow-sm capitalize">
                       <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 shrink-0" />{" "}

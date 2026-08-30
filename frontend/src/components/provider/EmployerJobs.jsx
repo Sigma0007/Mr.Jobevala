@@ -18,6 +18,7 @@ import {
   Users,
 } from "lucide-react";
 import customerservice from "../../customer/customerservice";
+import { workModeType } from "../../Utility/utilites";
 
 export default function EmployerJobs({ setActiveTab }) {
   const [jobs, setJobs] = useState([]);
@@ -172,7 +173,11 @@ export default function EmployerJobs({ setActiveTab }) {
                         {job.location?.state
                           ? `, ${job.location.state}`
                           : ""}{" "}
-                        {job.location?.isRemote && "(Remote)"}
+                        {`(${
+                          workModeType.find(
+                            (item) => item.value === job.location?.workMode,
+                          )?.label
+                        })`}
                       </span>
                     </div>
 

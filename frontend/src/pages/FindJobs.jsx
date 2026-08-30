@@ -103,7 +103,8 @@ export default function FindJobs() {
         `${job.location?.city || ""} ${job.location?.state || ""} ${job.location?.country || ""}`.toLowerCase();
       const matchesLocation =
         locationString.includes(locationQuery.toLowerCase()) ||
-        (locationQuery.toLowerCase() === "remote" && job.location?.isRemote);
+        (locationQuery.toLowerCase() === "remote" &&
+          job.location?.workMode === "remote");
 
       const matchesType =
         selectedTypes.length === 0 ||
@@ -450,8 +451,11 @@ export default function FindJobs() {
                           <Briefcase className="w-3.5 h-3.5 text-slate-400 shrink-0" />{" "}
                           {job.jobType}
                         </span>
-                        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg">
-                          {job.location?.isRemote ? "Remote" : "On-site"}
+                        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg capitalize">
+                          <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />{" "}
+                          {workModeType.find(
+                            (item) => item.value === job.location?.workMode,
+                          )?.label || "-"}
                         </span>
 
                         <span className="flex items-center gap-1.5 text-slate-400 ml-auto pt-2 md:pt-0">
