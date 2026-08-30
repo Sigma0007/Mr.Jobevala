@@ -5,6 +5,15 @@ import {
   Calendar,
   CheckCircle2,
   XCircle,
+  Calculator,
+  Megaphone,
+  PenTool,
+  Code2,
+  Users,
+  Car,
+  HeadphonesIcon,
+  HeartPulse,
+  Briefcase,
 } from "lucide-react";
 
 export const statusConfig = {
@@ -68,4 +77,76 @@ export const ExperienceType = [
   { label: "3-5 years", value: "3-5" },
   { label: "5-10 years", value: "5-10" },
   { label: "10+ years", value: "10+" },
+];
+
+export const CATEGORIES = [
+  {
+    title: "Accounting / Finance",
+    value: "accounting-finance",
+    count: "2 open positions",
+    icon: Calculator,
+  },
+  {
+    title: "Marketing",
+    value: "marketing",
+    count: "86 open positions",
+    icon: Megaphone,
+  },
+  {
+    title: "Design",
+    value: "design",
+    count: "43 open positions",
+    icon: PenTool,
+  },
+  {
+    title: "Development",
+    value: "development",
+    count: "12 open positions",
+    icon: Code2,
+  },
+  {
+    title: "Human Resource",
+    value: "human-resource",
+    count: "55 open positions",
+    icon: Users,
+  },
+  {
+    title: "Automotive Jobs",
+    value: "automotive-jobs",
+    count: "2 open positions",
+    icon: Car,
+  },
+  {
+    title: "Customer Service",
+    value: "customer-service",
+    count: "2 open positions",
+    icon: HeadphonesIcon,
+  },
+  {
+    title: "Health and Care",
+    value: "health-and-care",
+    count: "25 open positions",
+    icon: HeartPulse,
+  },
+  {
+    title: "Project Management",
+    value: "project-management",
+    count: "92 open positions",
+    icon: Briefcase,
+  },
+];
+
+export const EXPERIENCE_LEVELS = [
+  {
+    label: "Entry Level (0-2 yrs)",
+    value: "0-2",
+  },
+  {
+    label: "Mid Level (3-5 yrs)",
+    value: "3-5",
+  },
+  {
+    label: "Senior (5+ yrs)",
+    value: "5-plus",
+  },
 ];

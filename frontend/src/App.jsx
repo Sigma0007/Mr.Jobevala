@@ -8,7 +8,6 @@ import { UserDashboard } from "./components/user/UserDashboard";
 
 // Import your brand new HomePage
 import HomePage from "./pages/HomePage";
-import FindCandidates from "./components/FindCandidates";
 
 // Import the brand new Loader
 import InitialLoader from "./components/InitialLoader";
@@ -17,6 +16,7 @@ import EmployerDashboard from "./components/provider/EmployerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Register from "./pages/Register";
 import JobApplications from "./components/provider/JobApplications";
+import FindCandidates from "./pages/FindCandidates";
 
 export default function App() {
   return (

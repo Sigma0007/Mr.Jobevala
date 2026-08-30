@@ -13,7 +13,11 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import customerservice from "../customer/customerservice";
-import { workModeType } from "../Utility/utilites";
+import {
+  CATEGORIES,
+  EXPERIENCE_LEVELS,
+  workModeType,
+} from "../Utility/utilites";
 
 // Framer Motion Variants
 const containerVariants = {
@@ -137,24 +141,19 @@ export default function FindCandidates() {
               {/* Job Category */}
               <div className="mb-8">
                 <label className="block text-xs font-bold tracking-wider text-slate-400 uppercase mb-4">
-                  Expertise
+                  CATEGORIES
                 </label>
                 <div className="space-y-3.5">
-                  {[
-                    "Software Engineering",
-                    "Product Design",
-                    "Marketing",
-                    "Data Science",
-                  ].map((cat) => (
+                  {CATEGORIES.map((cat) => (
                     <label
-                      key={cat}
+                      key={cat.value}
                       className="flex items-center gap-3 cursor-pointer group"
                     >
                       <div className="w-4 h-4 rounded border border-slate-300 group-hover:border-blue-500 flex items-center justify-center transition-colors bg-white">
                         <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                       <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-                        {cat}
+                        {cat.title}
                       </span>
                     </label>
                   ))}
@@ -169,21 +168,16 @@ export default function FindCandidates() {
                   Experience Level
                 </label>
                 <div className="space-y-3.5">
-                  {[
-                    "Entry Level (0-2 yrs)",
-                    "Mid Level (3-5 yrs)",
-                    "Senior (5+ yrs)",
-                    "Director+",
-                  ].map((exp) => (
+                  {EXPERIENCE_LEVELS.map((exp) => (
                     <label
-                      key={exp}
+                      key={exp.value}
                       className="flex items-center gap-3 cursor-pointer group"
                     >
                       <div className="w-4 h-4 rounded-full border border-slate-300 group-hover:border-blue-500 flex items-center justify-center transition-colors bg-white">
                         <div className="w-2 h-2 rounded-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                       <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-                        {exp}
+                        {exp.label}
                       </span>
                     </label>
                   ))}

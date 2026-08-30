@@ -1,35 +1,5 @@
 import { motion } from "framer-motion";
-import {
-  Calculator,
-  Megaphone,
-  PenTool,
-  Code2,
-  Users,
-  Car,
-  HeadphonesIcon,
-  HeartPulse,
-  Briefcase,
-} from "lucide-react";
-
-const CATEGORIES = [
-  {
-    title: "Accounting / Finance",
-    count: "2 open positions",
-    icon: Calculator,
-  },
-  { title: "Marketing", count: "86 open positions", icon: Megaphone },
-  { title: "Design", count: "43 open positions", icon: PenTool },
-  { title: "Development", count: "12 open positions", icon: Code2 },
-  { title: "Human Resource", count: "55 open positions", icon: Users },
-  { title: "Automotive Jobs", count: "2 open positions", icon: Car },
-  {
-    title: "Customer Service",
-    count: "2 open positions",
-    icon: HeadphonesIcon,
-  },
-  { title: "Health and Care", count: "25 open positions", icon: HeartPulse },
-  { title: "Project Management", count: "92 open positions", icon: Briefcase },
-];
+import { CATEGORIES } from "../Utility/utilites";
 
 const containerVariants = {
   hidden: { opacity: 0 },
