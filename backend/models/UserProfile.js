@@ -54,9 +54,10 @@ const userProfileSchema = new mongoose.Schema(
                 type: String,
                 default: "India",
             },
-            isRemote: {
-                type: Boolean,
-                default: false,
+            workMode: {
+                type: String,
+                enum: ["remote", "on-site", "hybrid"],
+                default: "on-site",
             },
         },
         skills: [

@@ -39,3 +39,33 @@ export const statusConfig = {
     name: "Rejected",
   },
 };
+
+export const workModeType = [
+  { label: "On-site", value: "on-site" },
+  { label: "Remote", value: "remote" },
+  { label: "Hybrid", value: "hybrid" },
+];
+
+export const jobType = [
+  { label: "Full-time", value: "full-time" },
+  { label: "Part-time", value: "part-time" },
+  { label: "Contract", value: "contract" },
+  { label: "Internship", value: "internship" },
+  { label: "Freelance", value: "freelance" },
+];
+
+export const SalaryRangeType = [
+  { label: "Any Salary", value: "Any Salary" },
+  { label: "₹0 - ₹30k", value: "0-30000" },
+  { label: "₹30k - ₹60k", value: "30000-60000" },
+  { label: "₹60k - ₹100k", value: "60000-100000" },
+  { label: "₹100k+", value: "100000+" },
+];
+
+export const ExperienceType = [
+  { label: "0-1 year", value: "0-1" },
+  { label: "1-3 years", value: "1-3" },
+  { label: "3-5 years", value: "3-5" },
+  { label: "5-10 years", value: "5-10" },
+  { label: "10+ years", value: "10+" },
+];

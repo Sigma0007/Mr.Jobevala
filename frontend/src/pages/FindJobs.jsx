@@ -16,6 +16,7 @@ import toast from "react-hot-toast";
 import customerservice from "../customer/customerservice";
 import JobDetailsModal from "../components/Modals/JobDetailsModal";
 import ApplyJobModal from "../components/Modals/ApplyJobModal";
+import { jobType, SalaryRangeType, workModeType } from "../Utility/utilites";
 
 const timeAgo = (dateString) => {
   if (!dateString) return "";
@@ -110,17 +111,22 @@ export default function FindJobs() {
           (type) => type.toLowerCase() === job.jobType?.toLowerCase(),
         );
 
-      const mode = job.location?.isRemote ? "Remote" : "On-site";
       const matchesMode =
-        selectedModes.length === 0 || selectedModes.includes(mode);
+        selectedModes.length === 0 ||
+        selectedModes.some(
+          (mode) =>
+            mode.toLowerCase() === job.location?.workMode?.toLowerCase(),
+        );
 
       let matchesSalary = true;
       const salaryMin = job.salary?.min || 0;
-      if (salaryRange === "₹30k - ₹60k") {
+      if (salaryRange === "0-30000") {
+        matchesSalary = salaryMin >= 0 && salaryMin <= 30000;
+      } else if (salaryRange === "30000-60000") {
         matchesSalary = salaryMin >= 30000 && salaryMin <= 60000;
-      } else if (salaryRange === "₹60k - ₹100k") {
+      } else if (salaryRange === "60000-100000") {
         matchesSalary = salaryMin > 60000 && salaryMin <= 100000;
-      } else if (salaryRange === "₹100k+") {
+      } else if (salaryRange === "100000+") {
         matchesSalary = salaryMin > 100000;
       }
 
@@ -181,7 +187,6 @@ export default function FindJobs() {
       if (response.success) {
         setJobsData(response.data);
       }
-      console.log("response", response);
     };
     fetchJobs();
   }, []);
@@ -271,25 +276,20 @@ export default function FindJobs() {
                         Job Type
                       </h3>
                       <div className="space-y-3">
-                        {[
-                          "Full-Time",
-                          "Part-Time",
-                          "Contract",
-                          "Freelance",
-                        ].map((type) => (
+                        {jobType.map((type) => (
                           <label
-                            key={type}
+                            key={type.value}
                             className="flex items-center gap-3 cursor-pointer group"
                           >
                             <div className="relative flex items-center justify-center">
                               <input
                                 type="checkbox"
-                                checked={selectedTypes.includes(type)}
+                                checked={selectedTypes.includes(type.value)}
                                 onChange={() =>
                                   toggleArrayItem(
                                     selectedTypes,
                                     setSelectedTypes,
-                                    type,
+                                    type.value,
                                   )
                                 }
                                 className="peer appearance-none w-5 h-5 rounded-md border-2 border-slate-300 checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer focus:ring-4 focus:ring-blue-500/20 outline-none"
@@ -297,7 +297,7 @@ export default function FindJobs() {
                               <CheckCircle className="w-3.5 h-3.5 text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
                             </div>
                             <span className="text-[15px] font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-                              {type}
+                              {type.label}
                             </span>
                           </label>
                         ))}
@@ -310,20 +310,20 @@ export default function FindJobs() {
                         Work Mode
                       </h3>
                       <div className="space-y-3">
-                        {["On-site", "Remote", "Hybrid"].map((mode) => (
+                        {workModeType.map((mode) => (
                           <label
-                            key={mode}
+                            key={mode.value}
                             className="flex items-center gap-3 cursor-pointer group"
                           >
                             <div className="relative flex items-center justify-center">
                               <input
                                 type="checkbox"
-                                checked={selectedModes.includes(mode)}
+                                checked={selectedModes.includes(mode.value)}
                                 onChange={() =>
                                   toggleArrayItem(
                                     selectedModes,
                                     setSelectedModes,
-                                    mode,
+                                    mode.value,
                                   )
                                 }
                                 className="peer appearance-none w-5 h-5 rounded-md border-2 border-slate-300 checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer focus:ring-4 focus:ring-blue-500/20 outline-none"
@@ -331,7 +331,7 @@ export default function FindJobs() {
                               <CheckCircle className="w-3.5 h-3.5 text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
                             </div>
                             <span className="text-[15px] font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-                              {mode}
+                              {mode.label}
                             </span>
                           </label>
                         ))}
@@ -349,10 +349,11 @@ export default function FindJobs() {
                           onChange={(e) => setSalaryRange(e.target.value)}
                           className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 hover:border-slate-200 rounded-xl text-[15px] font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-all cursor-pointer text-slate-700 appearance-none"
                         >
-                          <option>Any Salary</option>
-                          <option>₹30k - ₹60k</option>
-                          <option>₹60k - ₹100k</option>
-                          <option>₹100k+</option>
+                          {SalaryRangeType.map((range) => (
+                            <option key={range.value} value={range.value}>
+                              {range.label}
+                            </option>
+                          ))}
                         </select>
                         <ChevronDown className="w-5 h-5 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
