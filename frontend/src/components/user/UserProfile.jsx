@@ -3,13 +3,14 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { User, UploadCloud, FileText, Loader2 } from "lucide-react";
 import customerservice from "../../customer/customerservice";
-import { workModeType } from "../../Utility/utilites";
+import { workModeType, jobType as jobTypeOptions } from "../../Utility/utilites";
 
 export default function UserProfile() {
   const [profile, setProfile] = useState({
     name: "",
     phone: "",
     title: "",
+    jobType: "full-time",
     location: {
       city: "",
       state: "",
@@ -44,6 +45,7 @@ export default function UserProfile() {
           name: res.data.name || "",
           phone: res.data.phone || "",
           title: res.data.title || "",
+          jobType: res.data.jobType || "full-time",
           location: res.data.location || {
             city: "",
             state: "",
@@ -90,6 +92,7 @@ export default function UserProfile() {
             name: res.data.name || "",
             phone: res.data.phone || "",
             title: res.data.title || "",
+            jobType: res.data.jobType || "full-time",
             location: res.data.location || {
               city: "",
               state: "",
@@ -376,7 +379,7 @@ export default function UserProfile() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="sm:col-span-2">
+            <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Education
               </label>
@@ -389,6 +392,24 @@ export default function UserProfile() {
                 placeholder="e.g. B.S. Computer Science"
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Job Type
+              </label>
+              <select
+                value={profile.jobType}
+                onChange={(e) =>
+                  setProfile({ ...profile, jobType: e.target.value })
+                }
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+              >
+                {jobTypeOptions.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

@@ -23,6 +23,11 @@ const userProfileSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        jobType: {
+            type: String,
+            enum: ["full-time", "part-time", "contract", "internship", "freelance"],
+            default: "full-time",
+        },
         bio: {
             type: String,
             default: "",
