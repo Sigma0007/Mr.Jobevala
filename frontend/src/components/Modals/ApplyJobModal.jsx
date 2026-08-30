@@ -80,9 +80,9 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSubmit }) {
             <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 relative z-10 pr-8 sm:pr-12">
               <img
                 src={
-                  job?.companyProfileId?.logo ||
+                  job?.companyProfile?.logo ||
                   `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    job?.companyProfileId?.companyName || "C",
+                    job?.companyProfile?.companyName || "C",
                   )}&background=random`
                 }
                 alt="logo"
@@ -94,7 +94,7 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSubmit }) {
                 </h2>
                 <p className="text-sm font-medium text-slate-500 flex items-center gap-2 capitalize">
                   <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
-                  {job?.companyProfileId?.companyName || "Company"}
+                  {job?.companyProfile?.companyName || "Company"}
                 </p>
               </div>
             </div>

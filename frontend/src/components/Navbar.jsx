@@ -172,7 +172,7 @@ export default function Navbar() {
                 ) : (
                   <>
                     <Link
-                      to={`/${user.role}-dashboard`}
+                      to={`/${user.role}/dashboard`}
                       onClick={() => setIsOpen(false)}
                       className="w-full flex items-center justify-center gap-2 bg-brand-600 text-white px-5 py-3 rounded-xl text-base font-medium hover:bg-brand-700 transition-colors shadow-sm"
                     >

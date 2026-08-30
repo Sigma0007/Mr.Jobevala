@@ -116,19 +116,19 @@ export default function UserSaved() {
                   </button>
                   <img
                     src={
-                      job.companyProfileId?.logo ||
+                      job.companyProfile?.logo ||
                       `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        job.companyProfileId?.companyName || "C",
+                        job.companyProfile?.companyName || "C",
                       )}&background=random`
                     }
-                    alt={job.companyProfileId?.companyName || "Company"}
+                    alt={job.companyProfile?.companyName || "Company"}
                     className="w-12 h-12 rounded-xl object-contain border border-slate-100 mb-4 bg-white p-1"
                   />
                   <h3 className="text-base font-bold text-slate-900 capitalize line-clamp-1">
                     {job.title}
                   </h3>
                   <p className="text-sm text-slate-500 font-medium mb-4 capitalize line-clamp-1">
-                    {job.companyProfileId?.companyName}
+                    {job.companyProfile?.companyName}
                   </p>
                   <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mb-6">
                     <span className="flex items-center gap-1 capitalize">

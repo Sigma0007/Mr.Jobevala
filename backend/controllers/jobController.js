@@ -41,7 +41,7 @@ export const createJob = catchAsync(async (req, res, next) => {
 
     const job = await Job.create({
         provider: req.user._id,
-        companyProfileId: companyData?._id,
+        companyProfile: companyData?._id,
 
         title,
         description,
@@ -63,7 +63,7 @@ export const createJob = catchAsync(async (req, res, next) => {
 });
 
 export const getAllJobs = catchAsync(async (req, res) => {
-    const jobs = await Job.find({}).populate("companyProfileId").sort({
+    const jobs = await Job.find({}).populate("companyProfile").sort({
         createdAt: -1,
     });
 
@@ -230,7 +230,7 @@ export const getSavedJobs = catchAsync(async (req, res) => {
     }).populate({
         path: "job",
         populate: {
-            path: "companyProfileId"
+            path: "companyProfile"
         }
     }).sort({
         createdAt: -1,

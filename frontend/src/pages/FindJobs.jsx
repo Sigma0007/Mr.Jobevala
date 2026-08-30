@@ -94,7 +94,7 @@ export default function FindJobs() {
     let result = jobsData.filter((job) => {
       const matchesSearch =
         job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.companyProfileId?.companyName
+        job.companyProfile?.companyName
           ?.toLowerCase()
           .includes(searchQuery.toLowerCase());
 
@@ -411,10 +411,10 @@ export default function FindJobs() {
 
                     <img
                       src={
-                        job.companyProfileId?.logo ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(job.companyProfileId?.companyName || "C")}&background=random`
+                        job.companyProfile?.logo ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(job.companyProfile?.companyName || "C")}&background=random`
                       }
-                      alt={job.companyProfileId?.companyName}
+                      alt={job.companyProfile?.companyName}
                       className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-contain p-2 md:p-3 border border-slate-100 shadow-sm shrink-0 bg-white"
                     />
 
@@ -427,7 +427,7 @@ export default function FindJobs() {
                           <div className="flex items-center gap-2 mt-1 text-slate-500">
                             <Building2 className="w-4 h-4 shrink-0" />
                             <p className="text-sm md:text-[15px] font-medium capitalize">
-                              {job.companyProfileId?.companyName}
+                              {job.companyProfile?.companyName}
                             </p>
                           </div>
                         </div>

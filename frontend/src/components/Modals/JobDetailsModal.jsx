@@ -69,8 +69,8 @@ export default function JobDetailsModal({
               <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 relative z-10 pr-8 sm:pr-12">
                 <img
                   src={
-                    selectedJob.companyProfileId?.logo ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedJob.companyProfileId?.companyName || "C")}&background=random`
+                    selectedJob.companyProfile?.logo ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedJob.companyProfile?.companyName || "C")}&background=random`
                   }
                   alt="logo"
                   className="w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-[1.25rem] object-contain p-2 sm:p-3 border-2 border-white shadow-md bg-white shrink-0"
@@ -81,7 +81,7 @@ export default function JobDetailsModal({
                   </h2>
                   <p className="text-sm sm:text-lg font-medium text-slate-500 flex items-center gap-2 capitalize">
                     <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 shrink-0" />
-                    {selectedJob.companyProfileId?.companyName}
+                    {selectedJob.companyProfile?.companyName}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-3 sm:mt-4 text-xs sm:text-[14px] font-medium text-slate-600">
                     <span className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 bg-white border border-slate-200 rounded-md shadow-sm capitalize">

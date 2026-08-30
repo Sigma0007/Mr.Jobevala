@@ -12,7 +12,7 @@ const jobSchema = new mongoose.Schema(
             required: [true, "Job title is required"],
             trim: true,
         },
-        companyProfileId: {
+        companyProfile: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "CompanyProfile",
             required: true,

@@ -112,10 +112,10 @@ export default function UserApplied() {
               <div className="flex items-center gap-4">
                 <img
                   src={
-                    app.job?.companyProfileId?.logo ||
+                    app.job?.companyProfile?.logo ||
                     "https://images.unsplash.com/photo-1549924293-3b909efef92d?w=150&q=80"
                   }
-                  alt={app.job?.companyProfileId?.companyName || "Company Logo"}
+                  alt={app.job?.companyProfile?.companyName || "Company Logo"}
                   className="w-12 h-12 rounded-xl object-cover border border-slate-100"
                 />
                 <div>
@@ -125,7 +125,7 @@ export default function UserApplied() {
                   <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 font-medium">
                     <span className="flex items-center gap-1">
                       <Building2 className="w-3.5 h-3.5" />{" "}
-                      {app.job?.companyProfileId?.companyName ||
+                      {app.job?.companyProfile?.companyName ||
                         "Unknown Company"}
                     </span>
                     <span className="flex items-center gap-1">

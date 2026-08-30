@@ -131,6 +131,33 @@ const getProviderStats = () => {
   return Auth(endpoint, {}, "GET");
 };
 
+// --- Admin APIs ---
+
+const getAdminStats = () => {
+  const endpoint = `/admin/stats`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getAdminUsers = () => {
+  const endpoint = `/admin/users`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const deleteAdminUser = (id) => {
+  const endpoint = `/admin/users/${id}`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
+const getAdminJobs = () => {
+  const endpoint = `/admin/jobs`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const deleteAdminJob = (id) => {
+  const endpoint = `/admin/jobs/${id}`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -159,4 +186,9 @@ export default {
   updateApplicationStatus,
   getProviderApplications,
   getProviderStats,
+  getAdminStats,
+  getAdminUsers,
+  deleteAdminUser,
+  getAdminJobs,
+  deleteAdminJob,
 };

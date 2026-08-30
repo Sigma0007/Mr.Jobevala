@@ -59,11 +59,11 @@ export const createApplication = async (req, res, next) => {
 export const getUserApplications = async (req, res, next) => {
     try {
         const applications = await Application.find({ user: req.user._id })
-            .populate("job", "title location companyProfileId")
+            .populate("job", "title location companyProfile")
             .populate({
                 path: "job",
                 populate: {
-                    path: "companyProfileId",
+                    path: "companyProfile",
                     select: "companyName logo"
                 }
             })
@@ -152,11 +152,11 @@ export const updateApplicationStatus = async (req, res, next) => {
 export const getProviderApplications = async (req, res, next) => {
     try {
         const applications = await Application.find({ provider: req.user._id })
-            .populate("job", "title location companyProfileId")
+            .populate("job", "title location companyProfile")
             .populate({
                 path: "job",
                 populate: {
-                    path: "companyProfileId",
+                    path: "companyProfile",
                     select: "companyName logo"
                 }
             })
