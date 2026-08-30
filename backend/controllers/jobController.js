@@ -63,9 +63,66 @@ export const createJob = catchAsync(async (req, res, next) => {
 });
 
 export const getAllJobs = catchAsync(async (req, res) => {
-    const jobs = await Job.find({}).populate("companyProfile").sort({
-        createdAt: -1,
-    });
+    const { searchQuery, locationQuery, jobType, workMode, salaryRange, sortBy } = req.query;
+
+    let dbQuery = {};
+
+    if (searchQuery) {
+        const companies = await CompanyProfile.find({ companyName: { $regex: searchQuery, $options: "i" } });
+        const companyIds = companies.map(c => c._id);
+        
+        dbQuery.$or = [
+            { title: { $regex: searchQuery, $options: "i" } },
+            { companyProfile: { $in: companyIds } }
+        ];
+    }
+
+    if (locationQuery) {
+        if (locationQuery.toLowerCase() === 'remote') {
+            dbQuery['location.workMode'] = { $regex: '^remote$', $options: 'i' };
+        } else {
+            const locRegex = { $regex: locationQuery, $options: "i" };
+            dbQuery.$and = dbQuery.$and || [];
+            dbQuery.$and.push({
+                $or: [
+                    { 'location.city': locRegex },
+                    { 'location.state': locRegex },
+                    { 'location.country': locRegex }
+                ]
+            });
+        }
+    }
+
+    if (jobType) {
+        const types = jobType.split(',');
+        dbQuery.jobType = { $in: types.map(t => new RegExp(`^${t}$`, 'i')) };
+    }
+
+    if (workMode) {
+        const modes = workMode.split(',');
+        dbQuery['location.workMode'] = { $in: modes.map(m => new RegExp(`^${m}$`, 'i')) };
+    }
+
+    if (salaryRange && salaryRange !== 'Any') {
+        if (salaryRange === "0-30000") {
+            dbQuery['salary.min'] = { $gte: 0, $lte: 30000 };
+        } else if (salaryRange === "30000-60000") {
+            dbQuery['salary.min'] = { $gte: 30000, $lte: 60000 };
+        } else if (salaryRange === "60000-100000") {
+            dbQuery['salary.min'] = { $gt: 60000, $lte: 100000 };
+        } else if (salaryRange === "100000+") {
+            dbQuery['salary.min'] = { $gt: 100000 };
+        }
+    }
+
+    let sortConfig = { createdAt: -1 };
+    if (sortBy === 'highest') {
+        sortConfig = { 'salary.min': -1 };
+    } else if (sortBy === 'newest') {
+        sortConfig = { createdAt: -1 };
+    }
+
+    const jobs = await Job.find(dbQuery).populate("companyProfile").sort(sortConfig);
 
     res.status(200).json({
         success: true,

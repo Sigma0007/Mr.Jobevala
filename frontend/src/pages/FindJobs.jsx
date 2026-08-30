@@ -40,6 +40,40 @@ export default function FindJobs() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [isSavingJob, setIsSavingJob] = useState(false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [locationQuery, setLocationQuery] = useState("");
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedModes, setSelectedModes] = useState([]);
+  const [salaryRange, setSalaryRange] = useState("Any");
+  const [sortBy, setSortBy] = useState("newest");
+  const [jobsData, setJobsData] = useState([]);
+
+  const filteredJobs = jobsData;
+
+  const toggleArrayItem = (array, setArray, item) => {
+    if (array.includes(item)) {
+      setArray(array.filter((i) => i !== item));
+    } else {
+      setArray([...array, item]);
+    }
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.05 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 1, y: 15 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring", stiffness: 300, damping: 24 },
+    },
+  };
 
   const handleApplySubmit = async (formData) => {
     try {
@@ -83,114 +117,29 @@ export default function FindJobs() {
     }
   };
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [locationQuery, setLocationQuery] = useState("");
-  const [selectedTypes, setSelectedTypes] = useState([]);
-  const [selectedModes, setSelectedModes] = useState([]);
-  const [salaryRange, setSalaryRange] = useState("Any");
-  const [sortBy, setSortBy] = useState("newest");
-  const [jobsData, setJobsData] = useState([]);
-
-  const filteredJobs = useMemo(() => {
-    let result = jobsData.filter((job) => {
-      const matchesSearch =
-        job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.companyProfile?.companyName
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase());
-
-      const locationString =
-        `${job.location?.city || ""} ${job.location?.state || ""} ${job.location?.country || ""}`.toLowerCase();
-      const matchesLocation =
-        locationString.includes(locationQuery.toLowerCase()) ||
-        (locationQuery.toLowerCase() === "remote" &&
-          job.location?.workMode === "remote");
-
-      const matchesType =
-        selectedTypes.length === 0 ||
-        selectedTypes.some(
-          (type) => type.toLowerCase() === job.jobType?.toLowerCase(),
-        );
-
-      const matchesMode =
-        selectedModes.length === 0 ||
-        selectedModes.some(
-          (mode) =>
-            mode.toLowerCase() === job.location?.workMode?.toLowerCase(),
-        );
-
-      let matchesSalary = true;
-      const salaryMin = job.salary?.min || 0;
-      if (salaryRange === "0-30000") {
-        matchesSalary = salaryMin >= 0 && salaryMin <= 30000;
-      } else if (salaryRange === "30000-60000") {
-        matchesSalary = salaryMin >= 30000 && salaryMin <= 60000;
-      } else if (salaryRange === "60000-100000") {
-        matchesSalary = salaryMin > 60000 && salaryMin <= 100000;
-      } else if (salaryRange === "100000+") {
-        matchesSalary = salaryMin > 100000;
-      }
-
-      return (
-        matchesSearch &&
-        matchesLocation &&
-        matchesType &&
-        matchesMode &&
-        matchesSalary
-      );
-    });
-
-    if (sortBy === "highest") {
-      result.sort((a, b) => (b.salary?.min || 0) - (a.salary?.min || 0));
-    } else if (sortBy === "newest") {
-      result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-
-    return result;
-  }, [
-    jobsData,
-    searchQuery,
-    locationQuery,
-    selectedTypes,
-    selectedModes,
-    salaryRange,
-    sortBy,
-  ]);
-
-  const toggleArrayItem = (array, setArray, item) => {
-    if (array.includes(item)) {
-      setArray(array.filter((i) => i !== item));
-    } else {
-      setArray([...array, item]);
-    }
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 1, y: 15 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { type: "spring", stiffness: 300, damping: 24 },
-    },
-  };
-
   useEffect(() => {
     const fetchJobs = async () => {
-      const response = await customerservice.getAllJobs();
+      const queryParams = new URLSearchParams();
+      if (searchQuery) queryParams.append("searchQuery", searchQuery);
+      if (locationQuery) queryParams.append("locationQuery", locationQuery);
+      if (selectedTypes.length > 0) queryParams.append("jobType", selectedTypes.join(","));
+      if (selectedModes.length > 0) queryParams.append("workMode", selectedModes.join(","));
+      if (salaryRange && salaryRange !== "Any") queryParams.append("salaryRange", salaryRange);
+      if (sortBy) queryParams.append("sortBy", sortBy);
+
+      const qs = queryParams.toString();
+      const response = await customerservice.getAllJobs(qs ? `?${qs}` : "");
       if (response.success) {
         setJobsData(response.data);
       }
     };
-    fetchJobs();
-  }, []);
+
+    const timeoutId = setTimeout(() => {
+      fetchJobs();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, locationQuery, selectedTypes, selectedModes, salaryRange, sortBy]);
 
   return (
     <div className="min-h-screen pt-24 md:pt-28 pb-16 bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">

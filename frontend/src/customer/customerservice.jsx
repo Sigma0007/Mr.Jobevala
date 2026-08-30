@@ -76,8 +76,8 @@ const updateCompanyProfile = (data = {}) => {
   return Auth(endpoint, data, "PUT");
 };
 
-const getAllJobs = () => {
-  const endpoint = `/jobs/getAllJobs`;
+const getAllJobs = (query = "") => {
+  const endpoint = `/jobs/getAllJobs${query}`;
   return Auth(endpoint, {}, "GET");
 };
 
