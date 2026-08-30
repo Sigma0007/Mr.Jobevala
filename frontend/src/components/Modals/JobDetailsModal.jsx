@@ -1,5 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   X,
   Building2,
@@ -32,6 +33,8 @@ export default function JobDetailsModal({
   onApplyClick,
   isSavedJobMode,
 }) {
+  const navigate = useNavigate();
+
   return (
     <AnimatePresence>
       {selectedJob && (
@@ -163,6 +166,13 @@ export default function JobDetailsModal({
 
               <button
                 onClick={() => {
+                  const token = localStorage.getItem("token");
+                  if (!token) {
+                    toast.error("Please login to apply for this job");
+                    navigate("/login");
+                    return;
+                  }
+
                   if (onApplyClick) {
                     onApplyClick();
                   } else {
