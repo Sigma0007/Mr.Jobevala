@@ -17,6 +17,8 @@ import {
   CATEGORIES,
   EXPERIENCE_LEVELS,
   workModeType,
+  jobType,
+  SalaryRangeType,
 } from "../Utility/utilites";
 
 // Framer Motion Variants
@@ -41,9 +43,43 @@ export default function FindCandidates() {
   const [searchTerm, setSearchTerm] = useState("");
   const [candidatesData, setCandidatesData] = useState([]);
 
+  // Filter States
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedExperience, setSelectedExperience] = useState([]);
+  const [selectedWorkModes, setSelectedWorkModes] = useState([]);
+  const [selectedJobTypes, setSelectedJobTypes] = useState([]);
+  const [selectedSalaryRanges, setSelectedSalaryRanges] = useState([]);
+
+  const handleFilterChange = (setter, value) => {
+    setter((prev) =>
+      prev.includes(value)
+        ? prev.filter((item) => item !== value)
+        : [...prev, value]
+    );
+  };
+
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setSelectedCategories([]);
+    setSelectedExperience([]);
+    setSelectedWorkModes([]);
+    setSelectedJobTypes([]);
+    setSelectedSalaryRanges([]);
+  };
+
   const fetchCandidates = async () => {
     try {
-      const response = await customerservice.getAllUserProfiles();
+      const queryParams = new URLSearchParams();
+      if (searchTerm) queryParams.append("search", searchTerm);
+      if (selectedCategories.length > 0) queryParams.append("categories", selectedCategories.join(","));
+      if (selectedExperience.length > 0) queryParams.append("experience", selectedExperience.join(","));
+      if (selectedWorkModes.length > 0) queryParams.append("workModes", selectedWorkModes.join(","));
+      if (selectedJobTypes.length > 0) queryParams.append("jobTypes", selectedJobTypes.join(","));
+      if (selectedSalaryRanges.length > 0) queryParams.append("salaryRanges", selectedSalaryRanges.join(","));
+      
+      const queryString = queryParams.toString() ? `?${queryParams.toString()}` : "";
+      
+      const response = await customerservice.getAllUserProfiles(queryString);
       if (response.success) {
         setCandidatesData(response.data);
       }
@@ -53,8 +89,13 @@ export default function FindCandidates() {
   };
 
   useEffect(() => {
-    fetchCandidates();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchCandidates();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm, selectedCategories, selectedExperience, selectedWorkModes, selectedJobTypes, selectedSalaryRanges]);
+
+  const filteredCandidates = candidatesData;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -114,7 +155,10 @@ export default function FindCandidates() {
                 <h2 className="text-lg font-bold text-slate-900 tracking-tight">
                   Filters
                 </h2>
-                <button className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                <button
+                  onClick={clearAllFilters}
+                  className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                >
                   Clear All
                 </button>
               </div>
@@ -149,12 +193,18 @@ export default function FindCandidates() {
                       key={cat.value}
                       className="flex items-center gap-3 cursor-pointer group"
                     >
-                      <div className="w-4 h-4 rounded border border-slate-300 group-hover:border-blue-500 flex items-center justify-center transition-colors bg-white">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedCategories.includes(cat.value) ? 'border-blue-600 bg-blue-50' : 'border-slate-300 bg-white group-hover:border-blue-500'}`}>
+                        <CheckCircle2 className={`w-3.5 h-3.5 text-blue-600 transition-opacity ${selectedCategories.includes(cat.value) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`} />
                       </div>
                       <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
                         {cat.title}
                       </span>
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={selectedCategories.includes(cat.value)}
+                        onChange={() => handleFilterChange(setSelectedCategories, cat.value)}
+                      />
                     </label>
                   ))}
                 </div>
@@ -163,7 +213,7 @@ export default function FindCandidates() {
               <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-8" />
 
               {/* Experience */}
-              <div>
+              <div className="mb-8">
                 <label className="block text-xs font-bold tracking-wider text-slate-400 uppercase mb-4">
                   Experience Level
                 </label>
@@ -173,12 +223,108 @@ export default function FindCandidates() {
                       key={exp.value}
                       className="flex items-center gap-3 cursor-pointer group"
                     >
-                      <div className="w-4 h-4 rounded-full border border-slate-300 group-hover:border-blue-500 flex items-center justify-center transition-colors bg-white">
-                        <div className="w-2 h-2 rounded-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${selectedExperience.includes(exp.value) ? 'border-blue-600 bg-blue-50' : 'border-slate-300 bg-white group-hover:border-blue-500'}`}>
+                        <div className={`w-2 h-2 rounded-full bg-blue-600 transition-opacity ${selectedExperience.includes(exp.value) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`} />
                       </div>
                       <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
                         {exp.label}
                       </span>
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={selectedExperience.includes(exp.value)}
+                        onChange={() => handleFilterChange(setSelectedExperience, exp.value)}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-8" />
+
+              {/* Work Mode */}
+              <div className="mb-8">
+                <label className="block text-xs font-bold tracking-wider text-slate-400 uppercase mb-4">
+                  Work Mode
+                </label>
+                <div className="space-y-3.5">
+                  {workModeType.map((mode) => (
+                    <label
+                      key={mode.value}
+                      className="flex items-center gap-3 cursor-pointer group"
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedWorkModes.includes(mode.value) ? 'border-blue-600 bg-blue-50' : 'border-slate-300 bg-white group-hover:border-blue-500'}`}>
+                        <CheckCircle2 className={`w-3.5 h-3.5 text-blue-600 transition-opacity ${selectedWorkModes.includes(mode.value) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`} />
+                      </div>
+                      <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+                        {mode.label}
+                      </span>
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={selectedWorkModes.includes(mode.value)}
+                        onChange={() => handleFilterChange(setSelectedWorkModes, mode.value)}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-8" />
+
+              {/* Job Type */}
+              <div className="mb-8">
+                <label className="block text-xs font-bold tracking-wider text-slate-400 uppercase mb-4">
+                  Job Type
+                </label>
+                <div className="space-y-3.5">
+                  {jobType.map((type) => (
+                    <label
+                      key={type.value}
+                      className="flex items-center gap-3 cursor-pointer group"
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedJobTypes.includes(type.value) ? 'border-blue-600 bg-blue-50' : 'border-slate-300 bg-white group-hover:border-blue-500'}`}>
+                        <CheckCircle2 className={`w-3.5 h-3.5 text-blue-600 transition-opacity ${selectedJobTypes.includes(type.value) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`} />
+                      </div>
+                      <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+                        {type.label}
+                      </span>
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={selectedJobTypes.includes(type.value)}
+                        onChange={() => handleFilterChange(setSelectedJobTypes, type.value)}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-8" />
+
+              {/* Salary Range */}
+              <div>
+                <label className="block text-xs font-bold tracking-wider text-slate-400 uppercase mb-4">
+                  Salary Range
+                </label>
+                <div className="space-y-3.5">
+                  {SalaryRangeType.map((range) => (
+                    <label
+                      key={range.value}
+                      className="flex items-center gap-3 cursor-pointer group"
+                    >
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${selectedSalaryRanges.includes(range.value) ? 'border-blue-600 bg-blue-50' : 'border-slate-300 bg-white group-hover:border-blue-500'}`}>
+                        <div className={`w-2 h-2 rounded-full bg-blue-600 transition-opacity ${selectedSalaryRanges.includes(range.value) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`} />
+                      </div>
+                      <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
+                        {range.label}
+                      </span>
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={selectedSalaryRanges.includes(range.value)}
+                        onChange={() => handleFilterChange(setSelectedSalaryRanges, range.value)}
+                      />
                     </label>
                   ))}
                 </div>
@@ -190,7 +336,7 @@ export default function FindCandidates() {
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
               <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider pl-2">
-                <span className="text-blue-600">{candidatesData.length}</span>{" "}
+                <span className="text-blue-600">{filteredCandidates.length}</span>{" "}
                 Candidates Available
               </h2>
               <div className="flex items-center gap-2 pr-2">
@@ -210,8 +356,9 @@ export default function FindCandidates() {
               className="space-y-5"
             >
               <AnimatePresence>
-                {candidatesData.map((candidate) => (
-                  <motion.div
+                {filteredCandidates.length > 0 ? (
+                  filteredCandidates.map((candidate) => (
+                    <motion.div
                     key={candidate._id}
                     variants={itemVariants}
                     whileHover={{ y: -2 }}
@@ -332,7 +479,21 @@ export default function FindCandidates() {
                       </div>
                     </div>
                   </motion.div>
-                ))}
+                ))
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-white p-10 rounded-3xl border border-slate-200/60 text-center flex flex-col items-center"
+                >
+                  <Search className="w-12 h-12 text-slate-300 mb-4" />
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">No candidates found</h3>
+                  <p className="text-slate-500 mb-6">We couldn't find any candidates matching your current filters.</p>
+                  <button onClick={clearAllFilters} className="px-5 py-2 bg-blue-50 text-blue-600 font-bold rounded-xl hover:bg-blue-100 transition-colors">
+                    Clear Filters
+                  </button>
+                </motion.div>
+              )}
               </AnimatePresence>
             </motion.div>
           </div>

@@ -147,6 +147,6 @@ export const EXPERIENCE_LEVELS = [
   },
   {
     label: "Senior (5+ yrs)",
-    value: "5-plus",
+    value: "5+",
   },
 ];

@@ -81,8 +81,8 @@ const getAllJobs = (query = "") => {
   return Auth(endpoint, {}, "GET");
 };
 
-const getAllUserProfiles = () => {
-  const endpoint = `/userprofile/get/all`;
+const getAllUserProfiles = (query = "") => {
+  const endpoint = `/userprofile/get/all${query}`;
   return Auth(endpoint, {}, "GET");
 };
 
