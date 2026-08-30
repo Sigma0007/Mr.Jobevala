@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import api from "../../customer/customerservice";
-import { Trash2 } from "lucide-react";
-import { toast } from "react-hot-toast";
+import api from '../../customer/customerservice';
+import { Trash2, Eye, X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const AdminUsersList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const fetchUsers = async () => {
     try {
@@ -99,13 +100,22 @@ const AdminUsersList = () => {
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
                   <td className="py-4 px-6 text-right">
-                    <button
-                      onClick={() => handleDelete(user._id)}
-                      className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete User"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => setSelectedUser(user)}
+                        className="p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="View User Details"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user._id)}
+                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete User"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -113,6 +123,59 @@ const AdminUsersList = () => {
           </tbody>
         </table>
       </div>
+
+      {/* User Details Modal */}
+      {selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100">
+              <h2 className="text-xl font-bold text-slate-900">User Details</h2>
+              <button 
+                onClick={() => setSelectedUser(null)}
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <p className="text-sm font-medium text-slate-500">Name</p>
+                <p className="text-base font-semibold text-slate-900">{selectedUser.name}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Email</p>
+                <p className="text-base text-slate-900">{selectedUser.email}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Phone</p>
+                <p className="text-base text-slate-900">{selectedUser.phone || "N/A"}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Role</p>
+                <p className="text-base text-slate-900 capitalize">{selectedUser.role}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Joined On</p>
+                <p className="text-base text-slate-900">{new Date(selectedUser.createdAt).toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Account Status</p>
+                <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-medium ${selectedUser.isActive !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                    {selectedUser.isActive !== false ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            </div>
+            <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button 
+                onClick={() => setSelectedUser(null)}
+                className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
