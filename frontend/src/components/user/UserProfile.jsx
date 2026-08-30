@@ -3,7 +3,11 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { User, UploadCloud, FileText, Loader2 } from "lucide-react";
 import customerservice from "../../customer/customerservice";
-import { workModeType, jobType as jobTypeOptions } from "../../Utility/utilites";
+import {
+  workModeType,
+  jobType as jobTypeOptions,
+  CATEGORIES,
+} from "../../Utility/utilites";
 
 export default function UserProfile() {
   const [profile, setProfile] = useState({
@@ -28,6 +32,7 @@ export default function UserProfile() {
     education: "",
     resume: "",
     profileImage: "",
+    category: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,6 +51,7 @@ export default function UserProfile() {
           phone: res.data.phone || "",
           title: res.data.title || "",
           jobType: res.data.jobType || "full-time",
+          category: res.data.category || "",
           location: res.data.location || {
             city: "",
             state: "",
@@ -93,6 +99,7 @@ export default function UserProfile() {
             phone: res.data.phone || "",
             title: res.data.title || "",
             jobType: res.data.jobType || "full-time",
+            category: res.data.category || "",
             location: res.data.location || {
               city: "",
               state: "",
@@ -378,7 +385,7 @@ export default function UserProfile() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Education
@@ -407,6 +414,24 @@ export default function UserProfile() {
                 {jobTypeOptions.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Job Category
+              </label>
+              <select
+                value={profile.category}
+                onChange={(e) =>
+                  setProfile({ ...profile, category: e.target.value })
+                }
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.value} value={cat.value}>
+                    {cat.title}
                   </option>
                 ))}
               </select>

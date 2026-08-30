@@ -28,6 +28,10 @@ const userProfileSchema = new mongoose.Schema(
             enum: ["full-time", "part-time", "contract", "internship", "freelance"],
             default: "full-time",
         },
+        category: {
+            type: String,
+            default: "",
+        },
         bio: {
             type: String,
             default: "",
