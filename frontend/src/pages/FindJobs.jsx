@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -8,7 +8,6 @@ import {
   Filter,
   DollarSign,
   Clock,
-  CheckCircle,
   Building2,
   ChevronDown,
 } from "lucide-react";
@@ -16,7 +15,8 @@ import toast from "react-hot-toast";
 import customerservice from "../customer/customerservice";
 import JobDetailsModal from "../components/Modals/JobDetailsModal";
 import ApplyJobModal from "../components/Modals/ApplyJobModal";
-import { jobType, SalaryRangeType, workModeType } from "../Utility/utilites";
+import CommonFilters from "../components/CommonFilters";
+import { workModeType } from "../Utility/utilites";
 
 const timeAgo = (dateString) => {
   if (!dateString) return "";
@@ -42,20 +42,32 @@ export default function FindJobs() {
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedExperience, setSelectedExperience] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedModes, setSelectedModes] = useState([]);
-  const [salaryRange, setSalaryRange] = useState("Any");
+  const [selectedSalaryRanges, setSelectedSalaryRanges] = useState([]);
   const [sortBy, setSortBy] = useState("newest");
   const [jobsData, setJobsData] = useState([]);
 
   const filteredJobs = jobsData;
 
-  const toggleArrayItem = (array, setArray, item) => {
-    if (array.includes(item)) {
-      setArray(array.filter((i) => i !== item));
-    } else {
-      setArray([...array, item]);
-    }
+  const handleFilterChange = (setter, value) => {
+    setter((prev) =>
+      prev.includes(value)
+        ? prev.filter((item) => item !== value)
+        : [...prev, value],
+    );
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setLocationQuery("");
+    setSelectedCategories([]);
+    setSelectedExperience([]);
+    setSelectedTypes([]);
+    setSelectedModes([]);
+    setSelectedSalaryRanges([]);
   };
 
   const containerVariants = {
@@ -122,9 +134,16 @@ export default function FindJobs() {
       const queryParams = new URLSearchParams();
       if (searchQuery) queryParams.append("searchQuery", searchQuery);
       if (locationQuery) queryParams.append("locationQuery", locationQuery);
-      if (selectedTypes.length > 0) queryParams.append("jobType", selectedTypes.join(","));
-      if (selectedModes.length > 0) queryParams.append("workMode", selectedModes.join(","));
-      if (salaryRange && salaryRange !== "Any") queryParams.append("salaryRange", salaryRange);
+      if (selectedCategories.length > 0)
+        queryParams.append("category", selectedCategories.join(","));
+      if (selectedExperience.length > 0)
+        queryParams.append("experience", selectedExperience.join(","));
+      if (selectedTypes.length > 0)
+        queryParams.append("jobType", selectedTypes.join(","));
+      if (selectedModes.length > 0)
+        queryParams.append("workMode", selectedModes.join(","));
+      if (selectedSalaryRanges.length > 0)
+        queryParams.append("salaryRange", selectedSalaryRanges.join(","));
       if (sortBy) queryParams.append("sortBy", sortBy);
 
       const qs = queryParams.toString();
@@ -139,7 +158,16 @@ export default function FindJobs() {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, locationQuery, selectedTypes, selectedModes, salaryRange, sortBy]);
+  }, [
+    searchQuery,
+    locationQuery,
+    selectedCategories,
+    selectedExperience,
+    selectedTypes,
+    selectedModes,
+    selectedSalaryRanges,
+    sortBy,
+  ]);
 
   return (
     <div className="min-h-screen pt-24 md:pt-28 pb-16 bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
@@ -202,117 +230,23 @@ export default function FindJobs() {
 
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
           {/* Filters Sidebar */}
-          <AnimatePresence>
-            {(isMobileFilterOpen ||
-              (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="w-full lg:w-72 flex-shrink-0 overflow-hidden lg:overflow-visible"
-              >
-                <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] sticky top-8">
-                  <div className="hidden lg:flex items-center gap-2 mb-8 pb-5 border-b border-slate-100">
-                    <Filter className="w-5 h-5 text-blue-600" />
-                    <h2 className="font-bold text-slate-900 text-lg tracking-tight">
-                      Filters
-                    </h2>
-                  </div>
-
-                  <div className="space-y-8">
-                    {/* Job Type Filter */}
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
-                        Job Type
-                      </h3>
-                      <div className="space-y-3">
-                        {jobType.map((type) => (
-                          <label
-                            key={type.value}
-                            className="flex items-center gap-3 cursor-pointer group"
-                          >
-                            <div className="relative flex items-center justify-center">
-                              <input
-                                type="checkbox"
-                                checked={selectedTypes.includes(type.value)}
-                                onChange={() =>
-                                  toggleArrayItem(
-                                    selectedTypes,
-                                    setSelectedTypes,
-                                    type.value,
-                                  )
-                                }
-                                className="peer appearance-none w-5 h-5 rounded-md border-2 border-slate-300 checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer focus:ring-4 focus:ring-blue-500/20 outline-none"
-                              />
-                              <CheckCircle className="w-3.5 h-3.5 text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
-                            </div>
-                            <span className="text-[15px] font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-                              {type.label}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Work Mode Filter */}
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
-                        Work Mode
-                      </h3>
-                      <div className="space-y-3">
-                        {workModeType.map((mode) => (
-                          <label
-                            key={mode.value}
-                            className="flex items-center gap-3 cursor-pointer group"
-                          >
-                            <div className="relative flex items-center justify-center">
-                              <input
-                                type="checkbox"
-                                checked={selectedModes.includes(mode.value)}
-                                onChange={() =>
-                                  toggleArrayItem(
-                                    selectedModes,
-                                    setSelectedModes,
-                                    mode.value,
-                                  )
-                                }
-                                className="peer appearance-none w-5 h-5 rounded-md border-2 border-slate-300 checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer focus:ring-4 focus:ring-blue-500/20 outline-none"
-                              />
-                              <CheckCircle className="w-3.5 h-3.5 text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
-                            </div>
-                            <span className="text-[15px] font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-                              {mode.label}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Salary Filter */}
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
-                        Salary Range
-                      </h3>
-                      <div className="relative">
-                        <select
-                          value={salaryRange}
-                          onChange={(e) => setSalaryRange(e.target.value)}
-                          className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 hover:border-slate-200 rounded-xl text-[15px] font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-all cursor-pointer text-slate-700 appearance-none"
-                        >
-                          {SalaryRangeType.map((range) => (
-                            <option key={range.value} value={range.value}>
-                              {range.label}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="w-5 h-5 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <CommonFilters
+            searchTerm={searchQuery}
+            setSearchTerm={setSearchQuery}
+            selectedCategories={selectedCategories}
+            setSelectedCategories={setSelectedCategories}
+            selectedExperience={selectedExperience}
+            setSelectedExperience={setSelectedExperience}
+            selectedWorkModes={selectedModes}
+            setSelectedWorkModes={setSelectedModes}
+            selectedJobTypes={selectedTypes}
+            setSelectedJobTypes={setSelectedTypes}
+            selectedSalaryRanges={selectedSalaryRanges}
+            setSelectedSalaryRanges={setSelectedSalaryRanges}
+            handleFilterChange={handleFilterChange}
+            clearAllFilters={clearAllFilters}
+            className={`${isMobileFilterOpen ? "block" : "hidden"} lg:block`}
+          />
 
           {/* Job Listings Area */}
           <div className="flex-1 flex flex-col min-h-0">
@@ -433,13 +367,7 @@ export default function FindJobs() {
                   filters. Try broadening your search or adjusting the criteria.
                 </p>
                 <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setLocationQuery("");
-                    setSelectedTypes([]);
-                    setSelectedModes([]);
-                    setSalaryRange("Any");
-                  }}
+                  onClick={clearAllFilters}
                   className="mt-6 text-blue-600 font-semibold hover:text-blue-700 hover:underline"
                 >
                   Clear all filters

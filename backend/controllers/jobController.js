@@ -80,7 +80,8 @@ export const getAllJobs = catchAsync(async (req, res) => {
     }
 
     if (category) {
-        dbQuery.category = { $regex: new RegExp(`^${category}$`, "i") };
+        const categories = category.split(',');
+        dbQuery.category = { $in: categories.map(c => new RegExp(`^${c.trim()}$`, "i")) };
     }
 
     if (locationQuery) {
@@ -101,23 +102,49 @@ export const getAllJobs = catchAsync(async (req, res) => {
 
     if (jobType) {
         const types = jobType.split(',');
-        dbQuery.jobType = { $in: types.map(t => new RegExp(`^${t}$`, 'i')) };
+        dbQuery.jobType = { $in: types.map(t => new RegExp(`^${t.trim()}$`, 'i')) };
     }
 
     if (workMode) {
         const modes = workMode.split(',');
-        dbQuery['location.workMode'] = { $in: modes.map(m => new RegExp(`^${m}$`, 'i')) };
+        dbQuery['location.workMode'] = { $in: modes.map(m => new RegExp(`^${m.trim()}$`, 'i')) };
+    }
+
+    if (req.query.experience) {
+        const expRanges = req.query.experience.split(',');
+        const expConditions = [];
+        for (const exp of expRanges) {
+            if (exp === "0-2") {
+                expConditions.push({ 'experience.min': { $lte: 2 } });
+            } else if (exp === "3-5") {
+                expConditions.push({ 'experience.min': { $lte: 5 }, 'experience.max': { $gte: 3 } });
+            } else if (exp === "5+") {
+                expConditions.push({ 'experience.max': { $gte: 5 } });
+            }
+        }
+        if (expConditions.length > 0) {
+            dbQuery.$and = dbQuery.$and || [];
+            dbQuery.$and.push({ $or: expConditions });
+        }
     }
 
     if (salaryRange && salaryRange !== 'Any') {
-        if (salaryRange === "0-30000") {
-            dbQuery['salary.min'] = { $gte: 0, $lte: 30000 };
-        } else if (salaryRange === "30000-60000") {
-            dbQuery['salary.min'] = { $gte: 30000, $lte: 60000 };
-        } else if (salaryRange === "60000-100000") {
-            dbQuery['salary.min'] = { $gt: 60000, $lte: 100000 };
-        } else if (salaryRange === "100000+") {
-            dbQuery['salary.min'] = { $gt: 100000 };
+        const ranges = salaryRange.split(',');
+        const salaryConditions = [];
+        for (const range of ranges) {
+            if (range === "0-30000") {
+                salaryConditions.push({ 'salary.min': { $gte: 0, $lte: 30000 } });
+            } else if (range === "30000-60000") {
+                salaryConditions.push({ 'salary.min': { $gte: 30000, $lte: 60000 } });
+            } else if (range === "60000-100000") {
+                salaryConditions.push({ 'salary.min': { $gt: 60000, $lte: 100000 } });
+            } else if (range === "100000+") {
+                salaryConditions.push({ 'salary.min': { $gt: 100000 } });
+            }
+        }
+        if (salaryConditions.length > 0) {
+            dbQuery.$and = dbQuery.$and || [];
+            dbQuery.$and.push({ $or: salaryConditions });
         }
     }
 
