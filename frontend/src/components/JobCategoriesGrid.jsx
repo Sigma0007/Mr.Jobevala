@@ -1,5 +1,10 @@
 import { motion } from "framer-motion";
 import { CATEGORIES } from "../Utility/utilites";
+import customerservice from "../customer/customerservice";
+import { setCategoriesJobPosition } from "../Redux/Dashboard/DashboardAction";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { PenTool } from "lucide-react";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -16,6 +21,28 @@ const cardVariants = {
 };
 
 export default function JobCategoriesGrid() {
+  const { categoryJobPosition } = useSelector((state) => state.dashboard);
+  const dispatch = useDispatch();
+
+  const fetchCategoryJobCounts = async () => {
+    try {
+      const response = await customerservice.getCategoryJobCounts();
+      if (response.success) {
+        dispatch(setCategoriesJobPosition(response.data));
+      }
+    } catch (error) {
+      console.error("Error fetching category job counts:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (categoryJobPosition.length === 0) {
+      fetchCategoryJobCounts();
+    }
+  }, []);
+
+  console.log("categoryJobPosition", categoryJobPosition);
+
   return (
     <section className="relative py-20 lg:py-28 bg-white overflow-hidden">
       {/* --- GPU-Accelerated Background --- */}
@@ -56,8 +83,10 @@ export default function JobCategoriesGrid() {
           viewport={{ once: true, margin: "-50px" }}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
         >
-          {CATEGORIES.map((cat, idx) => {
-            const Icon = cat.icon;
+          {categoryJobPosition.map((cat, idx) => {
+            const Icon =
+              CATEGORIES.find((item) => item.value === cat.value)?.icon ||
+              PenTool;
             return (
               <motion.div
                 key={idx}

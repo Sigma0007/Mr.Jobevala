@@ -17,6 +17,11 @@ const jobSchema = new mongoose.Schema(
             ref: "CompanyProfile",
             required: true,
         },
+        category: {
+            type: String,
+            trim: true,
+            default: "",
+        },
         description: {
             type: String,
             required: [true, "Job description is required"],

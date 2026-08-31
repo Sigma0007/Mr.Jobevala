@@ -1,4 +1,5 @@
 import Category from "../models/Category.js";
+import Job from "../models/Job.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
 
@@ -62,6 +63,90 @@ export const getAllCategories = catchAsync(async (req, res, next) => {
         success: true,
         count: categories.length,
         data: categories,
+    });
+});
+
+// @desc    Get categories with open position / job count
+// @route   GET /api/categories/job-counts
+// @access  Public
+export const getCategoryJobCounts = catchAsync(async (req, res, next) => {
+    let categories = await Category.find().sort({ createdAt: 1 });
+
+    // Seed default categories if none exist in the database yet
+    if (categories.length === 0) {
+        try {
+            await Category.insertMany(DEFAULT_CATEGORIES);
+            categories = await Category.find().sort({ createdAt: 1 });
+        } catch (error) {
+            categories = await Category.find().sort({ createdAt: 1 });
+        }
+    }
+
+    // Aggregate active jobs count & vacancies per category
+    const jobStats = await Job.aggregate([
+        {
+            $match: {
+                status: "active",
+            },
+        },
+        {
+            $group: {
+                _id: { $toLower: { $trim: { input: { $ifNull: ["$category", ""] } } } },
+                count: { $sum: { $ifNull: ["$vacancies", 1] } },
+                jobCount: { $sum: 1 },
+            },
+        },
+    ]);
+
+    const countMap = {};
+    jobStats.forEach((stat) => {
+        if (stat._id) {
+            countMap[stat._id] = stat.count;
+        }
+    });
+
+    const categoryCounts = await Promise.all(
+        categories.map(async (cat) => {
+            const valKey = (cat.value || "").toLowerCase().trim();
+            const titleKey = (cat.title || "").toLowerCase().trim();
+
+            let count = countMap[valKey] !== undefined ? countMap[valKey] : countMap[titleKey];
+
+            // If not directly in map, perform regex match query for flexible matching
+            if (count === undefined) {
+                const matched = await Job.aggregate([
+                    {
+                        $match: {
+                            status: "active",
+                            $or: [
+                                { category: { $regex: new RegExp(`^${cat.value}$`, "i") } },
+                                { category: { $regex: new RegExp(`^${cat.title}$`, "i") } },
+                            ],
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            total: { $sum: { $ifNull: ["$vacancies", 1] } },
+                        },
+                    },
+                ]);
+                count = matched.length > 0 ? matched[0].total : 0;
+            }
+
+            return {
+                _id: cat._id,
+                title: cat.title,
+                value: cat.value,
+                count: String(count || 0),
+            };
+        })
+    );
+
+    res.status(200).json({
+        success: true,
+        count: categoryCounts.length,
+        data: categoryCounts,
     });
 });
 

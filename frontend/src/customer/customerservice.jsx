@@ -165,6 +165,11 @@ const getCategories = () => {
   return Auth(endpoint, {}, "GET");
 };
 
+const getCategoryJobCounts = () => {
+  const endpoint = `/api/categories/job-counts`;
+  return Auth(endpoint, {}, "GET");
+};
+
 const createCategory = (data = {}) => {
   const endpoint = `/api/categories`;
   return Auth(endpoint, data, "POST");
@@ -214,6 +219,7 @@ export default {
   getAdminJobs,
   deleteAdminJob,
   getCategories,
+  getCategoryJobCounts,
   createCategory,
   updateCategory,
   deleteCategory,

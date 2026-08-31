@@ -1,4 +1,4 @@
-import { FETCH_DASHBOARD_SUCCESS, SET_CATEGORIES_TYPE_DATA } from "./DashboardActionType";
+import { CATEGORIES_JOB_POSITION, FETCH_DASHBOARD_SUCCESS, SET_CATEGORIES_TYPE_DATA } from "./DashboardActionType";
 
 
 export const fetchDashboardSuccess = (data) => ({
@@ -11,3 +11,7 @@ export const setAllCategoriesType = (data) => ({
   payload: data
 })
 
+export const setCategoriesJobPosition = (data) => ({
+  type: CATEGORIES_JOB_POSITION,
+  payload: data
+})

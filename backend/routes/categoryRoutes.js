@@ -1,6 +1,7 @@
 import express from "express";
 import {
     getAllCategories,
+    getCategoryJobCounts,
     getCategoryById,
     createCategory,
     updateCategory,
@@ -11,7 +12,8 @@ import { authorize } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
-// Public route: Get all categories
+// Public routes
+router.get("/job-counts", getCategoryJobCounts);
 router.get("/", getAllCategories);
 router.get("/:id", getCategoryById);
 

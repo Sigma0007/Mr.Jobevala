@@ -13,6 +13,7 @@ import {
     removeSavedJob,
     getProviderStats,
 } from "../controllers/jobController.js";
+import { getCategoryJobCounts } from "../controllers/categoryController.js";
 
 import {
     protect,
@@ -23,6 +24,11 @@ import {
 } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
+
+router.get(
+    "/category-counts",
+    getCategoryJobCounts
+);
 
 router.get(
     "/getAllJobs",

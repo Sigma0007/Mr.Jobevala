@@ -12,6 +12,7 @@ export const createJob = catchAsync(async (req, res, next) => {
         title,
         description,
         skills,
+        category,
         jobType,
         experience,
         salary,
@@ -46,6 +47,7 @@ export const createJob = catchAsync(async (req, res, next) => {
         title,
         description,
         skills,
+        category: category || "",
         jobType,
         experience,
         salary,
@@ -63,7 +65,7 @@ export const createJob = catchAsync(async (req, res, next) => {
 });
 
 export const getAllJobs = catchAsync(async (req, res) => {
-    const { searchQuery, locationQuery, jobType, workMode, salaryRange, sortBy } = req.query;
+    const { searchQuery, locationQuery, category, jobType, workMode, salaryRange, sortBy } = req.query;
 
     let dbQuery = {};
 
@@ -75,6 +77,10 @@ export const getAllJobs = catchAsync(async (req, res) => {
             { title: { $regex: searchQuery, $options: "i" } },
             { companyProfile: { $in: companyIds } }
         ];
+    }
+
+    if (category) {
+        dbQuery.category = { $regex: new RegExp(`^${category}$`, "i") };
     }
 
     if (locationQuery) {
@@ -180,6 +186,7 @@ export const updateJob = catchAsync(async (req, res, next) => {
         "title",
         "description",
         "skills",
+        "category",
         "jobType",
         "experience",
         "salary",
