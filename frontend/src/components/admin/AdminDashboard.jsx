@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import AdminOverview from './AdminOverview';
 import AdminUsersList from './AdminUsersList';
 import AdminJobsList from './AdminJobsList';
-import { LayoutDashboard, Users, Briefcase } from 'lucide-react';
+import AdminCategoriesList from './AdminCategoriesList';
+import { LayoutDashboard, Users, Briefcase, Layers } from 'lucide-react';
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
@@ -11,6 +12,7 @@ const AdminDashboard = () => {
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'users', label: 'Manage Users', icon: Users },
         { id: 'jobs', label: 'Manage Jobs', icon: Briefcase },
+        { id: 'categories', label: 'Manage Categories', icon: Layers },
     ];
 
     return (
@@ -24,7 +26,7 @@ const AdminDashboard = () => {
                 </p>
             </div>
 
-            <div className="flex space-x-2 mb-8 bg-slate-100 p-1.5 rounded-xl w-fit">
+            <div className="flex space-x-2 mb-8 bg-slate-100 p-1.5 rounded-xl w-fit overflow-x-auto">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -32,7 +34,7 @@ const AdminDashboard = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                                 isActive 
                                     ? 'bg-white text-blue-600 shadow-sm border border-slate-200/50' 
                                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
@@ -49,6 +51,7 @@ const AdminDashboard = () => {
                 {activeTab === 'overview' && <AdminOverview />}
                 {activeTab === 'users' && <AdminUsersList />}
                 {activeTab === 'jobs' && <AdminJobsList />}
+                {activeTab === 'categories' && <AdminCategoriesList />}
             </div>
         </div>
     );
