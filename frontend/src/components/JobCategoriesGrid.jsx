@@ -102,7 +102,7 @@ export default function JobCategoriesGrid() {
                     {cat.title}
                   </h3>
                   <p className="text-xs md:text-sm text-slate-500 mt-0.5 font-medium">
-                    ({cat.count})
+                    ({cat.count} open positions)
                   </p>
                 </div>
               </motion.div>

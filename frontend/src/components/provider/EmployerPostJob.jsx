@@ -7,6 +7,7 @@ import { clearSelectedJob } from "../../Redux/Job/JobAction";
 import { workModeType } from "../../Utility/utilites";
 
 export default function EmployerPostJob() {
+  const { categoriesType } = useSelector((state) => state.dashboard);
   const navigate = useNavigate();
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -19,6 +20,7 @@ export default function EmployerPostJob() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
+    category: "",
     skills: "",
     jobType: "full-time",
     experienceMin: "",
@@ -48,7 +50,6 @@ export default function EmployerPostJob() {
           }
         } catch (error) {
           toast.error("Failed to load job details.");
-          navigate("/provider/jobs");
           return;
         }
       }
@@ -71,6 +72,7 @@ export default function EmployerPostJob() {
           applicationDeadline: jobToEdit.applicationDeadline
             ? jobToEdit.applicationDeadline.split("T")[0]
             : "",
+          category: jobToEdit.category || "",
         });
       }
       setPageLoading(false);
@@ -126,6 +128,7 @@ export default function EmployerPostJob() {
         vacancies: Number(formData.vacancies),
         status: "active",
         applicationDeadline: formData.applicationDeadline || null,
+        category: formData.category,
       };
 
       let res;
@@ -139,8 +142,6 @@ export default function EmployerPostJob() {
         toast.success(
           isEditMode ? "Job updated successfully" : "Job posted successfully",
         );
-
-        navigate("/provider/jobs");
       }
     } catch (error) {
       toast.error(
@@ -186,6 +187,22 @@ export default function EmployerPostJob() {
               placeholder="React Developer"
               className="w-full border rounded-xl px-4 py-3"
             />
+          </div>
+          <div>
+            <label className="block mb-2">Category Type</label>
+
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full border rounded-xl px-4 py-3"
+            >
+              {categoriesType.map((mode) => (
+                <option key={mode.value} value={mode.value}>
+                  {mode.title}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
