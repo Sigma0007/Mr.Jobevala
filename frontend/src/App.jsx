@@ -17,8 +17,29 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Register from "./pages/Register";
 import JobApplications from "./components/provider/JobApplications";
 import FindCandidates from "./pages/FindCandidates";
+import { useEffect } from "react";
+import { setAllCategoriesType } from "./Redux/Dashboard/DashboardAction";
+import { useDispatch } from "react-redux";
+import customerservice from "./customer/customerservice";
 
 export default function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // get all categories
+    const getAllCategories = async () => {
+      try {
+        const response = await customerservice.getCategories();
+        if (response.success) {
+          dispatch(setAllCategoriesType(response.data));
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    getAllCategories();
+  }, []);
+
   return (
     <>
       <div className="min-h-screen bg-slate-50 font-sans relative">

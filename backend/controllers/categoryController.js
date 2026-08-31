@@ -61,7 +61,7 @@ export const getAllCategories = catchAsync(async (req, res, next) => {
     res.status(200).json({
         success: true,
         count: categories.length,
-        categories,
+        data: categories,
     });
 });
 

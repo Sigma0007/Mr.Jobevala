@@ -6,10 +6,12 @@ import customerservice from "../../customer/customerservice";
 import {
   workModeType,
   jobType as jobTypeOptions,
-  CATEGORIES,
 } from "../../Utility/utilites";
+import { useSelector } from "react-redux";
 
 export default function UserProfile() {
+  const { categoriesType } = useSelector((state) => state.dashboard);
+
   const [profile, setProfile] = useState({
     name: "",
     phone: "",
@@ -429,7 +431,7 @@ export default function UserProfile() {
                 }
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
               >
-                {CATEGORIES.map((cat) => (
+                {categoriesType.map((cat) => (
                   <option key={cat.value} value={cat.value}>
                     {cat.title}
                   </option>
