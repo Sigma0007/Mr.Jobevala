@@ -16,7 +16,7 @@ const AdminCategoriesList = () => {
     try {
       const response = await api.getCategories();
       if (response.success) {
-        setCategories(response.categories || []);
+        setCategories(response.data || []);
       } else {
         toast.error(response.message || "Failed to load categories.");
       }
@@ -43,7 +43,11 @@ const AdminCategoriesList = () => {
   };
 
   const handleDelete = async (id, title) => {
-    if (!window.confirm(`Are you sure you want to delete the category "${title}"?`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete the category "${title}"?`,
+      )
+    ) {
       return;
     }
 
@@ -64,7 +68,7 @@ const AdminCategoriesList = () => {
   const filteredCategories = categories.filter(
     (c) =>
       c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.value.toLowerCase().includes(searchTerm.toLowerCase())
+      c.value.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
