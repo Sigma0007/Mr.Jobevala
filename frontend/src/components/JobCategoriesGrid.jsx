@@ -41,8 +41,6 @@ export default function JobCategoriesGrid() {
     }
   }, []);
 
-  console.log("categoryJobPosition", categoryJobPosition);
-
   return (
     <section className="relative py-20 lg:py-28 bg-white overflow-hidden">
       {/* --- GPU-Accelerated Background --- */}

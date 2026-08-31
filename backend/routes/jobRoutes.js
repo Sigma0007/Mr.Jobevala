@@ -12,6 +12,7 @@ import {
     getSavedJobs,
     removeSavedJob,
     getProviderStats,
+    getLastsixJobs,
 } from "../controllers/jobController.js";
 import { getCategoryJobCounts } from "../controllers/categoryController.js";
 
@@ -33,6 +34,11 @@ router.get(
 router.get(
     "/getAllJobs",
     getAllJobs
+);
+
+router.get(
+    "/getLastsixJobs",
+    getLastsixJobs
 );
 
 router.get(

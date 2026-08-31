@@ -72,7 +72,7 @@ export const getAllJobs = catchAsync(async (req, res) => {
     if (searchQuery) {
         const companies = await CompanyProfile.find({ companyName: { $regex: searchQuery, $options: "i" } });
         const companyIds = companies.map(c => c._id);
-        
+
         dbQuery.$or = [
             { title: { $regex: searchQuery, $options: "i" } },
             { companyProfile: { $in: companyIds } }
@@ -129,6 +129,19 @@ export const getAllJobs = catchAsync(async (req, res) => {
     }
 
     const jobs = await Job.find(dbQuery).populate("companyProfile").sort(sortConfig);
+
+    res.status(200).json({
+        success: true,
+        total: jobs.length,
+        data: jobs,
+    });
+});
+
+export const getLastsixJobs = catchAsync(async (req, res) => {
+    const jobs = await Job.find()
+        .sort({ createdAt: -1 })
+        .limit(6)
+        .populate("companyProfile");
 
     res.status(200).json({
         success: true,

@@ -81,6 +81,11 @@ const getAllJobs = (query = "") => {
   return Auth(endpoint, {}, "GET");
 };
 
+const getLastsixJobs = () => {
+  const endpoint = `/api/jobs/getLastsixJobs`;
+  return Auth(endpoint, {}, "GET");
+};
+
 const getAllUserProfiles = (query = "") => {
   const endpoint = `/api/userprofile/get/all${query}`;
   return Auth(endpoint, {}, "GET");
@@ -223,4 +228,5 @@ export default {
   createCategory,
   updateCategory,
   deleteCategory,
+  getLastsixJobs,
 };
