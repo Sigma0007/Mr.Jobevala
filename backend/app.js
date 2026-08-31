@@ -16,7 +16,10 @@ const app = express();
 
 app.use(
     cors({
-        origin: "http://localhost:5173",
+        origin: [
+            "http://localhost:5173",
+            "https://job-portal-v5l9.vercel.app",
+        ],
         credentials: true,
     })
 );
