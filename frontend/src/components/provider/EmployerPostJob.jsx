@@ -131,17 +131,33 @@ export default function EmployerPostJob() {
         category: formData.category,
       };
 
-      let res;
       if (isEditMode) {
-        res = await customerservice.updateJob(id, payload);
+        const res = await customerservice.updateJob(id, payload);
+        if (res.success) {
+          toast.success("Job updated successfully");
+        }
       } else {
-        res = await customerservice.createJob(payload);
-      }
-
-      if (res.success) {
-        toast.success(
-          isEditMode ? "Job updated successfully" : "Job posted successfully",
-        );
+        const res = await customerservice.createJob(payload);
+        if (res.success) {
+          toast.success("Job posted successfully");
+          setFormData({
+            title: "",
+            description: "",
+            skills: "",
+            jobType: "full-time",
+            experienceMin: "",
+            experienceMax: "",
+            salaryMin: "",
+            salaryMax: "",
+            city: "",
+            state: "",
+            country: "India",
+            workMode: "on-site",
+            vacancies: 1,
+            applicationDeadline: "",
+            category: "",
+          });
+        }
       }
     } catch (error) {
       toast.error(
