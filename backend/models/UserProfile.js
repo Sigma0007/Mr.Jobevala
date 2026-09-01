@@ -51,6 +51,10 @@ const userProfileSchema = new mongoose.Schema(
             },
         },
         location: {
+            address: {
+                type: String,
+                default: "",
+            },
             city: {
                 type: String,
                 default: "",
@@ -62,6 +66,14 @@ const userProfileSchema = new mongoose.Schema(
             country: {
                 type: String,
                 default: "India",
+            },
+            lat: {
+                type: Number,
+                default: null,
+            },
+            lng: {
+                type: Number,
+                default: null,
             },
             workMode: {
                 type: String,

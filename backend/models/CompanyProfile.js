@@ -24,6 +24,14 @@ const companyProfileSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        lat: {
+            type: Number,
+            default: null,
+        },
+        lng: {
+            type: Number,
+            default: null,
+        },
         phone: {
             type: String,
             default: "",

@@ -8,6 +8,7 @@ import {
   jobType as jobTypeOptions,
 } from "../../Utility/utilites";
 import { useSelector } from "react-redux";
+import LocationPickerMap from "../provider/LocationPickerMap";
 
 export default function UserProfile() {
   const { categoriesType } = useSelector((state) => state.dashboard);
@@ -18,10 +19,13 @@ export default function UserProfile() {
     title: "",
     jobType: "full-time",
     location: {
+      address: "",
       city: "",
       state: "",
       country: "India",
       workMode: "on-site",
+      lat: null,
+      lng: null,
     },
     salary: {
       min: 0,
@@ -54,11 +58,14 @@ export default function UserProfile() {
           title: res.data.title || "",
           jobType: res.data.jobType || "full-time",
           category: res.data.category || "",
-          location: res.data.location || {
-            city: "",
-            state: "",
-            country: "India",
-            workMode: "on-site",
+          location: {
+            address: res.data.location.address || "",
+            city: res.data.location.city || "",
+            state: res.data.location.state || "",
+            country: res.data.location.country || "India",
+            workMode: res.data.location.workMode || "on-site",
+            lat: res.data.location.lat || null,
+            lng: res.data.location.lng || null,
           },
           salary: res.data.salary || {
             min: 0,
@@ -102,11 +109,14 @@ export default function UserProfile() {
             title: res.data.title || "",
             jobType: res.data.jobType || "full-time",
             category: res.data.category || "",
-            location: res.data.location || {
-              city: "",
-              state: "",
-              country: "India",
-              workMode: "on-site",
+            location: {
+              address: res.data.location.address || "",
+              city: res.data.location.city || "",
+              state: res.data.location.state || "",
+              country: res.data.location.country || "India",
+              workMode: res.data.location.workMode || "on-site",
+              lat: res.data.location.lat || null,
+              lng: res.data.location.lng || null,
             },
             salary: res.data.salary || {
               min: 0,
@@ -253,6 +263,45 @@ export default function UserProfile() {
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
               />
             </div>
+          </div>
+
+          {/* Location & Map Picker */}
+          <div className="pt-2">
+            <LocationPickerMap
+              label="Location / Address"
+              subLabel="(Pin your exact location on the map or search your locality)"
+              placeholder="Search area, road, city, or locality..."
+              value={
+                profile.location.address || profile.location.locationName || ""
+              }
+              lat={profile.location.lat}
+              lng={profile.location.lng}
+              onChange={(locStr, coords) => {
+                setProfile((prev) => ({
+                  ...prev,
+                  location: {
+                    ...prev.location,
+                    address: locStr,
+                    ...(coords
+                      ? {
+                          lat: coords.lat,
+                          lng: coords.lng,
+                        }
+                      : {}),
+                  },
+                }));
+              }}
+              onCoordinatesChange={(lat, lng) => {
+                setProfile((prev) => ({
+                  ...prev,
+                  location: {
+                    ...prev.location,
+                    lat: lat,
+                    lng: lng,
+                  },
+                }));
+              }}
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

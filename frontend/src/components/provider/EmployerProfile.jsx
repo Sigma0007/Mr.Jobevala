@@ -3,12 +3,15 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { Building2, Upload } from "lucide-react";
 import customerService from "../../customer/customerservice";
+import LocationPickerMap from "./LocationPickerMap";
 
 export default function EmployerProfile() {
   const [profile, setProfile] = useState({
     name: "",
     companyName: "",
     location: "",
+    lat: null,
+    lng: null,
     phone: "",
     logo: "",
     website: "",
@@ -23,16 +26,20 @@ export default function EmployerProfile() {
       try {
         const response = await customerService.getCompanyProfile();
         if (response.success && response.data) {
+          const profileData = response.data;
+
           setProfile({
-            name: response.data.name || "",
-            companyName: response.data.companyName || "",
-            location: response.data.location || "",
-            phone: response.data.phone || "",
-            logo: response.data.logo || "",
-            website: response.data.website || "",
-            industry: response.data.industry || "",
-            companySize: response.data.companySize || "",
-            aboutCompany: response.data.aboutCompany || "",
+            name: profileData.name || "",
+            companyName: profileData.companyName || "",
+            location: profileData.location || "",
+            lat: profileData.lat || "",
+            lng: profileData.lng || "",
+            phone: profileData.phone || "",
+            logo: profileData.logo || "",
+            website: profileData.website || "",
+            industry: profileData.industry || "",
+            companySize: profileData.companySize || "",
+            aboutCompany: profileData.aboutCompany || "",
           });
         }
       } catch (error) {
@@ -155,22 +162,6 @@ export default function EmployerProfile() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Location
-            </label>
-            <input
-              type="text"
-              value={profile.location}
-              onChange={(e) =>
-                setProfile({ ...profile, location: e.target.value })
-              }
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
               Website
             </label>
             <input
@@ -182,6 +173,9 @@ export default function EmployerProfile() {
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Industry
@@ -195,9 +189,6 @@ export default function EmployerProfile() {
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Company Size
@@ -211,6 +202,37 @@ export default function EmployerProfile() {
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
             />
           </div>
+        </div>
+
+        {/* Company Location with Search Suggestions and Google Maps */}
+        <div className="pt-2">
+          <LocationPickerMap
+            label="Office Address"
+            subLabel="(Sharing exact address will help candidates to reach you easily)"
+            placeholder="Search area, road, city, or locality..."
+            value={profile.location}
+            lat={profile.lat}
+            lng={profile.lng}
+            onChange={(loc, coords) => {
+              setProfile((prev) => ({
+                ...prev,
+                location: loc,
+                ...(coords
+                  ? {
+                      lat: coords.lat,
+                      lng: coords.lng,
+                    }
+                  : {}),
+              }));
+            }}
+            onCoordinatesChange={(lat, lng) => {
+              setProfile((prev) => ({
+                ...prev,
+                lat: lat,
+                lng: lng,
+              }));
+            }}
+          />
         </div>
 
         <div>
