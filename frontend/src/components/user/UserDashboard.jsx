@@ -1,18 +1,20 @@
 import { useState } from "react";
-import { User, FileText, Bookmark } from "lucide-react";
+import { User, FileText, Bookmark, LayoutDashboard } from "lucide-react";
 
 // Candidate Components
+import UserOverview from "./UserOverview";
 import UserApplied from "./UserApplied";
 import UserSaved from "./UserSaved";
 import UserProfile from "./UserProfile";
 
 export function UserDashboard() {
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState("overview");
 
   const menuItems = [
-    { id: "profile", name: "My Profile", icon: User },
+    { id: "overview", name: "Dashboard", icon: LayoutDashboard },
     { id: "applied", name: "Applied Jobs", icon: FileText },
     { id: "saved", name: "Saved Jobs", icon: Bookmark },
+    { id: "profile", name: "My Profile", icon: User },
   ];
 
   return (
@@ -34,7 +36,7 @@ export function UserDashboard() {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all cursor-pointer ${
                       isActive
                         ? "bg-brand-600 text-white shadow-[0_4px_14px_0_rgb(37,99,235,0.39)]"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
@@ -54,12 +56,14 @@ export function UserDashboard() {
 
           {/* Dynamic Main Content Area */}
           <div className="flex-1">
-            {activeTab === "profile" && <UserProfile />}
+            {activeTab === "overview" && <UserOverview setActiveTab={setActiveTab} />}
             {activeTab === "applied" && <UserApplied />}
             {activeTab === "saved" && <UserSaved />}
+            {activeTab === "profile" && <UserProfile />}
           </div>
         </div>
       </div>
     </div>
   );
 }
+

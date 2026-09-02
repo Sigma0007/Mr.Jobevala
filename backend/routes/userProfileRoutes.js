@@ -1,9 +1,21 @@
 import express from "express";
-import { getAllUserProfile, getUserProfile, updateUserProfile } from "../controllers/userProfileController.js";
+import {
+    getAllUserProfile,
+    getUserProfile,
+    updateUserProfile,
+    getUserOverview
+} from "../controllers/userProfileController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
+
+router.get(
+    "/overview",
+    protect,
+    authorize("user"),
+    getUserOverview
+);
 
 router.get(
     "/get/all",

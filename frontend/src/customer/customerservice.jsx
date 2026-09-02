@@ -61,6 +61,11 @@ const getUserProfile = () => {
   return Auth(endpoint, {}, "GET");
 };
 
+const getUserOverview = () => {
+  const endpoint = `/api/userprofile/overview`;
+  return Auth(endpoint, {}, "GET");
+};
+
 const updateUserProfile = (data = {}) => {
   const endpoint = `/api/userprofile`;
   return Auth(endpoint, data, "PUT");
@@ -204,6 +209,7 @@ export default {
   deleteJob,
   updateJobStatus,
   getUserProfile,
+  getUserOverview,
   updateUserProfile,
   getCompanyProfile,
   updateCompanyProfile,
