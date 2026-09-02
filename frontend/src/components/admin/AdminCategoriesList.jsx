@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from "react";
 import api from "../../customer/customerservice";
-import { Plus, Edit2, Trash2, Search, Layers, RefreshCw } from "lucide-react";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Search,
+  Layers,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  Tag,
+} from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { setAllCategoriesType } from "../../Redux/Dashboard/DashboardAction";
 import CategoryModal from "./CategoryModal";
 
 const AdminCategoriesList = () => {
+  const dispatch = useDispatch();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState(null);
+  const [expandedCategoryId, setExpandedCategoryId] = useState(null);
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -17,6 +31,7 @@ const AdminCategoriesList = () => {
       const response = await api.getCategories();
       if (response.success) {
         setCategories(response.data || []);
+        dispatch(setAllCategoriesType(response.data || []));
       } else {
         toast.error(response.message || "Failed to load categories.");
       }
@@ -45,7 +60,7 @@ const AdminCategoriesList = () => {
   const handleDelete = async (id, label) => {
     if (
       !window.confirm(
-        `Are you sure you want to delete the category "${label}"?`,
+        `Are you sure you want to delete the category "${label}"? This action cannot be undone.`,
       )
     ) {
       return;
@@ -55,21 +70,34 @@ const AdminCategoriesList = () => {
       const response = await api.deleteCategory(id);
       if (response.success) {
         toast.success(response.message || "Category deleted successfully!");
-        setCategories((prev) => prev.filter((c) => c._id !== id));
+        const updatedList = categories.filter((c) => c._id !== id);
+        setCategories(updatedList);
+        dispatch(setAllCategoriesType(updatedList));
       } else {
         toast.error(response.message || "Failed to delete category.");
       }
     } catch (error) {
       console.error("Error deleting category:", error);
-      toast.error("Failed to delete category.");
+      toast.error(error.message || "Failed to delete category.");
     }
   };
 
-  const filteredCategories = categories.filter(
-    (c) =>
-      c.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.value.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const toggleExpand = (id) => {
+    setExpandedCategoryId((prev) => (prev === id ? null : id));
+  };
+
+  const filteredCategories = categories.filter((c) => {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return true;
+    const matchLabel = c.label?.toLowerCase().includes(term);
+    const matchValue = c.value?.toLowerCase().includes(term);
+    const matchRole = c.roles?.some(
+      (r) =>
+        r.label?.toLowerCase().includes(term) ||
+        r.value?.toLowerCase().includes(term),
+    );
+    return matchLabel || matchValue || matchRole;
+  });
 
   return (
     <div className="space-y-6">
@@ -84,7 +112,7 @@ const AdminCategoriesList = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search categories by title or slug..."
+            placeholder="Search categories or sub-roles..."
             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
           />
         </div>
@@ -113,11 +141,11 @@ const AdminCategoriesList = () => {
           <div className="flex items-center gap-2">
             <Layers size={20} className="text-blue-600" />
             <h2 className="font-bold text-slate-900 text-base">
-              Categories List
+              Categories & Roles List
             </h2>
           </div>
           <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-full">
-            {categories.length} Total
+            {categories.length} Total Categories
           </span>
         </div>
 
@@ -136,7 +164,7 @@ const AdminCategoriesList = () => {
             </h3>
             <p className="text-slate-500 text-sm mt-1 max-w-sm mx-auto">
               {searchTerm
-                ? "No categories match your search term. Try adjusting your search query."
+                ? "No categories match your search term. Try adjusting your query."
                 : "No categories have been created yet. Click 'Add Category' to get started."}
             </p>
             {!searchTerm && (
@@ -154,58 +182,109 @@ const AdminCategoriesList = () => {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   <th className="py-4 px-6">#</th>
-                  <th className="py-4 px-6">Category Title</th>
+                  <th className="py-4 px-6">Category Label</th>
                   <th className="py-4 px-6">Slug / Value</th>
+                  <th className="py-4 px-6">Sub-Roles</th>
                   <th className="py-4 px-6">Created Date</th>
                   <th className="py-4 px-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filteredCategories.map((category, index) => (
-                  <tr
-                    key={category._id || index}
-                    className="hover:bg-slate-50/60 transition-colors"
-                  >
-                    <td className="py-4 px-6 text-xs text-slate-400 font-mono">
-                      {index + 1}
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-slate-900 text-sm">
-                        {category.label}
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md text-xs font-mono">
-                        {category.value}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-slate-500 text-sm">
-                      {category.createdAt
-                        ? new Date(category.createdAt).toLocaleDateString()
-                        : "Predefined"}
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => handleEdit(category)}
-                          className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit Category"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleDelete(category._id, category.label)
-                          }
-                          className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete Category"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filteredCategories.map((category, index) => {
+                  const isExpanded = expandedCategoryId === category._id;
+                  const roleCount = category.roles?.length || 0;
+
+                  return (
+                    <React.Fragment key={category._id || index}>
+                      <tr className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-4 px-6 text-xs text-slate-400 font-mono">
+                          {index + 1}
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="font-semibold text-slate-900 text-sm">
+                            {category.label}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md text-xs font-mono">
+                            {category.value}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          {roleCount > 0 ? (
+                            <button
+                              onClick={() => toggleExpand(category._id)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                            >
+                              <Tag size={12} />
+                              <span>{roleCount} Roles</span>
+                              {isExpanded ? (
+                                <ChevronUp size={12} />
+                              ) : (
+                                <ChevronDown size={12} />
+                              )}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-slate-400">
+                              0 Roles
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-4 px-6 text-slate-500 text-sm">
+                          {category.createdAt
+                            ? new Date(category.createdAt).toLocaleDateString()
+                            : "Predefined"}
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => handleEdit(category)}
+                              className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Edit Category"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleDelete(category._id, category.label)
+                              }
+                              className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete Category"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* Expanded Sub-roles Row */}
+                      {isExpanded && roleCount > 0 && (
+                        <tr className="bg-slate-50/70 border-b border-slate-100">
+                          <td colSpan={6} className="py-3 px-8">
+                            <div className="flex flex-wrap gap-2 items-center py-1">
+                              <span className="text-xs font-semibold text-slate-500 mr-2">
+                                Sub-Roles:
+                              </span>
+                              {category.roles.map((r, rIdx) => (
+                                <div
+                                  key={rIdx}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                                >
+                                  <span className="font-medium text-slate-700">
+                                    {r.label}
+                                  </span>
+                                  <span className="text-[10px] font-mono text-slate-400 bg-slate-50 px-1 rounded">
+                                    {r.value}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>

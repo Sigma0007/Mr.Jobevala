@@ -125,7 +125,7 @@ export default function CommonFilters({
                   />
                 </div>
                 <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-                  {cat.title}
+                  {cat.label || cat.title}
                 </span>
                 <input
                   type="checkbox"

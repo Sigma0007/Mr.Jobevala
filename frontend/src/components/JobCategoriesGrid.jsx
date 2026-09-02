@@ -97,7 +97,7 @@ export default function JobCategoriesGrid() {
                 </div>
                 <div>
                   <h3 className="text-base md:text-lg font-bold text-slate-900 group-hover:text-brand-600 transition-colors duration-300">
-                    {cat.title}
+                    {cat.label || cat.title}
                   </h3>
                   <p className="text-xs md:text-sm text-slate-500 mt-0.5 font-medium">
                     ({cat.count} open positions)

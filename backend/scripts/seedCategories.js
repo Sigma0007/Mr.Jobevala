@@ -13,7 +13,7 @@ const seedCategories = async () => {
 
         const validValues = DEFAULT_CATEGORIES.map((c) => c.value);
 
-        // Optional: Remove obsolete categories not in the new category list
+        // Remove obsolete categories not in the new category list
         const removed = await Category.deleteMany({ value: { $nin: validValues } });
         if (removed.deletedCount > 0) {
             console.log(`Cleaned up ${removed.deletedCount} old/deprecated categories.`);
@@ -25,12 +25,11 @@ const seedCategories = async () => {
                 {
                     $set: {
                         label: cat.label,
-                        title: cat.title,
                         value: cat.value,
                         roles: cat.roles,
                     },
                 },
-                { upsert: true, new: true }
+                { upsert: true, returnDocument: "after" }
             );
         }
 

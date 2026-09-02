@@ -121,7 +121,7 @@ export default function EmployerPostJob() {
     const categoryObj = categoriesType.find(
       (c) => c.value === selectedCategory,
     );
-    const isSubCatValid = categoryObj?.roles.some(
+    const isSubCatValid = categoryObj?.roles?.some(
       (r) => r.value === formData.subCategory,
     );
 
@@ -135,7 +135,7 @@ export default function EmployerPostJob() {
   const handleSubCategoryChange = (e) => {
     const selectedSubCategory = e.target.value;
     const parentCategory = categoriesType.find((c) =>
-      c.roles.some((r) => r.value === selectedSubCategory),
+      c.roles?.some((r) => r.value === selectedSubCategory),
     );
 
     setFormData((prev) => ({
@@ -325,14 +325,14 @@ export default function EmployerPostJob() {
             >
               <option value="">Select Sub-category Type</option>
               {selectedCategoryObj
-                ? selectedCategoryObj.roles.map((role) => (
+                ? (selectedCategoryObj.roles || []).map((role) => (
                     <option key={role.value} value={role.value}>
                       {role.label}
                     </option>
                   ))
                 : categoriesType.map((cat) => (
                     <optgroup key={cat.value} label={cat.label}>
-                      {cat.roles.map((role) => (
+                      {(cat.roles || []).map((role) => (
                         <option key={role.value} value={role.value}>
                           {role.label}
                         </option>

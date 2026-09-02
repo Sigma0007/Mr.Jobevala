@@ -482,7 +482,7 @@ export default function UserProfile() {
               >
                 {categoriesType.map((cat) => (
                   <option key={cat.value} value={cat.value}>
-                    {cat.title}
+                    {cat.label || cat.title}
                   </option>
                 ))}
               </select>
