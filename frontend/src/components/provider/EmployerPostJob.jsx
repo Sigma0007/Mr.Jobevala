@@ -6,6 +6,17 @@ import customerservice from "../../customer/customerservice";
 import { clearSelectedJob } from "../../Redux/Job/JobAction";
 import { workModeType } from "../../Utility/utilites";
 
+// TODO: need to add
+// Category type
+// Sub-category type
+// Job role
+// job location state, distict, taluka, Village
+// Minimum Qualification * 10th pass, 12th pass, graduate, post graduate, diploma
+// Gender Preference *
+// Job Timings
+// job shift * morning, evening, night
+// Job address
+
 export default function EmployerPostJob() {
   const { categoriesType } = useSelector((state) => state.dashboard);
   const navigate = useNavigate();

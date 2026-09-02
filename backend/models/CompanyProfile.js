@@ -10,10 +10,23 @@ const companyProfileSchema = new mongoose.Schema(
         },
         name: {
             type: String,
-            required: [true, "Name is required"],
             trim: true,
-            minlength: 2,
-            maxlength: 100,
+            default: "",
+        },
+        ownerName: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        ownerPhone: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        ownerEmail: {
+            type: String,
+            trim: true,
+            default: "",
         },
         companyName: {
             type: String,
@@ -49,6 +62,30 @@ const companyProfileSchema = new mongoose.Schema(
             default: "",
         },
         companySize: {
+            type: String,
+            default: "",
+        },
+        establishYear: {
+            type: String,
+            default: "",
+        },
+        benefits: {
+            type: [String],
+            default: [],
+        },
+        contactPersonRole: {
+            type: String,
+            default: "",
+        },
+        contactPersonName: {
+            type: String,
+            default: "",
+        },
+        contactPersonPhone: {
+            type: String,
+            default: "",
+        },
+        contactPersonEmail: {
             type: String,
             default: "",
         },

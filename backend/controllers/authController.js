@@ -108,8 +108,9 @@ export const register = catchAsync(
         if (userRole === "provider") {
             await CompanyProfile.create({
                 user: user._id,
-                phone: phone || "",
-                name: name || "",
+                ownerPhone: phone || "",
+                ownerName: name || "",
+                ownerEmail: email || ""
             });
         }
 
