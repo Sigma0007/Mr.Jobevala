@@ -50,7 +50,7 @@ const EmployerDashboard = () => {
                         </div>
                     </div>
                     <div className="flex-1">
-                        {activeTab === "overview" && <EmployerOverview />}
+                        {activeTab === "overview" && <EmployerOverview setActiveTab={setActiveTab} />}
                         {activeTab === "jobs" && <EmployerJobs setActiveTab={setActiveTab} />}
                         {activeTab === "applicants" && <EmployerApplicants />}
                         {activeTab === "post-job" && <EmployerPostJob setActiveTab={setActiveTab} />}

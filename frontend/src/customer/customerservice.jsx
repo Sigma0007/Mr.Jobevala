@@ -136,6 +136,11 @@ const getProviderApplications = () => {
   return Auth(endpoint, {}, "GET");
 };
 
+const getProviderOverview = () => {
+  const endpoint = `/api/companyprofile/overview`;
+  return Auth(endpoint, {}, "GET");
+};
+
 const getProviderStats = () => {
   const endpoint = `/api/jobs/provider-state-overview`;
   return Auth(endpoint, {}, "GET");
@@ -223,6 +228,7 @@ export default {
   getJobApplications,
   updateApplicationStatus,
   getProviderApplications,
+  getProviderOverview,
   getProviderStats,
   getAdminStats,
   getAdminUsers,
