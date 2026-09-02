@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Briefcase,
   Users,
@@ -9,24 +9,19 @@ import {
   CheckCircle2,
   AlertCircle,
   PlusCircle,
-  Building2,
-  MapPin,
-  Mail,
-  Phone,
-  Calendar,
   ChevronRight,
-  ExternalLink,
   Award,
   Sparkles,
-  FileText,
   X,
   Loader2,
   RefreshCw,
   Eye,
+  Calendar,
 } from "lucide-react";
 import customerservice from "../../customer/customerservice";
 import toast from "react-hot-toast";
 import { statusConfig } from "../../Utility/utilites";
+import CandidateDetailsModal from "../Modals/CandidateDetailsModal";
 
 export default function EmployerOverview({ setActiveTab = () => {} }) {
   const [overviewData, setOverviewData] = useState(null);
@@ -673,208 +668,13 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
       </div>
 
       {/* 6. Interactive Candidate Preview Modal */}
-      <AnimatePresence>
-        {selectedApplicant && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedApplicant(null)}
-              className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-full max-w-3xl max-h-[90vh] overflow-hidden bg-white rounded-3xl shadow-2xl flex flex-col"
-            >
-              {/* Modal Header */}
-              <div className="flex-shrink-0 border-b border-slate-100 bg-white px-6 sm:px-8 py-5 flex items-start justify-between sticky top-0 z-10">
-                <div className="flex items-center gap-4 sm:gap-5">
-                  <img
-                    src={
-                      selectedApplicant.userProfile?.profileImage ||
-                      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80"
-                    }
-                    alt={selectedApplicant.userProfile?.name || "Applicant"}
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-slate-100 shadow-sm"
-                  />
-                  <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-                      {selectedApplicant.userProfile?.name ||
-                        "Candidate Profile"}
-                    </h2>
-                    <p className="text-sm font-semibold text-brand-600 mt-0.5">
-                      {selectedApplicant.job?.title || "Applied Role"}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-500">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {selectedApplicant.location || "Location not specified"}
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        Applied{" "}
-                        {new Date(
-                          selectedApplicant.createdAt,
-                        ).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedApplicant(null)}
-                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Modal Content */}
-              <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-6 space-y-6">
-                {/* Contact & Status Card */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs">
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <Mail className="w-4 h-4 text-slate-400" />
-                    <span className="truncate">
-                      {selectedApplicant.user?.email || "No email"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <Phone className="w-4 h-4 text-slate-400" />
-                    <span>
-                      {selectedApplicant.userProfile?.phone || "No phone"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <Briefcase className="w-4 h-4 text-slate-400" />
-                    <span>
-                      {selectedApplicant.totalExperience || 0} yrs experience
-                    </span>
-                  </div>
-                </div>
-
-                {/* Candidate Resume Link */}
-                {selectedApplicant.userProfile?.resume && (
-                  <div className="p-4 bg-blue-50/70 border border-blue-100 rounded-2xl flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-6 h-6 text-brand-600" />
-                      <div>
-                        <h4 className="text-sm font-bold text-slate-900">
-                          Candidate Resume
-                        </h4>
-                        <p className="text-xs text-slate-500">
-                          Uploaded PDF / document
-                        </p>
-                      </div>
-                    </div>
-                    <a
-                      href={selectedApplicant.userProfile.resume}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl hover:bg-brand-700 transition"
-                    >
-                      View Resume <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                )}
-
-                {/* Cover Letter */}
-                {selectedApplicant.coverLetter && (
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-bold text-slate-900">
-                      Cover Letter / Note
-                    </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 whitespace-pre-wrap leading-relaxed">
-                      {selectedApplicant.coverLetter}
-                    </p>
-                  </div>
-                )}
-
-                {/* Skills */}
-                {selectedApplicant.userProfile?.skills?.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-bold text-slate-900">
-                      Skills & Expertise
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedApplicant.userProfile.skills.map(
-                        (skill, idx) => (
-                          <span
-                            key={idx}
-                            className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-full"
-                          >
-                            {skill}
-                          </span>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Status Change Section */}
-                <div className="pt-4 border-t border-slate-100 space-y-3">
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Update Application Status
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { key: "reviewed", label: "Mark Reviewed" },
-                      { key: "shortlisted", label: "Shortlist" },
-                      { key: "interview", label: "Invite to Interview" },
-                      { key: "hired", label: "Hire Candidate 🎉" },
-                      { key: "rejected", label: "Reject" },
-                    ].map(({ key, label }) => {
-                      const isActive =
-                        (selectedApplicant.status || "").toLowerCase() === key;
-                      return (
-                        <button
-                          key={key}
-                          disabled={updatingStatus !== null}
-                          onClick={() =>
-                            handleStatusChange(selectedApplicant._id, key)
-                          }
-                          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                            isActive
-                              ? "bg-slate-900 text-white shadow-sm"
-                              : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-                          }`}
-                        >
-                          {updatingStatus === key ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : null}
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="flex-shrink-0 border-t border-slate-100 px-6 sm:px-8 py-4 bg-slate-50 flex items-center justify-between">
-                <button
-                  onClick={() => {
-                    setSelectedApplicant(null);
-                    setActiveTab("applicants");
-                  }}
-                  className="text-xs font-bold text-brand-600 hover:text-brand-700"
-                >
-                  Open in Full Applicant Management &rarr;
-                </button>
-                <button
-                  onClick={() => setSelectedApplicant(null)}
-                  className="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold rounded-xl transition"
-                >
-                  Close
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <CandidateDetailsModal
+        applicant={selectedApplicant}
+        onClose={() => setSelectedApplicant(null)}
+        onStatusChange={handleStatusChange}
+        updatingStatus={updatingStatus}
+        onViewAll={() => setActiveTab("applicants")}
+      />
     </motion.div>
   );
 }
