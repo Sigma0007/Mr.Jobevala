@@ -22,6 +22,11 @@ const jobSchema = new mongoose.Schema(
             trim: true,
             default: "",
         },
+        subCategory: {
+            type: String,
+            trim: true,
+            default: "",
+        },
         description: {
             type: String,
             required: [true, "Job description is required"],
@@ -36,6 +41,27 @@ const jobSchema = new mongoose.Schema(
             type: String,
             enum: ["full-time", "part-time", "contract", "internship", "freelance"],
             default: "full-time",
+        },
+        qualification: {
+            type: String,
+            default: "",
+        },
+        education: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        genderPreference: {
+            type: String,
+            default: "any",
+        },
+        jobTimings: {
+            type: String,
+            default: "",
+        },
+        jobShift: {
+            type: String,
+            default: "day",
         },
         experience: {
             min: {
@@ -71,6 +97,14 @@ const jobSchema = new mongoose.Schema(
                 default: '',
             },
             country: {
+                type: String,
+                default: "",
+            },
+            talukaOrVillage: {
+                type: String,
+                default: "",
+            },
+            address: {
                 type: String,
                 default: "",
             },

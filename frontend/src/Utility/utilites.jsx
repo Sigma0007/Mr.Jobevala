@@ -63,6 +63,27 @@ export const jobType = [
   { label: "Freelance", value: "freelance" },
 ];
 
+export const qualificationTypes = [
+  { label: "10th Pass", value: "10th pass" },
+  { label: "12th Pass", value: "12th pass" },
+  { label: "Graduate", value: "graduate" },
+  { label: "Post Graduate", value: "post graduate" },
+  { label: "Diploma", value: "diploma" },
+];
+
+export const genderPreferenceTypes = [
+  { label: "No Preference / Any", value: "any" },
+  { label: "Male", value: "male" },
+  { label: "Female", value: "female" },
+];
+
+export const jobShiftTypes = [
+  { label: "Day", value: "day" },
+  { label: "Morning", value: "morning" },
+  { label: "Evening", value: "evening" },
+  { label: "Night", value: "night" },
+];
+
 export const SalaryRangeType = [
   { label: "Any Salary", value: "Any Salary" },
   { label: "₹0 - ₹30k", value: "0-30000" },
@@ -379,7 +400,7 @@ export const BENEFITS = [
   { label: "Tea / Coffee", value: "tea_coffee" },
 ];
 
-export const JOB_ROLES = [
+export const JOB_ROLES_CATEGORY_TYPE = [
   {
     label: "Banking, Financial Services & Insurance",
     value: "banking_financial_services_insurance",
