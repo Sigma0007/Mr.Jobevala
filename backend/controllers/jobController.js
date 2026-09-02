@@ -77,7 +77,7 @@ export const createJob = catchAsync(async (req, res, next) => {
 });
 
 export const getAllJobs = catchAsync(async (req, res) => {
-    const { searchQuery, locationQuery, category, jobType, workMode, salaryRange, sortBy } = req.query;
+    const { searchQuery, locationQuery, category, subCategory, jobType, workMode, salaryRange, sortBy } = req.query;
 
     let dbQuery = {};
 
@@ -94,6 +94,11 @@ export const getAllJobs = catchAsync(async (req, res) => {
     if (category) {
         const categories = category.split(',');
         dbQuery.category = { $in: categories.map(c => new RegExp(`^${c.trim()}$`, "i")) };
+    }
+
+    if (subCategory) {
+        const subCategories = subCategory.split(',');
+        dbQuery.subCategory = { $in: subCategories.map(s => new RegExp(`^${s.trim()}$`, "i")) };
     }
 
     if (locationQuery) {

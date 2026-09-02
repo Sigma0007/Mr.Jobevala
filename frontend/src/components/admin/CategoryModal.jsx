@@ -3,7 +3,12 @@ import { X, Loader2, Sparkles, FolderPlus, Edit3 } from "lucide-react";
 import api from "../../customer/customerservice";
 import { toast } from "react-hot-toast";
 
-const CategoryModal = ({ isOpen, onClose, categoryToEdit, onCategorySaved }) => {
+const CategoryModal = ({
+  isOpen,
+  onClose,
+  categoryToEdit,
+  onCategorySaved,
+}) => {
   const [title, setTitle] = useState("");
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
@@ -11,7 +16,7 @@ const CategoryModal = ({ isOpen, onClose, categoryToEdit, onCategorySaved }) => 
 
   useEffect(() => {
     if (categoryToEdit) {
-      setTitle(categoryToEdit.title || "");
+      setTitle(categoryToEdit.label || "");
       setValue(categoryToEdit.value || "");
       setAutoSlug(false);
     } else {
@@ -51,7 +56,7 @@ const CategoryModal = ({ isOpen, onClose, categoryToEdit, onCategorySaved }) => 
     }
 
     const payload = {
-      title: title.trim(),
+      label: title.trim(),
       value: value.trim() ? value.trim() : generateSlug(title),
     };
 
@@ -134,7 +139,8 @@ const CategoryModal = ({ isOpen, onClose, categoryToEdit, onCategorySaved }) => 
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="block text-sm font-semibold text-slate-700">
-                  Slug / Value Identifier <span className="text-red-500">*</span>
+                  Slug / Value Identifier{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 {!categoryToEdit && (
                   <button

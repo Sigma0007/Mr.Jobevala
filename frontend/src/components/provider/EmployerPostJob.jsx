@@ -6,7 +6,6 @@ import customerservice from "../../customer/customerservice";
 import { clearSelectedJob } from "../../Redux/Job/JobAction";
 import {
   workModeType,
-  JOB_ROLES_CATEGORY_TYPE,
   qualificationTypes,
   genderPreferenceTypes,
   jobShiftTypes,
@@ -17,6 +16,7 @@ export default function EmployerPostJob() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const selectedJob = useSelector((state) => state.job?.selectedJob);
+  const { categoriesType } = useSelector((state) => state.dashboard);
   const isEditMode = Boolean(id);
 
   const [loading, setLoading] = useState(false);
@@ -118,7 +118,7 @@ export default function EmployerPostJob() {
 
   const handleCategoryChange = (e) => {
     const selectedCategory = e.target.value;
-    const categoryObj = JOB_ROLES_CATEGORY_TYPE.find(
+    const categoryObj = categoriesType.find(
       (c) => c.value === selectedCategory,
     );
     const isSubCatValid = categoryObj?.roles.some(
@@ -134,7 +134,7 @@ export default function EmployerPostJob() {
 
   const handleSubCategoryChange = (e) => {
     const selectedSubCategory = e.target.value;
-    const parentCategory = JOB_ROLES_CATEGORY_TYPE.find((c) =>
+    const parentCategory = categoriesType.find((c) =>
       c.roles.some((r) => r.value === selectedSubCategory),
     );
 
@@ -145,7 +145,7 @@ export default function EmployerPostJob() {
     }));
   };
 
-  const selectedCategoryObj = JOB_ROLES_CATEGORY_TYPE.find(
+  const selectedCategoryObj = categoriesType.find(
     (cat) => cat.value === formData.category,
   );
 
@@ -305,7 +305,7 @@ export default function EmployerPostJob() {
               className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
             >
               <option value="">Select Category Type</option>
-              {JOB_ROLES_CATEGORY_TYPE.map((cat) => (
+              {categoriesType.map((cat) => (
                 <option key={cat.value} value={cat.value}>
                   {cat.label}
                 </option>
@@ -330,7 +330,7 @@ export default function EmployerPostJob() {
                       {role.label}
                     </option>
                   ))
-                : JOB_ROLES_CATEGORY_TYPE.map((cat) => (
+                : categoriesType.map((cat) => (
                     <optgroup key={cat.value} label={cat.label}>
                       {cat.roles.map((role) => (
                         <option key={role.value} value={role.value}>

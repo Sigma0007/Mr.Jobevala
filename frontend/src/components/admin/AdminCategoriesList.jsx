@@ -42,10 +42,10 @@ const AdminCategoriesList = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id, title) => {
+  const handleDelete = async (id, label) => {
     if (
       !window.confirm(
-        `Are you sure you want to delete the category "${title}"?`,
+        `Are you sure you want to delete the category "${label}"?`,
       )
     ) {
       return;
@@ -67,7 +67,7 @@ const AdminCategoriesList = () => {
 
   const filteredCategories = categories.filter(
     (c) =>
-      c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.value.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
@@ -171,7 +171,7 @@ const AdminCategoriesList = () => {
                     </td>
                     <td className="py-4 px-6">
                       <div className="font-semibold text-slate-900 text-sm">
-                        {category.title}
+                        {category.label}
                       </div>
                     </td>
                     <td className="py-4 px-6">
@@ -195,7 +195,7 @@ const AdminCategoriesList = () => {
                         </button>
                         <button
                           onClick={() =>
-                            handleDelete(category._id, category.title)
+                            handleDelete(category._id, category.label)
                           }
                           className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete Category"

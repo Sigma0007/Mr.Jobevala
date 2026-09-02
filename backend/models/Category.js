@@ -1,10 +1,26 @@
 import mongoose from "mongoose";
 
+const roleSchema = new mongoose.Schema(
+    {
+        label: {
+            type: String,
+            required: [true, "Role label is required"],
+            trim: true,
+        },
+        value: {
+            type: String,
+            required: [true, "Role value is required"],
+            trim: true,
+            lowercase: true,
+        },
+    },
+    { _id: false }
+);
+
 const categorySchema = new mongoose.Schema(
     {
-        title: {
+        label: {
             type: String,
-            required: [true, "Category title is required"],
             trim: true,
         },
         value: {
@@ -13,6 +29,10 @@ const categorySchema = new mongoose.Schema(
             unique: true,
             trim: true,
             lowercase: true,
+        },
+        roles: {
+            type: [roleSchema],
+            default: [],
         },
     },
     {
