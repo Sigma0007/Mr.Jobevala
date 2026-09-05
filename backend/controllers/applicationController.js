@@ -97,8 +97,8 @@ export const getJobApplications = async (req, res, next) => {
         }
 
         const applications = await Application.find({ job: jobId })
-            .populate("userProfile", "name phone title profileImage resume experience skills")
-            .populate("user", "email")
+            .populate("userProfile")
+            .populate("user")
             .sort({ createdAt: -1 });
 
         res.status(200).json({

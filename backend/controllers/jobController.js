@@ -198,14 +198,43 @@ export const getLastsixJobs = catchAsync(async (req, res) => {
 export const getMyJobs = catchAsync(async (req, res) => {
     const jobs = await Job.find({
         provider: req.user._id,
-    }).sort({
-        createdAt: -1,
-    });
+    })
+        .sort({
+            createdAt: -1,
+        })
+        .lean();
+
+    // Get applicant count for each job
+    const jobIds = jobs.map((job) => job._id);
+
+    const applicationCounts = await Application.aggregate([
+        {
+            $match: {
+                job: { $in: jobIds },
+            },
+        },
+        {
+            $group: {
+                _id: "$job",
+                count: { $sum: 1 },
+            },
+        },
+    ]);
+
+    const countMap = applicationCounts.reduce((acc, curr) => {
+        acc[curr._id.toString()] = curr.count;
+        return acc;
+    }, {});
+
+    const jobsWithApplicantCount = jobs.map((job) => ({
+        ...job,
+        applicantCount: countMap[job._id.toString()] || 0,
+    }));
 
     res.status(200).json({
         success: true,
-        total: jobs.length,
-        data: jobs,
+        total: jobsWithApplicantCount.length,
+        data: jobsWithApplicantCount,
     });
 });
 
