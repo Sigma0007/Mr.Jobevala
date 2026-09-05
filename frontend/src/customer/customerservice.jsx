@@ -202,9 +202,64 @@ const deleteCategory = (id) => {
 
 // --- Location APIs ---
 
+const getLocations = (params = "") => {
+  const endpoint = `/api/locations${params}`;
+  return Auth(endpoint, {}, "GET");
+};
+
 const getLocationsHierarchy = () => {
   const endpoint = `/api/locations/hierarchy`;
   return Auth(endpoint, {}, "GET");
+};
+
+const getNextLocationCode = (type) => {
+  const endpoint = `/api/locations/next-code?type=${type}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const createState = (data = {}) => {
+  const endpoint = `/api/locations/states`;
+  return Auth(endpoint, data, "POST");
+};
+
+const updateState = (id, data = {}) => {
+  const endpoint = `/api/locations/states/${id}`;
+  return Auth(endpoint, data, "PUT");
+};
+
+const deleteState = (id) => {
+  const endpoint = `/api/locations/states/${id}`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
+const createDistrict = (data = {}) => {
+  const endpoint = `/api/locations/districts`;
+  return Auth(endpoint, data, "POST");
+};
+
+const updateDistrict = (id, data = {}) => {
+  const endpoint = `/api/locations/districts/${id}`;
+  return Auth(endpoint, data, "PUT");
+};
+
+const deleteDistrict = (id) => {
+  const endpoint = `/api/locations/districts/${id}`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
+const createSubDivision = (data = {}) => {
+  const endpoint = `/api/locations/subdivisions`;
+  return Auth(endpoint, data, "POST");
+};
+
+const updateSubDivision = (id, data = {}) => {
+  const endpoint = `/api/locations/subdivisions/${id}`;
+  return Auth(endpoint, data, "PUT");
+};
+
+const deleteSubDivision = (id) => {
+  const endpoint = `/api/locations/subdivisions/${id}`;
+  return Auth(endpoint, {}, "DELETE");
 };
 
 export default {
@@ -248,6 +303,16 @@ export default {
   updateCategory,
   deleteCategory,
   getLastsixJobs,
-  getLocationsHierarchy,
   getLocations,
+  getLocationsHierarchy,
+  getNextLocationCode,
+  createState,
+  updateState,
+  deleteState,
+  createDistrict,
+  updateDistrict,
+  deleteDistrict,
+  createSubDivision,
+  updateSubDivision,
+  deleteSubDivision,
 };

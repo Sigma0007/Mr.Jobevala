@@ -3,7 +3,8 @@ import AdminOverview from './AdminOverview';
 import AdminUsersList from './AdminUsersList';
 import AdminJobsList from './AdminJobsList';
 import AdminCategoriesList from './AdminCategoriesList';
-import { LayoutDashboard, Users, Briefcase, Layers } from 'lucide-react';
+import AdminLocationsList from './AdminLocationsList';
+import { LayoutDashboard, Users, Briefcase, Layers, MapPin } from 'lucide-react';
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
@@ -13,6 +14,7 @@ const AdminDashboard = () => {
         { id: 'users', label: 'Manage Users', icon: Users },
         { id: 'jobs', label: 'Manage Jobs', icon: Briefcase },
         { id: 'categories', label: 'Manage Categories', icon: Layers },
+        { id: 'locations', label: 'Manage Locations', icon: MapPin },
     ];
 
     return (
@@ -22,7 +24,7 @@ const AdminDashboard = () => {
                     Admin Control Center
                 </h1>
                 <p className="text-slate-600 mt-2">
-                    Platform metrics and management dashboard.
+                    Platform metrics, categories, jobs, users, and location hierarchy management.
                 </p>
             </div>
 
@@ -52,6 +54,7 @@ const AdminDashboard = () => {
                 {activeTab === 'users' && <AdminUsersList />}
                 {activeTab === 'jobs' && <AdminJobsList />}
                 {activeTab === 'categories' && <AdminCategoriesList />}
+                {activeTab === 'locations' && <AdminLocationsList />}
             </div>
         </div>
     );
