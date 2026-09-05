@@ -106,6 +106,7 @@ const userProfileSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
+        versionKey: false,
     },
 );
 

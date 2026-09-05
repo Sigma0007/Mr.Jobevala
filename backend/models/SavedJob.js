@@ -17,6 +17,7 @@ const savedJobSchema =
         },
         {
             timestamps: true,
+            versionKey: false,
         }
     );
 

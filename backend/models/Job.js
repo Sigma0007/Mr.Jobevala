@@ -131,6 +131,7 @@ const jobSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
+        versionKey: false,
     },
 );
 

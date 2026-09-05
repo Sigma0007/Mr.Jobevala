@@ -84,6 +84,7 @@ const applicationSchema =
         },
         {
             timestamps: true,
+            versionKey: false,
         }
     );
 
