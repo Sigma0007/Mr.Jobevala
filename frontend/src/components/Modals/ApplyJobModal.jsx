@@ -130,7 +130,8 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSubmit }) {
 
   const candidateName = userProfile?.name || authUser?.name || "Job Applicant";
   const candidateEmail = authUser?.email || "No email available";
-  const candidatePhone = userProfile?.phone || "No phone provided";
+  const candidatePhone =
+    userProfile?.phone || authUser?.phone || "No phone provided";
   const candidateImage =
     userProfile?.profileImage ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(

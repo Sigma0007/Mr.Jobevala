@@ -160,8 +160,8 @@ export const getProviderApplications = async (req, res, next) => {
                     select: "companyName logo"
                 }
             })
-            .populate("userProfile", "name phone title profileImage resume experience skills education")
-            .populate("user", "email")
+            .populate("userProfile")
+            .populate("user")
             .sort({ createdAt: -1 });
 
         res.status(200).json({
