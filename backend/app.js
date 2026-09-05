@@ -8,6 +8,7 @@ import companyProfileRoutes from "./routes/companyProfileRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
+import locationRoutes from "./routes/locationRoutes.js";
 
 import { errorHandler } from "./middleware/errorMiddleware.js";
 
@@ -43,6 +44,7 @@ app.use("/api/companyprofile", companyProfileRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/locations", locationRoutes);
 
 app.use(errorHandler);
 
