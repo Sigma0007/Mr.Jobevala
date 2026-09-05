@@ -21,6 +21,8 @@ export default function EmployerPostJob() {
 
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(isEditMode);
+  const [locationHierarchy, setLocationHierarchy] = useState([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -108,6 +110,24 @@ export default function EmployerPostJob() {
     };
   }, [id, isEditMode, selectedJob, navigate, dispatch]);
 
+  useEffect(() => {
+    const fetchLocationHierarchy = async () => {
+      try {
+        setLocationsLoading(true);
+        const res = await customerservice.getLocationsHierarchy();
+        if (res?.success && Array.isArray(res?.data)) {
+          setLocationHierarchy(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch location hierarchy:", err);
+      } finally {
+        setLocationsLoading(false);
+      }
+    };
+
+    fetchLocationHierarchy();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -115,6 +135,44 @@ export default function EmployerPostJob() {
       [name]: value,
     }));
   };
+
+  const handleStateChange = (e) => {
+    const selectedState = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      state: selectedState,
+      city: "",
+      talukaOrVillage: "",
+    }));
+  };
+
+  const handleDistrictChange = (e) => {
+    const selectedDistrict = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      city: selectedDistrict,
+      talukaOrVillage: "",
+    }));
+  };
+
+  const handleSubDivisionChange = (e) => {
+    const selectedSubDiv = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      talukaOrVillage: selectedSubDiv,
+    }));
+  };
+
+  const selectedStateObj = locationHierarchy.find(
+    (item) => item.state_name?.toLowerCase() === formData.state?.toLowerCase(),
+  );
+  const availableDistricts = selectedStateObj?.districts || [];
+
+  const selectedDistrictObj = availableDistricts.find(
+    (item) =>
+      item.district_name?.toLowerCase() === formData.city?.toLowerCase(),
+  );
+  const availableSubDivisions = selectedDistrictObj?.subDivisions || [];
 
   const handleCategoryChange = (e) => {
     const selectedCategory = e.target.value;
@@ -159,6 +217,16 @@ export default function EmployerPostJob() {
 
     if (!formData.qualification) {
       toast.error("Please select a Minimum Qualification");
+      return;
+    }
+
+    if (!formData.state) {
+      toast.error("Please select a State");
+      return;
+    }
+
+    if (!formData.city) {
+      toast.error("Please select a District / City");
       return;
     }
 
@@ -574,53 +642,103 @@ export default function EmployerPostJob() {
 
         {/* Location Section */}
         <div className="border-t border-slate-100 pt-5">
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">
-            Location Details
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-800">
+              Location Details
+            </h2>
+            {locationsLoading && (
+              <span className="text-xs text-brand-600 font-medium animate-pulse">
+                Loading locations...
+              </span>
+            )}
+          </div>
+
           <div className="grid md:grid-cols-2 gap-5 mb-5">
             <div>
               <label className="block mb-2 font-medium text-slate-700">
-                Job Location (Taluka / Village)
+                State <span className="text-red-500">*</span>
               </label>
-              <input
-                name="talukaOrVillage"
-                value={formData.talukaOrVillage}
-                onChange={handleChange}
-                placeholder="e.g. Kotda Sangani, Shapar"
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-              />
+              <select
+                name="state"
+                value={formData.state}
+                onChange={handleStateChange}
+                disabled={locationsLoading}
+                required
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                <option value="">
+                  {locationsLoading ? "Loading States..." : "Select State"}
+                </option>
+                {locationHierarchy.map((st) => (
+                  <option key={st.state_code || st._id} value={st.state_name}>
+                    {st.state_name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
               <label className="block mb-2 font-medium text-slate-700">
-                City <span className="text-red-500">*</span>
+                District / City <span className="text-red-500">*</span>
               </label>
-              <input
+              <select
                 name="city"
                 value={formData.city}
-                onChange={handleChange}
+                onChange={handleDistrictChange}
+                disabled={!formData.state || availableDistricts.length === 0}
                 required
-                placeholder="e.g. Rajkot"
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-              />
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                <option value="">
+                  {!formData.state
+                    ? "Select State First"
+                    : availableDistricts.length === 0
+                      ? "No Districts Available"
+                      : "Select District / City"}
+                </option>
+                {availableDistricts.map((dist) => (
+                  <option
+                    key={dist.district_code || dist._id}
+                    value={dist.district_name}
+                  >
+                    {dist.district_name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5 mb-5">
             <div>
               <label className="block mb-2 font-medium text-slate-700">
-                State
+                Job Location (Taluka / Sub-Division / Village)
               </label>
-              <input
-                name="state"
-                value={formData.state}
-                onChange={handleChange}
-                placeholder="e.g. Gujarat"
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-              />
+              <select
+                name="talukaOrVillage"
+                value={formData.talukaOrVillage}
+                onChange={handleSubDivisionChange}
+                disabled={!formData.city || availableSubDivisions.length === 0}
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                <option value="">
+                  {!formData.city
+                    ? "Select District First"
+                    : availableSubDivisions.length === 0
+                      ? "No Sub-Divisions Available"
+                      : "Select Taluka / Sub-Division"}
+                </option>
+                {availableSubDivisions.map((sub) => (
+                  <option
+                    key={sub.sub_division_code || sub._id}
+                    value={sub.sub_division_name}
+                  >
+                    {sub.sub_division_name}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div>
+            {/* <div>
               <label className="block mb-2 font-medium text-slate-700">
                 Country
               </label>
@@ -631,7 +749,7 @@ export default function EmployerPostJob() {
                 placeholder="e.g. India"
                 className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
-            </div>
+            </div> */}
           </div>
 
           <div>

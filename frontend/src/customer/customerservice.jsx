@@ -200,6 +200,13 @@ const deleteCategory = (id) => {
   return Auth(endpoint, {}, "DELETE");
 };
 
+// --- Location APIs ---
+
+const getLocationsHierarchy = () => {
+  const endpoint = `/api/locations/hierarchy`;
+  return Auth(endpoint, {}, "GET");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -241,4 +248,6 @@ export default {
   updateCategory,
   deleteCategory,
   getLastsixJobs,
+  getLocationsHierarchy,
+  getLocations,
 };
