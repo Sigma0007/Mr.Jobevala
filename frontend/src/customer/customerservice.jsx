@@ -202,11 +202,6 @@ const deleteCategory = (id) => {
 
 // --- Location APIs ---
 
-const getLocations = (params = "") => {
-  const endpoint = `/api/locations${params}`;
-  return Auth(endpoint, {}, "GET");
-};
-
 const getLocationsHierarchy = () => {
   const endpoint = `/api/locations/hierarchy`;
   return Auth(endpoint, {}, "GET");
@@ -303,7 +298,6 @@ export default {
   updateCategory,
   deleteCategory,
   getLastsixJobs,
-  getLocations,
   getLocationsHierarchy,
   getNextLocationCode,
   createState,

@@ -22,6 +22,7 @@ export default function UserProfile() {
       address: "",
       city: "",
       state: "",
+      talukaOrVillage: "",
       country: "India",
       workMode: "on-site",
       lat: null,
@@ -42,10 +43,76 @@ export default function UserProfile() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [locationHierarchy, setLocationHierarchy] = useState([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
 
   useEffect(() => {
     fetchProfile();
+    fetchLocationHierarchy();
   }, []);
+
+  const fetchLocationHierarchy = async () => {
+    try {
+      setLocationsLoading(true);
+      const res = await customerservice.getLocationsHierarchy();
+      if (res?.success && Array.isArray(res?.data)) {
+        setLocationHierarchy(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch location hierarchy:", err);
+    } finally {
+      setLocationsLoading(false);
+    }
+  };
+
+  const handleStateChange = (e) => {
+    const selectedState = e.target.value;
+    setProfile((prev) => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        state: selectedState,
+        city: "",
+        talukaOrVillage: "",
+      },
+    }));
+  };
+
+  const handleDistrictChange = (e) => {
+    const selectedDistrict = e.target.value;
+    setProfile((prev) => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        city: selectedDistrict,
+        talukaOrVillage: "",
+      },
+    }));
+  };
+
+  const handleSubDivisionChange = (e) => {
+    const selectedSubDiv = e.target.value;
+    setProfile((prev) => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        talukaOrVillage: selectedSubDiv,
+      },
+    }));
+  };
+
+  const selectedStateObj = locationHierarchy.find(
+    (item) =>
+      item.state_name?.toLowerCase() === profile.location?.state?.toLowerCase(),
+  );
+  const availableDistricts = selectedStateObj?.districts || [];
+
+  const selectedDistrictObj = availableDistricts.find(
+    (item) =>
+      item.district_name?.toLowerCase() ===
+      profile.location?.city?.toLowerCase(),
+  );
+  const availableSubDivisions = selectedDistrictObj?.subDivisions || [];
 
   const fetchProfile = async () => {
     try {
@@ -59,13 +126,14 @@ export default function UserProfile() {
           jobType: res.data.jobType || "full-time",
           category: res.data.category || "",
           location: {
-            address: res.data.location.address || "",
-            city: res.data.location.city || "",
-            state: res.data.location.state || "",
-            country: res.data.location.country || "India",
-            workMode: res.data.location.workMode || "on-site",
-            lat: res.data.location.lat || null,
-            lng: res.data.location.lng || null,
+            address: res.data.location?.address || "",
+            city: res.data.location?.city || "",
+            state: res.data.location?.state || "",
+            talukaOrVillage: res.data.location?.talukaOrVillage || "",
+            country: res.data.location?.country || "India",
+            workMode: res.data.location?.workMode || "on-site",
+            lat: res.data.location?.lat || null,
+            lng: res.data.location?.lng || null,
           },
           salary: res.data.salary || {
             min: 0,
@@ -110,13 +178,14 @@ export default function UserProfile() {
             jobType: res.data.jobType || "full-time",
             category: res.data.category || "",
             location: {
-              address: res.data.location.address || "",
-              city: res.data.location.city || "",
-              state: res.data.location.state || "",
-              country: res.data.location.country || "India",
-              workMode: res.data.location.workMode || "on-site",
-              lat: res.data.location.lat || null,
-              lng: res.data.location.lng || null,
+              address: res.data.location?.address || "",
+              city: res.data.location?.city || "",
+              state: res.data.location?.state || "",
+              talukaOrVillage: res.data.location?.talukaOrVillage || "",
+              country: res.data.location?.country || "India",
+              workMode: res.data.location?.workMode || "on-site",
+              lat: res.data.location?.lat || null,
+              lng: res.data.location?.lng || null,
             },
             salary: res.data.salary || {
               min: 0,
@@ -306,55 +375,97 @@ export default function UserProfile() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                City
-              </label>
-              <input
-                type="text"
-                value={profile.location.city}
-                onChange={(e) =>
-                  setProfile({
-                    ...profile,
-                    location: { ...profile.location, city: e.target.value },
-                  })
-                }
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
-              />
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-slate-700">
+                  State
+                </label>
+                {locationsLoading && (
+                  <span className="text-xs text-brand-600 animate-pulse">
+                    Loading...
+                  </span>
+                )}
+              </div>
+              <select
+                value={profile.location.state}
+                onChange={handleStateChange}
+                disabled={locationsLoading}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                <option value="">
+                  {locationsLoading ? "Loading States..." : "Select State"}
+                </option>
+                {locationHierarchy.map((st) => (
+                  <option
+                    key={st.state_code || st._id || st.state_name}
+                    value={st.state_name}
+                  >
+                    {st.state_name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                State
+                District / City
               </label>
-              <input
-                type="text"
-                value={profile.location.state}
-                onChange={(e) =>
-                  setProfile({
-                    ...profile,
-                    location: { ...profile.location, state: e.target.value },
-                  })
+              <select
+                value={profile.location.city}
+                onChange={handleDistrictChange}
+                disabled={
+                  !profile.location.state || availableDistricts.length === 0
                 }
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
-              />
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                <option value="">
+                  {!profile.location.state
+                    ? "Select State First"
+                    : availableDistricts.length === 0
+                      ? "No Districts Available"
+                      : "Select District / City"}
+                </option>
+                {availableDistricts.map((dist) => (
+                  <option
+                    key={dist.district_code || dist._id || dist.district_name}
+                    value={dist.district_name}
+                  >
+                    {dist.district_name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Country
+                Taluka / Sub-Division / Village
               </label>
-              <input
-                type="text"
-                value={profile.location.country}
-                onChange={(e) =>
-                  setProfile({
-                    ...profile,
-                    location: { ...profile.location, country: e.target.value },
-                  })
+              <select
+                value={profile.location.talukaOrVillage || ""}
+                onChange={handleSubDivisionChange}
+                disabled={
+                  !profile.location.city || availableSubDivisions.length === 0
                 }
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
-              />
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                <option value="">
+                  {!profile.location.city
+                    ? "Select District First"
+                    : availableSubDivisions.length === 0
+                      ? "No Sub-Divisions Available"
+                      : "Select Taluka / Sub-Division"}
+                </option>
+                {availableSubDivisions.map((sub) => (
+                  <option
+                    key={
+                      sub.sub_division_code || sub._id || sub.sub_division_name
+                    }
+                    value={sub.sub_division_name}
+                  >
+                    {sub.sub_division_name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">

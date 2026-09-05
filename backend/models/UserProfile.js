@@ -67,6 +67,10 @@ const userProfileSchema = new mongoose.Schema(
                 type: String,
                 default: "India",
             },
+            talukaOrVillage: {
+                type: String,
+                default: "",
+            },
             lat: {
                 type: Number,
                 default: null,
