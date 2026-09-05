@@ -16,6 +16,8 @@ export default function UserProfile() {
   const [profile, setProfile] = useState({
     name: "",
     phone: "",
+    dob: "",
+    gender: "",
     title: "",
     jobType: "full-time",
     location: {
@@ -122,6 +124,8 @@ export default function UserProfile() {
         setProfile({
           name: res.data.name || "",
           phone: res.data.phone || "",
+          dob: res.data.dob || "",
+          gender: res.data.gender || "",
           title: res.data.title || "",
           jobType: res.data.jobType || "full-time",
           category: res.data.category || "",
@@ -174,6 +178,8 @@ export default function UserProfile() {
           setProfile({
             name: res.data.name || "",
             phone: res.data.phone || "",
+            dob: res.data.dob || "",
+            gender: res.data.gender || "",
             title: res.data.title || "",
             jobType: res.data.jobType || "full-time",
             category: res.data.category || "",
@@ -301,6 +307,39 @@ export default function UserProfile() {
                 }
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Date of Birth
+              </label>
+              <input
+                type="date"
+                value={profile.dob ? profile.dob.substring(0, 10) : ""}
+                onChange={(e) =>
+                  setProfile({ ...profile, dob: e.target.value })
+                }
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Gender (Sex)
+              </label>
+              <select
+                value={profile.gender || ""}
+                onChange={(e) =>
+                  setProfile({ ...profile, gender: e.target.value })
+                }
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all"
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
             </div>
           </div>
 

@@ -19,6 +19,15 @@ const userProfileSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        dob: {
+            type: String,
+            default: "",
+        },
+        gender: {
+            type: String,
+            enum: ["male", "female", "other", ""],
+            default: "",
+        },
         title: {
             type: String,
             default: "",
