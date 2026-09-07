@@ -503,21 +503,113 @@ export const saveJob = catchAsync(async (req, res, next) => {
 
 // GET SAVED JOBS
 export const getSavedJobs = catchAsync(async (req, res) => {
-    const savedJobs = await SavedJob.find({
+    const { search, jobType, workMode, category, sortBy } = req.query;
+
+    const allSavedJobs = await SavedJob.find({
         user: req.user._id,
     }).populate({
         path: "job",
         populate: {
-            path: "companyProfile"
-        }
-    }).sort({
-        createdAt: -1,
+            path: "companyProfile",
+        },
     });
+
+    // Compute overall stats across all saved jobs
+    const stats = {
+        total: allSavedJobs.length,
+        remoteCount: 0,
+        hybridCount: 0,
+        fulltimeCount: 0,
+        parttimeCount: 0,
+        internshipCount: 0,
+    };
+
+    allSavedJobs.forEach((item) => {
+        const job = item.job;
+        if (!job) return;
+        const mode = (job.location?.workMode || job.workMode || "").toLowerCase();
+        if (mode === "remote") stats.remoteCount++;
+        if (mode === "hybrid") stats.hybridCount++;
+        const type = (job.jobType || "").toLowerCase();
+        if (type === "full-time") stats.fulltimeCount++;
+        if (type === "part-time") stats.parttimeCount++;
+        if (type === "internship") stats.internshipCount++;
+    });
+
+    // Filter based on query params
+    let filtered = allSavedJobs.filter((item) => {
+        const job = item.job;
+        if (!job) return false;
+
+        // Search filter
+        if (search && search.trim()) {
+            const term = search.trim().toLowerCase();
+            const title = (job.title || "").toLowerCase();
+            const company = (job.companyProfile?.companyName || "").toLowerCase();
+            const city = (job.location?.city || "").toLowerCase();
+            const state = (job.location?.state || "").toLowerCase();
+            const cat = (job.category || "").toLowerCase();
+            const skills = (job.skills || []).join(" ").toLowerCase();
+
+            const matches =
+                title.includes(term) ||
+                company.includes(term) ||
+                city.includes(term) ||
+                state.includes(term) ||
+                cat.includes(term) ||
+                skills.includes(term);
+
+            if (!matches) return false;
+        }
+
+        // Job Type filter
+        if (jobType && jobType !== "all") {
+            if ((job.jobType || "").toLowerCase() !== jobType.toLowerCase()) {
+                return false;
+            }
+        }
+
+        // Work Mode filter
+        if (workMode && workMode !== "all") {
+            const mode = (job.location?.workMode || job.workMode || "").toLowerCase();
+            if (mode !== workMode.toLowerCase()) {
+                return false;
+            }
+        }
+
+        // Category filter
+        if (category && category !== "all") {
+            if ((job.category || "").toLowerCase() !== category.toLowerCase()) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    // Sorting
+    if (sortBy === "oldest") {
+        filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    } else if (sortBy === "salaryHigh" || sortBy === "salary") {
+        filtered.sort((a, b) => {
+            const salA = a.job?.salary?.max || a.job?.salary?.min || 0;
+            const salB = b.job?.salary?.max || b.job?.salary?.min || 0;
+            return Number(salB) - Number(salA);
+        });
+    } else if (sortBy === "titleAsc") {
+        filtered.sort((a, b) => (a.job?.title || "").localeCompare(b.job?.title || ""));
+    } else if (sortBy === "companyAsc") {
+        filtered.sort((a, b) => (a.job?.companyProfile?.companyName || "").localeCompare(b.job?.companyProfile?.companyName || ""));
+    } else {
+        // Default: newest
+        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
 
     res.status(200).json({
         success: true,
-        total: savedJobs.length,
-        data: savedJobs,
+        total: filtered.length,
+        stats,
+        data: filtered,
     });
 });
 

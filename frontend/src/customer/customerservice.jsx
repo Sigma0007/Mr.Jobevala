@@ -106,8 +106,8 @@ const saveJob = (id) => {
   return Auth(endpoint, {}, "POST");
 };
 
-const getSavedJobs = () => {
-  const endpoint = `/api/jobs/saved`;
+const getSavedJobs = (query = "") => {
+  const endpoint = `/api/jobs/saved${query}`;
   return Auth(endpoint, {}, "GET");
 };
 
