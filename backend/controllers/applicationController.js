@@ -59,12 +59,10 @@ export const createApplication = async (req, res, next) => {
 export const getUserApplications = async (req, res, next) => {
     try {
         const applications = await Application.find({ user: req.user._id })
-            .populate("job", "title location companyProfile")
             .populate({
                 path: "job",
                 populate: {
-                    path: "companyProfile",
-                    select: "companyName logo"
+                    path: "companyProfile"
                 }
             })
             .sort({ createdAt: -1 });
@@ -73,6 +71,44 @@ export const getUserApplications = async (req, res, next) => {
             success: true,
             count: applications.length,
             data: applications,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Get single application by ID
+// @route   GET /api/applications/:id
+// @access  Private
+export const getApplicationById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const application = await Application.findById(id)
+            .populate({
+                path: "job",
+                populate: {
+                    path: "companyProfile"
+                }
+            })
+            .populate("userProfile")
+            .populate("user", "name email phone");
+
+        if (!application) {
+            return res.status(404).json({ success: false, message: "Application not found" });
+        }
+
+        // Check authorization (applicant, provider or admin)
+        const isApplicant = application.user && application.user._id.toString() === req.user._id.toString();
+        const isProvider = application.provider && application.provider.toString() === req.user._id.toString();
+        const isAdmin = req.user.role === "admin";
+
+        if (!isApplicant && !isProvider && !isAdmin) {
+            return res.status(403).json({ success: false, message: "Not authorized to view this application" });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: application,
         });
     } catch (error) {
         next(error);

@@ -44,8 +44,6 @@ export default function Login() {
 
       const res = await customerservice.loginUser(data);
 
-      console.log("Login Response:", res);
-
       if (res.success === true) {
         if (res.token) {
           localStorage.setItem("token", res.token);

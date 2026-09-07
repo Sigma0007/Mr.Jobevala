@@ -52,7 +52,6 @@ const timeAgo = (dateString) => {
 
 export default function JobDetails() {
   const { categoriesType } = useSelector((state) => state.dashboard);
-  console.log("categoriesType", categoriesType);
   const { id } = useParams();
   const navigate = useNavigate();
 

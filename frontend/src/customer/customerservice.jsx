@@ -126,6 +126,11 @@ const getMyApplications = () => {
   return Auth(endpoint, {}, "GET");
 };
 
+const getApplicationById = (id) => {
+  const endpoint = `/api/applications/${id}`;
+  return Auth(endpoint, {}, "GET");
+};
+
 const getJobApplications = (id) => {
   const endpoint = `/api/applications/job/${id}`;
   return Auth(endpoint, {}, "GET");
@@ -288,6 +293,7 @@ export default {
   removeSavedJob,
   createApplication,
   getMyApplications,
+  getApplicationById,
   getJobApplications,
   updateApplicationStatus,
   getProviderApplications,

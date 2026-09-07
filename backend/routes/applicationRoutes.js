@@ -3,6 +3,7 @@ import express from "express";
 import {
     createApplication,
     getUserApplications,
+    getApplicationById,
     getJobApplications,
     updateApplicationStatus,
     getProviderApplications,
@@ -47,6 +48,14 @@ router.get(
     "/provider-applications",
     protect,
     authorize("provider"),
-    getProviderApplications)
+    getProviderApplications
+);
+
+// Single application details route (accessible by owner candidate, job provider, or admin)
+router.get(
+    "/:id",
+    protect,
+    getApplicationById
+);
 
 export default router;

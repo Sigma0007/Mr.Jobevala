@@ -425,7 +425,12 @@ export default function UserOverview({ setActiveTab }) {
                 recentApplications.map((app) => (
                   <div
                     key={app._id}
-                    className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 first:pt-0 last:pb-0 group"
+                    onClick={() =>
+                      navigate(`/user/applied/${app._id}`, {
+                        state: { application: app },
+                      })
+                    }
+                    className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 first:pt-0 last:pb-0 group cursor-pointer hover:bg-slate-50/80 px-2 -mx-2 rounded-xl transition-colors"
                   >
                     <div className="flex items-center gap-3.5">
                       <img
@@ -439,7 +444,7 @@ export default function UserOverview({ setActiveTab }) {
                         className="w-11 h-11 rounded-xl object-contain border border-slate-100 bg-white p-1 shrink-0"
                       />
                       <div className="min-w-0">
-                        <h4 className="text-sm font-bold text-slate-900 truncate capitalize">
+                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-brand-600 transition-colors truncate capitalize">
                           {app.job?.title || "Job Position"}
                         </h4>
                         <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">

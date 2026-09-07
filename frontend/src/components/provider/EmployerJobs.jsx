@@ -36,7 +36,10 @@ import {
   Check,
 } from "lucide-react";
 import customerservice from "../../customer/customerservice";
-import { workModeType, jobType as jobTypeOptions } from "../../Utility/utilites";
+import {
+  workModeType,
+  jobType as jobTypeOptions,
+} from "../../Utility/utilites";
 
 export default function EmployerJobs({ setActiveTab }) {
   const [jobs, setJobs] = useState([]);
@@ -56,7 +59,6 @@ export default function EmployerJobs({ setActiveTab }) {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { categoriesType } = useSelector((state) => state.dashboard || {});
 
   const fetchJobs = async (isManualRefresh = false) => {
     try {
@@ -149,7 +151,9 @@ export default function EmployerJobs({ setActiveTab }) {
   const changeStatus = async (id, newStatus) => {
     try {
       setStatusUpdatingId(id);
-      const res = await customerservice.updateJobStatus(id, { status: newStatus });
+      const res = await customerservice.updateJobStatus(id, {
+        status: newStatus,
+      });
 
       if (res.success) {
         toast.success(
@@ -399,7 +403,8 @@ export default function EmployerJobs({ setActiveTab }) {
               Job Postings & Openings
             </h1>
             <p className="text-slate-300 text-sm mt-1 max-w-xl">
-              Manage your active listings, track candidate pipelines, and publish new job opportunities.
+              Manage your active listings, track candidate pipelines, and
+              publish new job opportunities.
             </p>
           </div>
 
@@ -606,7 +611,8 @@ export default function EmployerJobs({ setActiveTab }) {
 
           <div className="flex items-center gap-3 text-slate-500">
             <span>
-              Showing <strong className="text-slate-800">{filteredJobs.length}</strong>{" "}
+              Showing{" "}
+              <strong className="text-slate-800">{filteredJobs.length}</strong>{" "}
               {filteredJobs.length === 1 ? "job" : "jobs"}
             </span>
           </div>
@@ -651,9 +657,13 @@ export default function EmployerJobs({ setActiveTab }) {
         <div className="grid grid-cols-1 gap-5">
           {filteredJobs.map((job) => {
             const workModeInfo = getWorkModeBadge(job.location?.workMode);
-            const daysToDeadline = getDaysUntilDeadline(job.applicationDeadline);
+            const daysToDeadline = getDaysUntilDeadline(
+              job.applicationDeadline,
+            );
             const isDeadlineSoon =
-              daysToDeadline !== null && daysToDeadline <= 5 && daysToDeadline >= 0;
+              daysToDeadline !== null &&
+              daysToDeadline <= 5 &&
+              daysToDeadline >= 0;
             const isDeadlinePassed =
               daysToDeadline !== null && daysToDeadline < 0;
 
@@ -693,7 +703,9 @@ export default function EmployerJobs({ setActiveTab }) {
                       <span
                         className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${workModeInfo.bg}`}
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full ${workModeInfo.dot}`} />
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${workModeInfo.dot}`}
+                        />
                         {workModeInfo.label}
                       </span>
 
@@ -766,7 +778,10 @@ export default function EmployerJobs({ setActiveTab }) {
                       <p className="text-[10px] font-semibold uppercase text-slate-400">
                         Location
                       </p>
-                      <p className="font-semibold text-slate-800 truncate" title={job.location?.address || ""}>
+                      <p
+                        className="font-semibold text-slate-800 truncate"
+                        title={job.location?.address || ""}
+                      >
                         {job.location?.city || "Remote"}
                         {job.location?.state ? `, ${job.location.state}` : ""}
                       </p>
@@ -860,8 +875,8 @@ export default function EmployerJobs({ setActiveTab }) {
                             isDeadlinePassed
                               ? "text-red-500"
                               : isDeadlineSoon
-                              ? "text-amber-600"
-                              : "text-slate-500"
+                                ? "text-amber-600"
+                                : "text-slate-500"
                           }`}
                         >
                           <CalendarDays className="w-3.5 h-3.5" />
@@ -886,7 +901,9 @@ export default function EmployerJobs({ setActiveTab }) {
                         disabled={statusUpdatingId === job._id}
                         className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
                       >
-                        {statusUpdatingId === job._id ? "Updating..." : "Close Job"}
+                        {statusUpdatingId === job._id
+                          ? "Updating..."
+                          : "Close Job"}
                       </button>
                     ) : (
                       <button
@@ -894,7 +911,9 @@ export default function EmployerJobs({ setActiveTab }) {
                         disabled={statusUpdatingId === job._id}
                         className="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-xl border border-emerald-200 transition-all disabled:opacity-50"
                       >
-                        {statusUpdatingId === job._id ? "Updating..." : "Reopen Job"}
+                        {statusUpdatingId === job._id
+                          ? "Updating..."
+                          : "Reopen Job"}
                       </button>
                     )}
 
@@ -1148,7 +1167,9 @@ export default function EmployerJobs({ setActiveTab }) {
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-brand-500/20"
                   >
                     <Users className="w-4 h-4" />
-                    <span>View Candidates ({quickViewJob.applicantCount || 0})</span>
+                    <span>
+                      View Candidates ({quickViewJob.applicantCount || 0})
+                    </span>
                   </button>
                 </div>
               </div>

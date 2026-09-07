@@ -18,6 +18,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Register from "./pages/Register";
 import JobApplications from "./components/provider/JobApplications";
 import FindCandidates from "./pages/FindCandidates";
+import UserAppliedJobDetail from "./pages/UserAppliedJobDetail";
 import { useEffect } from "react";
 import { setAllCategoriesType } from "./Redux/Dashboard/DashboardAction";
 import { useDispatch } from "react-redux";
@@ -134,6 +135,15 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["user"]}>
                 <UserDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/user/applied/:id"
+            element={
+              <ProtectedRoute allowedRoles={["user"]}>
+                <UserAppliedJobDetail />
               </ProtectedRoute>
             }
           />

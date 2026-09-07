@@ -27,30 +27,8 @@ import {
   AlertCircle,
   HelpCircle,
 } from "lucide-react";
-import { statusConfig } from "../../Utility/utilites";
+import { formatCTC, statusConfig } from "../../Utility/utilites";
 import toast from "react-hot-toast";
-
-// Helper to format CTC cleanly
-const formatCTC = (val) => {
-  if (val === undefined || val === null || val === "") return "Not specified";
-  if (
-    typeof val === "string" &&
-    (val.toLowerCase().includes("lpa") ||
-      val.includes("₹") ||
-      val.includes("$"))
-  ) {
-    return val;
-  }
-  const num = Number(val);
-  if (!isNaN(num) && num > 0) {
-    if (num >= 100000) {
-      const lpa = (num / 100000).toFixed(num % 100000 === 0 ? 0 : 2);
-      return `₹${lpa} LPA (₹${num.toLocaleString("en-IN")})`;
-    }
-    return `₹${num.toLocaleString("en-IN")}`;
-  }
-  return String(val);
-};
 
 export default function CandidateDetailsModal({
   applicant,
@@ -70,7 +48,8 @@ export default function CandidateDetailsModal({
 
   const candidateName = userProfile.name || user.name || "Candidate";
   const candidateEmail = user.email || "No email available";
-  const candidatePhone = userProfile.phone || user.phone || "No phone available";
+  const candidatePhone =
+    userProfile.phone || user.phone || "No phone available";
   const candidateTitle =
     userProfile.title || applicant.currentRole || "Candidate";
   const totalExp =
@@ -187,7 +166,8 @@ export default function CandidateDetailsModal({
                   </h2>
                   <span
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-                      statusConfig[statusKey]?.color || statusConfig.pending.color
+                      statusConfig[statusKey]?.color ||
+                      statusConfig.pending.color
                     }`}
                   >
                     <StatusIcon className="w-3.5 h-3.5" />
@@ -223,7 +203,8 @@ export default function CandidateDetailsModal({
                     <>
                       <span>•</span>
                       <span className="text-slate-700 font-medium">
-                        Position: <strong className="text-brand-700">{job.title}</strong>
+                        Position:{" "}
+                        <strong className="text-brand-700">{job.title}</strong>
                       </span>
                     </>
                   )}
@@ -441,13 +422,16 @@ export default function CandidateDetailsModal({
                   rel="noreferrer"
                   className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm transition shrink-0"
                 >
-                  View / Download Resume <ExternalLink className="w-3.5 h-3.5" />
+                  View / Download Resume{" "}
+                  <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
             ) : (
               <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center gap-3 text-xs text-slate-500">
                 <FileText className="w-5 h-5 text-slate-400 shrink-0" />
-                <span>No direct resume file link attached to this profile.</span>
+                <span>
+                  No direct resume file link attached to this profile.
+                </span>
               </div>
             )}
 
@@ -501,19 +485,28 @@ export default function CandidateDetailsModal({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Job Title</span>
-                    <span className="font-bold text-slate-900 text-sm">{job.title}</span>
+                    <span className="text-slate-400 block text-[11px]">
+                      Job Title
+                    </span>
+                    <span className="font-bold text-slate-900 text-sm">
+                      {job.title}
+                    </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Job Type & Shift</span>
+                    <span className="text-slate-400 block text-[11px]">
+                      Job Type & Shift
+                    </span>
                     <span className="font-semibold text-slate-800 capitalize">
                       {job.jobType || "Full-time"} • {job.jobShift || "Day"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Job Location</span>
+                    <span className="text-slate-400 block text-[11px]">
+                      Job Location
+                    </span>
                     <span className="font-semibold text-slate-800">
-                      {job.location?.city || "Remote"}, {job.location?.state || ""}
+                      {job.location?.city || "Remote"},{" "}
+                      {job.location?.state || ""}
                     </span>
                   </div>
                 </div>
@@ -528,7 +521,10 @@ export default function CandidateDetailsModal({
                     Update Application Status
                   </h3>
                   <span className="text-xs text-slate-400">
-                    Current: <strong className="text-slate-700 capitalize">{StatusText}</strong>
+                    Current:{" "}
+                    <strong className="text-slate-700 capitalize">
+                      {StatusText}
+                    </strong>
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2">

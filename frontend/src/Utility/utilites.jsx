@@ -14,6 +14,10 @@ import {
   HeadphonesIcon,
   HeartPulse,
   Briefcase,
+  ShieldCheck,
+  Umbrella,
+  Coffee,
+  Award,
 } from "lucide-react";
 
 export const statusConfig = {
@@ -382,22 +386,30 @@ export const IndustryType = [
 ];
 
 export const BENEFITS = [
-  { label: "Health Insurance", value: "health_insurance" },
-  { label: "Provident Fund (PF)", value: "provident_fund" },
-  { label: "Paid Leaves", value: "paid_leaves" },
-  { label: "Flexible Work Hours", value: "flexible_work_hours" },
-  { label: "Sales Incentives", value: "sales_incentives" },
-  { label: "Annual Bonus", value: "annual_bonus" },
-  { label: "Joining Bonus", value: "joining_bonus" },
-  { label: "Travel Allowance", value: "travel_allowance" },
-  { label: "Company Cab / Shuttle", value: "company_cab_shuttle" },
-  { label: "Shift Allowance", value: "shift_allowance" },
-  { label: "Weekly Payout", value: "weekly_payout" },
-  { label: "Lunch / Dinner", value: "lunch_dinner" },
-  { label: "Staff Accommodation", value: "staff_accommodation" },
-  { label: "Petrol Allowance", value: "petrol_allowance" },
-  { label: "Mobile Allowance", value: "mobile_allowance" },
-  { label: "Tea / Coffee", value: "tea_coffee" },
+  { label: "Health Insurance", value: "health_insurance", icon: ShieldCheck },
+  { label: "Provident Fund (PF)", value: "provident_fund", icon: Calendar },
+  { label: "Paid Leaves", value: "paid_leaves", icon: Clock },
+  { label: "Flexible Work Hours", value: "flexible_work_hours", icon: Clock },
+  { label: "Sales Incentives", value: "sales_incentives", icon: Award },
+  { label: "Annual Bonus", value: "annual_bonus", icon: Award },
+  { label: "Joining Bonus", value: "joining_bonus", icon: Award },
+  { label: "Travel Allowance", value: "travel_allowance", icon: Umbrella },
+  {
+    label: "Company Cab / Shuttle",
+    value: "company_cab_shuttle",
+    icon: Umbrella,
+  },
+  { label: "Shift Allowance", value: "shift_allowance", icon: Clock },
+  { label: "Weekly Payout", value: "weekly_payout", icon: Clock },
+  { label: "Lunch / Dinner", value: "lunch_dinner", icon: Coffee },
+  {
+    label: "Staff Accommodation",
+    value: "staff_accommodation",
+    icon: Umbrella,
+  },
+  { label: "Petrol Allowance", value: "petrol_allowance", icon: Umbrella },
+  { label: "Mobile Allowance", value: "mobile_allowance", icon: Umbrella },
+  { label: "Tea / Coffee", value: "tea_coffee", icon: Coffee },
 ];
 
 export const JOB_ROLES_CATEGORY_TYPE = [
@@ -911,3 +923,25 @@ export const JOB_ROLES_CATEGORY_TYPE = [
     roles: [{ label: "Others", value: "others" }],
   },
 ];
+
+// Helper for formatting CTC
+export const formatCTC = (val) => {
+  if (val === undefined || val === null || val === "") return null;
+  if (
+    typeof val === "string" &&
+    (val.toLowerCase().includes("lpa") ||
+      val.includes("₹") ||
+      val.includes("$"))
+  ) {
+    return val;
+  }
+  const num = Number(val);
+  if (!isNaN(num) && num > 0) {
+    if (num >= 100000) {
+      const lpa = (num / 100000).toFixed(num % 100000 === 0 ? 0 : 1);
+      return `₹${lpa} LPA`;
+    }
+    return `₹${num.toLocaleString("en-IN")}`;
+  }
+  return String(val);
+};
