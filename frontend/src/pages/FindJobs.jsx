@@ -10,11 +10,11 @@ import {
   Clock,
   Building2,
   ChevronDown,
+  ArrowRight,
+  Sparkles,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import customerservice from "../customer/customerservice";
-import JobDetailsModal from "../components/Modals/JobDetailsModal";
-import ApplyJobModal from "../components/Modals/ApplyJobModal";
 import CommonFilters from "../components/CommonFilters";
 import { workModeType } from "../Utility/utilites";
 
@@ -36,10 +36,7 @@ const timeAgo = (dateString) => {
 
 export default function FindJobs() {
   const navigate = useNavigate();
-  const [selectedJob, setSelectedJob] = useState(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [isSavingJob, setIsSavingJob] = useState(false);
-  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -85,48 +82,6 @@ export default function FindJobs() {
       y: 0,
       transition: { type: "spring", stiffness: 300, damping: 24 },
     },
-  };
-
-  const handleApplySubmit = async (formData) => {
-    try {
-      const response = await customerservice.createApplication(formData);
-      if (response.success) {
-        toast.success("Application Submitted Successfully! 🎉");
-        setIsApplyModalOpen(false);
-        setSelectedJob(null);
-      } else {
-        toast.error(response?.message || "Failed to apply");
-      }
-    } catch (error) {
-      console.error("Error applying for job:", error);
-      toast.error("An error occurred while applying for job");
-    }
-  };
-
-  const handleSaveJob = async (jobId) => {
-    if (!jobId) return;
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("Please login to save jobs");
-      navigate("/login");
-      return;
-    }
-
-    setIsSavingJob(true);
-    try {
-      const response = await customerservice.saveJob(jobId);
-      if (response.success) {
-        toast.success("Saved to your shortlist!", { icon: "🔖" });
-      } else {
-        toast.error(response.message || "Failed to save job");
-      }
-    } catch (error) {
-      toast.error("Failed to save job");
-      console.error("Error saving job:", error);
-    } finally {
-      setIsSavingJob(false);
-    }
   };
 
   useEffect(() => {
@@ -288,11 +243,11 @@ export default function FindJobs() {
                   <motion.div
                     variants={itemVariants}
                     key={job._id}
-                    onClick={() => setSelectedJob(job)}
-                    className="bg-white p-5 md:p-6 rounded-[1.5rem] border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:border-blue-200 transition-all cursor-pointer group flex flex-col sm:flex-row gap-5 md:gap-6 relative overflow-hidden"
+                    onClick={() => navigate(`/jobs/${job._id}`)}
+                    className="bg-white p-5 md:p-6 rounded-[1.5rem] border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:border-blue-300 transition-all cursor-pointer group flex flex-col sm:flex-row gap-5 md:gap-6 relative overflow-hidden"
                   >
                     {/* Hover indicator strip */}
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600 opacity-1 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
 
                     <img
                       src={
@@ -300,7 +255,7 @@ export default function FindJobs() {
                         `https://ui-avatars.com/api/?name=${encodeURIComponent(job.companyProfile?.companyName || "C")}&background=random`
                       }
                       alt={job.companyProfile?.companyName}
-                      className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-contain p-2 md:p-3 border border-slate-100 shadow-sm shrink-0 bg-white"
+                      className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-contain p-2 md:p-3 border border-slate-100 shadow-sm shrink-0 bg-white group-hover:scale-105 transition-transform"
                     />
 
                     <div className="flex-1 min-w-0">
@@ -315,6 +270,12 @@ export default function FindJobs() {
                               {job.companyProfile?.companyName}
                             </p>
                           </div>
+                        </div>
+
+                        {/* View Details Hover CTA */}
+                        <div className="hidden md:flex items-center gap-1 text-sm font-bold text-blue-600 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+                          <span>View Details</span>
+                          <ArrowRight className="w-4 h-4" />
                         </div>
                       </div>
 
@@ -377,23 +338,6 @@ export default function FindJobs() {
           </div>
         </div>
       </div>
-
-      {/* --- Responsive Job Details Modal --- */}
-      <JobDetailsModal
-        selectedJob={selectedJob}
-        setSelectedJob={setSelectedJob}
-        onSaveJob={handleSaveJob}
-        isSavingJob={isSavingJob}
-        onApplyClick={() => setIsApplyModalOpen(true)}
-        isSavedJobMode={false}
-      />
-
-      <ApplyJobModal
-        isOpen={isApplyModalOpen}
-        onClose={() => setIsApplyModalOpen(false)}
-        job={selectedJob}
-        onSubmit={handleApplySubmit}
-      />
 
       <style
         dangerouslySetInnerHTML={{

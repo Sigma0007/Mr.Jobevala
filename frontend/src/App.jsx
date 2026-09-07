@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import FindJobs from "./pages/FindJobs";
+import JobDetails from "./pages/JobDetails";
 import Footer from "./components/Footer";
 import { UserDashboard } from "./components/user/UserDashboard";
 
@@ -83,6 +84,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
 
           <Route path="/jobs" element={<FindJobs />} />
+          <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/candidates" element={<FindCandidates />} />
 
           {/* ADMIN */}

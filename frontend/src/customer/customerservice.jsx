@@ -86,6 +86,11 @@ const getAllJobs = (query = "") => {
   return Auth(endpoint, {}, "GET");
 };
 
+const getJobById = (id) => {
+  const endpoint = `/api/jobs/${id}`;
+  return Auth(endpoint, {}, "GET");
+};
+
 const getLastsixJobs = () => {
   const endpoint = `/api/jobs/getLastsixJobs`;
   return Auth(endpoint, {}, "GET");
@@ -276,6 +281,7 @@ export default {
   getCompanyProfile,
   updateCompanyProfile,
   getAllJobs,
+  getJobById,
   getAllUserProfiles,
   saveJob,
   getSavedJobs,

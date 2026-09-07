@@ -11,8 +11,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import customerservice from "../customer/customerservice";
-import JobDetailsModal from "./Modals/JobDetailsModal";
-import ApplyJobModal from "./Modals/ApplyJobModal";
 
 const timeAgo = (dateString) => {
   if (!dateString) return "";
@@ -49,9 +47,6 @@ const cardVariants = {
 
 export default function FeaturedJobs() {
   const navigate = useNavigate();
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [isSavingJob, setIsSavingJob] = useState(false);
-  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [jobs, setJobs] = useState([]);
 
   const fetchLastSixJobs = async () => {
@@ -64,53 +59,10 @@ export default function FeaturedJobs() {
       console.error("Error fetching last six jobs:", error);
     }
   };
-  ``;
 
   useEffect(() => {
     fetchLastSixJobs();
   }, []);
-
-  const handleApplySubmit = async (formData) => {
-    try {
-      const response = await customerservice.createApplication(formData);
-      if (response?.success) {
-        toast.success("Application Submitted Successfully! 🎉");
-        setIsApplyModalOpen(false);
-        setSelectedJob(null);
-      } else {
-        toast.error(response?.message || "Failed to apply");
-      }
-    } catch (error) {
-      console.error("Error applying for job:", error);
-      toast.error("An error occurred while applying for job");
-    }
-  };
-
-  const handleSaveJob = async (jobId) => {
-    if (!jobId) return;
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("Please login to save jobs");
-      navigate("/login");
-      return;
-    }
-
-    setIsSavingJob(true);
-    try {
-      const response = await customerservice.saveJob(jobId);
-      if (response?.success) {
-        toast.success("Saved to your shortlist!", { icon: "🔖" });
-      } else {
-        toast.error(response?.message || "Failed to save job");
-      }
-    } catch (error) {
-      toast.error("Failed to save job");
-      console.error("Error saving job:", error);
-    } finally {
-      setIsSavingJob(false);
-    }
-  };
 
   return (
     <section className="py-20 lg:py-28 bg-[#F8FAFC] overflow-hidden relative">
@@ -171,8 +123,8 @@ export default function FeaturedJobs() {
               <motion.div
                 key={job._id || job.id}
                 variants={cardVariants}
-                onClick={() => setSelectedJob(job)}
-                className="group relative bg-white p-6 rounded-[1.5rem] border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:border-blue-200 transition-all cursor-pointer flex flex-col"
+                onClick={() => navigate(`/jobs/${job._id || job.id}`)}
+                className="group relative bg-white p-6 rounded-[1.5rem] border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:border-blue-300 transition-all cursor-pointer flex flex-col"
               >
                 <div className="absolute left-0 top-6 bottom-6 w-1.5 bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity rounded-r-full" />
 
@@ -238,52 +190,6 @@ export default function FeaturedJobs() {
           </Link>
         </motion.div>
       </div>
-
-      {/* --- Responsive Job Details Modal --- */}
-      <JobDetailsModal
-        selectedJob={selectedJob}
-        setSelectedJob={setSelectedJob}
-        onSaveJob={handleSaveJob}
-        isSavingJob={isSavingJob}
-        onApplyClick={() => setIsApplyModalOpen(true)}
-        isSavedJobMode={false}
-      />
-
-      <ApplyJobModal
-        isOpen={isApplyModalOpen}
-        onClose={() => setIsApplyModalOpen(false)}
-        job={selectedJob}
-        onSubmit={handleApplySubmit}
-      />
-
-      {/* Reused custom scrollbar style from FindJobs.jsx */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        @media (min-width: 640px) {
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-          }
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: #cbd5e1;
-          border-radius: 20px;
-          border: 2px solid white;
-        }
-        @media (min-width: 640px) {
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            border: 3px solid white;
-          }
-        }
-      `,
-        }}
-      />
     </section>
   );
 }

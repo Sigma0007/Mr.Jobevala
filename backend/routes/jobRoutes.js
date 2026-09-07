@@ -4,6 +4,7 @@ import {
     createJob,
     getMyJobs,
     getMyJobById,
+    getJobById,
     updateJob,
     deleteJob,
     updateJobStatus,
@@ -46,6 +47,11 @@ router.get(
     protect,
     authorize("user"),
     getSavedJobs
+);
+
+router.get(
+    "/:id",
+    getJobById
 );
 
 router.post(
