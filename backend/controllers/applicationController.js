@@ -58,19 +58,95 @@ export const createApplication = async (req, res, next) => {
 // @access  Private (User)
 export const getUserApplications = async (req, res, next) => {
     try {
-        const applications = await Application.find({ user: req.user._id })
+        const { status, search, sortBy } = req.query;
+
+        // Fetch all applications of this user with populated job details
+        const allApplications = await Application.find({ user: req.user._id })
             .populate({
                 path: "job",
                 populate: {
                     path: "companyProfile"
                 }
-            })
-            .sort({ createdAt: -1 });
+            });
+
+        // Compute overall status counts across all applications of the user
+        const statusCounts = {
+            all: allApplications.length,
+            pending: 0,
+            reviewed: 0,
+            shortlisted: 0,
+            interview: 0,
+            hired: 0,
+            rejected: 0,
+        };
+
+        allApplications.forEach((app) => {
+            const st = (app.status || "pending").toLowerCase();
+            if (statusCounts[st] !== undefined) {
+                statusCounts[st] += 1;
+            }
+        });
+
+        // Filter applications based on query parameters
+        let filtered = allApplications.filter((app) => {
+            // Status filter
+            if (status && status !== "all") {
+                if ((app.status || "pending").toLowerCase() !== status.toLowerCase()) {
+                    return false;
+                }
+            }
+
+            // Search filter
+            if (search && search.trim()) {
+                const term = search.trim().toLowerCase();
+                const title = (app.job?.title || "").toLowerCase();
+                const company = (app.job?.companyProfile?.companyName || "").toLowerCase();
+                const location = (app.location || app.job?.location?.city || "").toLowerCase();
+                const currentRole = (app.currentRole || "").toLowerCase();
+                const currentCompany = (app.currentCompany || "").toLowerCase();
+                const category = (app.job?.category || "").toLowerCase();
+                const skills = (app.job?.skills || []).join(" ").toLowerCase();
+
+                const matches =
+                    title.includes(term) ||
+                    company.includes(term) ||
+                    location.includes(term) ||
+                    currentRole.includes(term) ||
+                    currentCompany.includes(term) ||
+                    category.includes(term) ||
+                    skills.includes(term);
+
+                if (!matches) return false;
+            }
+
+            return true;
+        });
+
+        // Sort applications
+        if (sortBy === "oldest") {
+            filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        } else if (sortBy === "salary") {
+            filtered.sort((a, b) => {
+                const salA = a.job?.salary?.max || 0;
+                const salB = b.job?.salary?.max || 0;
+                return Number(salB) - Number(salA);
+            });
+        } else if (sortBy === "experience") {
+            filtered.sort((a, b) => {
+                const expA = a.totalExperience || 0;
+                const expB = b.totalExperience || 0;
+                return Number(expB) - Number(expA);
+            });
+        } else {
+            // Default newest
+            filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
 
         res.status(200).json({
             success: true,
-            count: applications.length,
-            data: applications,
+            count: filtered.length,
+            statusCounts,
+            data: filtered,
         });
     } catch (error) {
         next(error);

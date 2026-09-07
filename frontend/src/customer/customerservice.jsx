@@ -121,8 +121,8 @@ const createApplication = (data = {}) => {
   return Auth(endpoint, data, "POST");
 };
 
-const getMyApplications = () => {
-  const endpoint = `/api/applications/my-applications`;
+const getMyApplications = (params = "") => {
+  const endpoint = `/api/applications/my-applications${params}`;
   return Auth(endpoint, {}, "GET");
 };
 

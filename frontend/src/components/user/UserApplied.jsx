@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Building2,
@@ -31,6 +31,15 @@ export default function UserApplied() {
   const { categoriesType } = useSelector((state) => state.dashboard);
 
   const [appliedJobs, setAppliedJobs] = useState([]);
+  const [statusCounts, setStatusCounts] = useState({
+    all: 0,
+    pending: 0,
+    reviewed: 0,
+    shortlisted: 0,
+    interview: 0,
+    hired: 0,
+    rejected: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -38,16 +47,25 @@ export default function UserApplied() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchAppliedJobs();
-  }, []);
-
-  const fetchAppliedJobs = async () => {
+  const fetchAppliedJobs = async (
+    search = searchTerm,
+    status = selectedStatus,
+    sort = sortBy,
+  ) => {
     setIsLoading(true);
     try {
-      const response = await customerservice.getMyApplications();
+      const queryParams = new URLSearchParams();
+      if (search) queryParams.set("search", search);
+      if (status !== "all") queryParams.set("status", status);
+      if (sort) queryParams.set("sortBy", sort);
+
+      const query = queryParams.toString();
+      const response = await customerservice.getMyApplications(`?${query}`);
       if (response.success) {
         setAppliedJobs(response.data || []);
+        if (response.statusCounts) {
+          setStatusCounts(response.statusCounts);
+        }
       } else {
         toast.error(response.message || "Failed to load applied jobs");
       }
@@ -58,6 +76,13 @@ export default function UserApplied() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      fetchAppliedJobs(searchTerm, selectedStatus, sortBy);
+    }, 250);
+    return () => clearTimeout(handler);
+  }, [searchTerm, selectedStatus, sortBy]);
 
   const getStatusBadge = (status) => {
     const st = (status || "pending").toLowerCase();
@@ -112,103 +137,29 @@ export default function UserApplied() {
     }
   };
 
-  // Status Counts
-  const statusCounts = useMemo(() => {
-    const counts = {
-      all: appliedJobs.length,
-      pending: 0,
-      reviewed: 0,
-      shortlisted: 0,
-      interview: 0,
-      hired: 0,
-      rejected: 0,
-    };
-    appliedJobs.forEach((app) => {
-      const st = (app.status || "pending").toLowerCase();
-      if (counts[st] !== undefined) {
-        counts[st] += 1;
-      }
-    });
-    return counts;
-  }, [appliedJobs]);
-
-  // Filter and sort applied jobs
-  const filteredJobs = useMemo(() => {
-    return appliedJobs
-      .filter((app) => {
-        // Status filter
-        if (
-          selectedStatus !== "all" &&
-          (app.status || "pending").toLowerCase() !== selectedStatus
-        ) {
-          return false;
-        }
-
-        // Search match
-        if (searchTerm.trim()) {
-          const term = searchTerm.toLowerCase();
-          const title = (app.job?.title || "").toLowerCase();
-          const company = (
-            app.job?.companyProfile?.companyName || ""
-          ).toLowerCase();
-          const location = (
-            app.location ||
-            app.job?.location?.city ||
-            ""
-          ).toLowerCase();
-          const currentRole = (app.currentRole || "").toLowerCase();
-          const currentCompany = (app.currentCompany || "").toLowerCase();
-          const category = (app.job?.category || "").toLowerCase();
-          const skills = (app.job?.skills || []).join(" ").toLowerCase();
-
-          const matches =
-            title.includes(term) ||
-            company.includes(term) ||
-            location.includes(term) ||
-            currentRole.includes(term) ||
-            currentCompany.includes(term) ||
-            category.includes(term) ||
-            skills.includes(term);
-
-          if (!matches) return false;
-        }
-
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === "newest") {
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        }
-        if (sortBy === "oldest") {
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        }
-        if (sortBy === "salary") {
-          const salA = a.job?.salary?.max || 0;
-          const salB = b.job?.salary?.max || 0;
-          return Number(salB) - Number(salA);
-        }
-        if (sortBy === "experience") {
-          const expA = a.totalExperience || 0;
-          const expB = b.totalExperience || 0;
-          return Number(expB) - Number(expA);
-        }
-        return 0;
-      });
-  }, [appliedJobs, searchTerm, selectedStatus, sortBy]);
-
   const statusTabs = [
-    { id: "all", label: "All Applications", count: statusCounts.all },
-    { id: "pending", label: "Pending", count: statusCounts.pending },
-    { id: "reviewed", label: "Reviewed", count: statusCounts.reviewed },
+    { id: "all", label: "All Applications", count: statusCounts.all || 0 },
+    { id: "pending", label: "Pending", count: statusCounts.pending || 0 },
+    { id: "reviewed", label: "Reviewed", count: statusCounts.reviewed || 0 },
     {
       id: "shortlisted",
       label: "Shortlisted",
-      count: statusCounts.shortlisted,
+      count: statusCounts.shortlisted || 0,
     },
-    { id: "interview", label: "Interview", count: statusCounts.interview },
-    { id: "hired", label: "Hired", count: statusCounts.hired },
-    { id: "rejected", label: "Not Selected", count: statusCounts.rejected },
+    {
+      id: "interview",
+      label: "Interview",
+      count: statusCounts.interview || 0,
+    },
+    { id: "hired", label: "Hired", count: statusCounts.hired || 0 },
+    {
+      id: "rejected",
+      label: "Not Selected",
+      count: statusCounts.rejected || 0,
+    },
   ];
+
+  const filteredJobs = appliedJobs;
 
   const handleCardClick = (application) => {
     navigate(`/user/applied/${application._id}`, {
@@ -232,7 +183,7 @@ export default function UserApplied() {
                 Application History
               </span>
               <span className="text-xs text-slate-400 font-medium">
-                • {appliedJobs.length} Applications Total
+                • {statusCounts.all || 0} Applications Total
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
@@ -246,7 +197,9 @@ export default function UserApplied() {
 
           <div className="flex items-center gap-2.5 self-start md:self-auto">
             <button
-              onClick={fetchAppliedJobs}
+              onClick={() =>
+                fetchAppliedJobs(searchTerm, selectedStatus, sortBy)
+              }
               disabled={isLoading}
               className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition shadow-xs cursor-pointer"
               title="Refresh applications list"
@@ -273,7 +226,7 @@ export default function UserApplied() {
               Total Applied
             </span>
             <p className="text-2xl font-extrabold text-blue-900 mt-1">
-              {appliedJobs.length}
+              {statusCounts.all || 0}
             </p>
           </div>
 
