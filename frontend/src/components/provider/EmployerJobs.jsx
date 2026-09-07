@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedJob, clearSelectedJob } from "../../Redux/Job/JobAction";
@@ -43,6 +43,13 @@ import {
 
 export default function EmployerJobs({ setActiveTab }) {
   const [jobs, setJobs] = useState([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    closed: 0,
+    totalApplicants: 0,
+    totalVacancies: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,7 +67,14 @@ export default function EmployerJobs({ setActiveTab }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const fetchJobs = async (isManualRefresh = false) => {
+  const fetchJobs = async (
+    isManualRefresh = false,
+    search = searchQuery,
+    status = statusFilter,
+    workMode = workModeFilter,
+    jobType = jobTypeFilter,
+    sort = sortBy,
+  ) => {
     try {
       if (isManualRefresh) {
         setRefreshing(true);
@@ -68,13 +82,28 @@ export default function EmployerJobs({ setActiveTab }) {
         setLoading(true);
       }
 
-      const res = await customerservice.getMyJobs();
+      const queryParams = new URLSearchParams();
+      if (search?.trim()) queryParams.set("search", search.trim());
+      if (status && status !== "all") queryParams.set("status", status);
+      if (workMode && workMode !== "all") queryParams.set("workMode", workMode);
+      if (jobType && jobType !== "all") queryParams.set("jobType", jobType);
+      if (sort) queryParams.set("sortBy", sort);
+
+      const queryStr = queryParams.toString()
+        ? `?${queryParams.toString()}`
+        : "";
+      const res = await customerservice.getMyJobs(queryStr);
 
       if (res.success) {
         setJobs(res.data || []);
+        if (res.stats) {
+          setStats(res.stats);
+        }
         if (isManualRefresh) {
           toast.success("Job listings refreshed");
         }
+      } else {
+        toast.error(res.message || "Failed to load jobs");
       }
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to load jobs");
@@ -85,8 +114,19 @@ export default function EmployerJobs({ setActiveTab }) {
   };
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    const handler = setTimeout(() => {
+      fetchJobs(
+        false,
+        searchQuery,
+        statusFilter,
+        workModeFilter,
+        jobTypeFilter,
+        sortBy,
+      );
+    }, 250);
+
+    return () => clearTimeout(handler);
+  }, [searchQuery, statusFilter, workModeFilter, jobTypeFilter, sortBy]);
 
   // Format Helper functions
   const formatCurrency = (amount, currency = "INR") => {
@@ -138,8 +178,17 @@ export default function EmployerJobs({ setActiveTab }) {
 
       if (res.success) {
         toast.success("Job deleted successfully");
-        setJobs((prev) => prev.filter((job) => job._id !== deleteModalJob._id));
         setDeleteModalJob(null);
+        fetchJobs(
+          false,
+          searchQuery,
+          statusFilter,
+          workModeFilter,
+          jobTypeFilter,
+          sortBy,
+        );
+      } else {
+        toast.error(res.message || "Failed to delete job");
       }
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to delete job");
@@ -162,20 +211,20 @@ export default function EmployerJobs({ setActiveTab }) {
             : "Job marked as closed",
         );
 
-        setJobs((prev) =>
-          prev.map((job) =>
-            job._id === id
-              ? {
-                  ...job,
-                  status: newStatus,
-                }
-              : job,
-          ),
-        );
-
         if (quickViewJob && quickViewJob._id === id) {
           setQuickViewJob((prev) => ({ ...prev, status: newStatus }));
         }
+
+        fetchJobs(
+          false,
+          searchQuery,
+          statusFilter,
+          workModeFilter,
+          jobTypeFilter,
+          sortBy,
+        );
+      } else {
+        toast.error(res.message || "Failed to update status");
       }
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to update status");
@@ -206,95 +255,8 @@ export default function EmployerJobs({ setActiveTab }) {
     navigate(`/provider/jobs/${job._id}/applications`);
   };
 
-  // Metrics Calculations
-  const stats = useMemo(() => {
-    const total = jobs.length;
-    const active = jobs.filter((j) => j.status === "active").length;
-    const closed = jobs.filter((j) => j.status === "closed").length;
-    const totalApplicants = jobs.reduce(
-      (acc, j) => acc + (j.applicantCount || 0),
-      0,
-    );
-    const totalVacancies = jobs.reduce(
-      (acc, j) => acc + (Number(j.vacancies) || 1),
-      0,
-    );
-
-    return { total, active, closed, totalApplicants, totalVacancies };
-  }, [jobs]);
-
-  // Filtering and Sorting
-  const filteredJobs = useMemo(() => {
-    return jobs
-      .filter((job) => {
-        // Search filter
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          const matchTitle = job.title?.toLowerCase().includes(q);
-          const matchCategory = job.category?.toLowerCase().includes(q);
-          const matchSubCategory = job.subCategory?.toLowerCase().includes(q);
-          const matchCity = job.location?.city?.toLowerCase().includes(q);
-          const matchState = job.location?.state?.toLowerCase().includes(q);
-          const matchSkills = job.skills?.some((s) =>
-            s.toLowerCase().includes(q),
-          );
-          const matchEducation = job.education?.toLowerCase().includes(q);
-
-          if (
-            !matchTitle &&
-            !matchCategory &&
-            !matchSubCategory &&
-            !matchCity &&
-            !matchState &&
-            !matchSkills &&
-            !matchEducation
-          ) {
-            return false;
-          }
-        }
-
-        // Status filter
-        if (statusFilter !== "all" && job.status !== statusFilter) {
-          return false;
-        }
-
-        // Work mode filter
-        if (
-          workModeFilter !== "all" &&
-          job.location?.workMode !== workModeFilter
-        ) {
-          return false;
-        }
-
-        // Job type filter
-        if (jobTypeFilter !== "all" && job.jobType !== jobTypeFilter) {
-          return false;
-        }
-
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === "newest") {
-          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-        }
-        if (sortBy === "oldest") {
-          return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
-        }
-        if (sortBy === "applicants") {
-          return (b.applicantCount || 0) - (a.applicantCount || 0);
-        }
-        if (sortBy === "salary_high") {
-          return (b.salary?.max || 0) - (a.salary?.max || 0);
-        }
-        if (sortBy === "deadline") {
-          return (
-            new Date(a.applicationDeadline || "9999-12-31") -
-            new Date(b.applicationDeadline || "9999-12-31")
-          );
-        }
-        return 0;
-      });
-  }, [jobs, searchQuery, statusFilter, workModeFilter, jobTypeFilter, sortBy]);
+  // Jobs are already filtered, sorted, and have metrics computed on the backend
+  const filteredJobs = jobs;
 
   const hasActiveFilters =
     searchQuery.trim() !== "" ||
@@ -528,7 +490,7 @@ export default function EmployerJobs({ setActiveTab }) {
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              All ({jobs.length})
+              All ({stats.total})
             </button>
             <button
               onClick={() => setStatusFilter("active")}

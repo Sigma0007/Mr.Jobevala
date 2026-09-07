@@ -196,7 +196,20 @@ export const getLastsixJobs = catchAsync(async (req, res) => {
 
 // GET PROVIDER JOBS
 export const getMyJobs = catchAsync(async (req, res) => {
-    const jobs = await Job.find({
+    const {
+        search,
+        searchQuery,
+        status,
+        statusFilter,
+        workMode,
+        workModeFilter,
+        jobType,
+        jobTypeFilter,
+        sortBy,
+        sort,
+    } = req.query;
+
+    const allJobs = await Job.find({
         provider: req.user._id,
     })
         .sort({
@@ -205,7 +218,7 @@ export const getMyJobs = catchAsync(async (req, res) => {
         .lean();
 
     // Get applicant count for each job
-    const jobIds = jobs.map((job) => job._id);
+    const jobIds = allJobs.map((job) => job._id);
 
     const applicationCounts = await Application.aggregate([
         {
@@ -226,15 +239,110 @@ export const getMyJobs = catchAsync(async (req, res) => {
         return acc;
     }, {});
 
-    const jobsWithApplicantCount = jobs.map((job) => ({
+    const allJobsWithApplicantCount = allJobs.map((job) => ({
         ...job,
         applicantCount: countMap[job._id.toString()] || 0,
     }));
 
+    // Calculate overall stats for this employer across all their jobs
+    const stats = {
+        total: allJobsWithApplicantCount.length,
+        active: allJobsWithApplicantCount.filter((j) => j.status === "active").length,
+        closed: allJobsWithApplicantCount.filter((j) => j.status === "closed").length,
+        totalApplicants: allJobsWithApplicantCount.reduce(
+            (acc, j) => acc + (j.applicantCount || 0),
+            0
+        ),
+        totalVacancies: allJobsWithApplicantCount.reduce(
+            (acc, j) => acc + (Number(j.vacancies) || 1),
+            0
+        ),
+    };
+
+    const q = (search || searchQuery || "").trim().toLowerCase();
+    const currentStatus = status || statusFilter || "all";
+    const currentWorkMode = workMode || workModeFilter || "all";
+    const currentJobType = jobType || jobTypeFilter || "all";
+    const currentSortBy = sortBy || sort || "newest";
+
+    let filteredJobs = allJobsWithApplicantCount.filter((job) => {
+        // Search filter
+        if (q) {
+            const matchTitle = job.title?.toLowerCase().includes(q);
+            const matchCategory = job.category?.toLowerCase().includes(q);
+            const matchSubCategory = job.subCategory?.toLowerCase().includes(q);
+            const matchCity = job.location?.city?.toLowerCase().includes(q);
+            const matchState = job.location?.state?.toLowerCase().includes(q);
+            const matchSkills = Array.isArray(job.skills) && job.skills.some((s) =>
+                s?.toLowerCase().includes(q)
+            );
+            const matchEducation = job.education?.toLowerCase().includes(q);
+
+            if (
+                !matchTitle &&
+                !matchCategory &&
+                !matchSubCategory &&
+                !matchCity &&
+                !matchState &&
+                !matchSkills &&
+                !matchEducation
+            ) {
+                return false;
+            }
+        }
+
+        // Status filter
+        if (currentStatus !== "all" && job.status?.toLowerCase() !== currentStatus.toLowerCase()) {
+            return false;
+        }
+
+        // Work mode filter
+        if (
+            currentWorkMode !== "all" &&
+            job.location?.workMode?.toLowerCase() !== currentWorkMode.toLowerCase()
+        ) {
+            return false;
+        }
+
+        // Job type filter
+        if (
+            currentJobType !== "all" &&
+            job.jobType?.toLowerCase() !== currentJobType.toLowerCase()
+        ) {
+            return false;
+        }
+
+        return true;
+    });
+
+    // Sorting
+    filteredJobs.sort((a, b) => {
+        if (currentSortBy === "newest") {
+            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        }
+        if (currentSortBy === "oldest") {
+            return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+        }
+        if (currentSortBy === "applicants") {
+            return (b.applicantCount || 0) - (a.applicantCount || 0);
+        }
+        if (currentSortBy === "salary_high") {
+            return (b.salary?.max || 0) - (a.salary?.max || 0);
+        }
+        if (currentSortBy === "deadline") {
+            return (
+                new Date(a.applicationDeadline || "9999-12-31") -
+                new Date(b.applicationDeadline || "9999-12-31")
+            );
+        }
+        return 0;
+    });
+
     res.status(200).json({
         success: true,
-        total: jobsWithApplicantCount.length,
-        data: jobsWithApplicantCount,
+        total: filteredJobs.length,
+        stats,
+        data: filteredJobs,
     });
 });
 

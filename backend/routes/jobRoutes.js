@@ -49,18 +49,6 @@ router.get(
     getSavedJobs
 );
 
-router.get(
-    "/:id",
-    getJobById
-);
-
-router.post(
-    "/:id/save",
-    protect,
-    authorize("user"),
-    saveJob
-);
-
 router.delete(
     "/saved/:id",
     protect,
@@ -94,6 +82,18 @@ router.get(
     protect,
     authorize("provider"),
     getMyJobById
+);
+
+router.get(
+    "/:id",
+    getJobById
+);
+
+router.post(
+    "/:id/save",
+    protect,
+    authorize("user"),
+    saveJob
 );
 
 router.put(

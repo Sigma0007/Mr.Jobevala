@@ -31,8 +31,8 @@ const createJob = (data = {}) => {
   return Auth(endpoint, data, "POST");
 };
 
-const getMyJobs = () => {
-  const endpoint = "/api/jobs/my-jobs";
+const getMyJobs = (params = "") => {
+  const endpoint = `/api/jobs/my-jobs${params}`;
   return Auth(endpoint, {}, "GET");
 };
 
