@@ -20,7 +20,7 @@ app.use(
     cors({
         origin: [
             "http://localhost:5173",
-            "https://job-portal-jmcn.onrender.com",
+            "https://job-portal-f-az3p.onrender.com",
         ],
         credentials: true,
     })
