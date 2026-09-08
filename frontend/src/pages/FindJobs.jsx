@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   MapPin,
@@ -8,7 +8,6 @@ import {
   Filter,
   DollarSign,
   Clock,
-  Building2,
   ChevronDown,
   ArrowRight,
   Sparkles,
@@ -16,23 +15,16 @@ import {
   BookmarkCheck,
   Share2,
   Calendar,
-  GraduationCap,
-  Users,
   LayoutGrid,
   List,
   Eye,
-  CheckCircle2,
   ShieldCheck,
   X,
-  ExternalLink,
   Flame,
   Sun,
   Moon,
-  Gift,
-  ArrowUpRight,
   Layers,
   SlidersHorizontal,
-  Compass,
   RotateCcw,
   Check,
 } from "lucide-react";
@@ -41,13 +33,7 @@ import customerservice from "../customer/customerservice";
 import CommonFilters from "../components/CommonFilters";
 import ApplyJobModal from "../components/Modals/ApplyJobModal";
 import JobDetailsModal from "../components/Modals/JobDetailsModal";
-import {
-  workModeType,
-  jobType,
-  JOB_ROLES_CATEGORY_TYPE,
-  BENEFITS,
-  IndustryType,
-} from "../Utility/utilites";
+import { JOB_ROLES_CATEGORY_TYPE } from "../Utility/utilites";
 
 // Animation Variants
 const containerVariants = {
@@ -102,7 +88,8 @@ const formatDeadline = (dateString) => {
 const formatSalaryRange = (salary) => {
   if (!salary) return "Salary Negotiable";
   const { min, max, currency = "INR" } = salary;
-  const symbol = currency === "INR" || !currency ? "₹" : currency === "USD" ? "$" : currency;
+  const symbol =
+    currency === "INR" || !currency ? "₹" : currency === "USD" ? "$" : currency;
 
   const formatVal = (val) => {
     const num = Number(val);
@@ -132,12 +119,18 @@ const formatSalaryRange = (salary) => {
 const formatExperience = (exp) => {
   if (!exp) return null;
   if (typeof exp === "object") {
-    if (exp.min !== undefined && exp.max !== undefined && exp.min !== null && exp.max !== null) {
+    if (
+      exp.min !== undefined &&
+      exp.max !== undefined &&
+      exp.min !== null &&
+      exp.max !== null
+    ) {
       if (exp.min === 0 && exp.max === 0) return "Fresher / 0 yrs";
       return `${exp.min} - ${exp.max} yrs exp`;
     }
     if (exp.min !== undefined && exp.min !== null) return `${exp.min}+ yrs exp`;
-    if (exp.max !== undefined && exp.max !== null) return `Up to ${exp.max} yrs exp`;
+    if (exp.max !== undefined && exp.max !== null)
+      return `Up to ${exp.max} yrs exp`;
   }
   if (typeof exp === "number" || typeof exp === "string") {
     return `${exp} yrs exp`;
@@ -203,7 +196,6 @@ export default function FindJobs() {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedModes, setSelectedModes] = useState([]);
   const [selectedSalaryRanges, setSelectedSalaryRanges] = useState([]);
-  const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
 
   const [jobsData, setJobsData] = useState([]);
@@ -225,7 +217,7 @@ export default function FindJobs() {
         const res = await customerservice.getSavedJobs();
         if (res?.success && Array.isArray(res.data)) {
           const ids = new Set(
-            res.data.map((item) => (item.job?._id ? item.job._id : item._id))
+            res.data.map((item) => (item.job?._id ? item.job._id : item._id)),
           );
           setSavedJobIds(ids);
         }
@@ -242,8 +234,10 @@ export default function FindJobs() {
       setLoading(true);
       try {
         const queryParams = new URLSearchParams();
-        if (searchQuery.trim()) queryParams.append("searchQuery", searchQuery.trim());
-        if (locationQuery.trim()) queryParams.append("locationQuery", locationQuery.trim());
+        if (searchQuery.trim())
+          queryParams.append("searchQuery", searchQuery.trim());
+        if (locationQuery.trim())
+          queryParams.append("locationQuery", locationQuery.trim());
         if (selectedCategories.length > 0)
           queryParams.append("category", selectedCategories.join(","));
         if (selectedExperience.length > 0)
@@ -254,7 +248,6 @@ export default function FindJobs() {
           queryParams.append("workMode", selectedModes.join(","));
         if (selectedSalaryRanges.length > 0)
           queryParams.append("salaryRange", selectedSalaryRanges.join(","));
-        if (sortBy) queryParams.append("sortBy", sortBy);
 
         const qs = queryParams.toString();
         const response = await customerservice.getAllJobs(qs ? `?${qs}` : "");
@@ -284,13 +277,14 @@ export default function FindJobs() {
     selectedTypes,
     selectedModes,
     selectedSalaryRanges,
-    sortBy,
   ]);
 
   // Filter Handlers
   const handleFilterChange = (setter, value) => {
     setter((prev) =>
-      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+      prev.includes(value)
+        ? prev.filter((item) => item !== value)
+        : [...prev, value],
     );
   };
 
@@ -416,10 +410,14 @@ export default function FindJobs() {
             <span>Discover Verified Career Opportunities</span>
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.15]">
-            Find Your Next <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 bg-clip-text text-transparent">Dream Job</span>
+            Find Your Next{" "}
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 bg-clip-text text-transparent">
+              Dream Job
+            </span>
           </h1>
           <p className="mt-2 text-slate-500 text-sm sm:text-base md:text-lg max-w-2xl font-normal">
-            Browse through hundreds of high-growth roles, competitive salaries, and top-tier verified employers.
+            Browse through hundreds of high-growth roles, competitive salaries,
+            and top-tier verified employers.
           </p>
         </div>
 
@@ -465,40 +463,6 @@ export default function FindJobs() {
                 </button>
               )}
             </div>
-
-            {/* Quick Work Mode Selection in Search Bar */}
-            <div className="flex items-center gap-1 bg-slate-50/80 p-1.5 rounded-2xl border border-slate-200/60 shrink-0 overflow-x-auto">
-              {[
-                { label: "All Modes", value: "" },
-                { label: "Remote", value: "remote" },
-                { label: "Hybrid", value: "hybrid" },
-                { label: "On-site", value: "on-site" },
-              ].map((item) => {
-                const isSelected =
-                  item.value === ""
-                    ? selectedModes.length === 0
-                    : selectedModes.includes(item.value);
-                return (
-                  <button
-                    key={item.label}
-                    onClick={() => {
-                      if (item.value === "") {
-                        setSelectedModes([]);
-                      } else {
-                        handleFilterChange(setSelectedModes, item.value);
-                      }
-                    }}
-                    className={`px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
-                      isSelected
-                        ? "bg-blue-600 text-white shadow-xs"
-                        : "text-slate-600 hover:bg-white hover:text-slate-900"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
           {/* Quick Category Chips */}
@@ -511,7 +475,9 @@ export default function FindJobs() {
               return (
                 <button
                   key={cat.value}
-                  onClick={() => handleFilterChange(setSelectedCategories, cat.value)}
+                  onClick={() =>
+                    handleFilterChange(setSelectedCategories, cat.value)
+                  }
                   className={`px-3 py-1.5 rounded-xl font-medium transition-all shrink-0 flex items-center gap-1.5 border ${
                     isSelected
                       ? "bg-blue-50 text-blue-700 border-blue-200 font-bold"
@@ -586,7 +552,9 @@ export default function FindJobs() {
                   <div>
                     <h2 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
                       {loading ? (
-                        <span className="text-slate-400">Loading Positions...</span>
+                        <span className="text-slate-400">
+                          Loading Positions...
+                        </span>
                       ) : (
                         <>
                           <span className="text-blue-600 font-extrabold text-lg">
@@ -628,21 +596,6 @@ export default function FindJobs() {
                       <List className="w-4 h-4" />
                     </button>
                   </div>
-
-                  {/* Sort By Dropdown */}
-                  <div className="relative flex items-center">
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="pl-3.5 pr-8 py-2 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer appearance-none shadow-xs transition-all"
-                    >
-                      <option value="newest">Newest First</option>
-                      <option value="highest">Highest Salary</option>
-                      <option value="relevant">Most Relevant</option>
-                      <option value="exp_asc">Experience: Low to High</option>
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
                 </div>
               </div>
 
@@ -656,7 +609,10 @@ export default function FindJobs() {
                   {searchQuery.trim() && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-200">
                       Query: "{searchQuery}"
-                      <button onClick={() => setSearchQuery("")} className="hover:text-blue-900 ml-0.5">
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="hover:text-blue-900 ml-0.5"
+                      >
                         <X className="w-3 h-3" />
                       </button>
                     </span>
@@ -665,7 +621,10 @@ export default function FindJobs() {
                   {locationQuery.trim() && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-xs font-semibold border border-rose-200">
                       Location: "{locationQuery}"
-                      <button onClick={() => setLocationQuery("")} className="hover:text-rose-900 ml-0.5">
+                      <button
+                        onClick={() => setLocationQuery("")}
+                        className="hover:text-rose-900 ml-0.5"
+                      >
                         <X className="w-3 h-3" />
                       </button>
                     </span>
@@ -678,7 +637,11 @@ export default function FindJobs() {
                     >
                       {formatCategoryName(cat) || cat}
                       <button
-                        onClick={() => setSelectedCategories((prev) => prev.filter((c) => c !== cat))}
+                        onClick={() =>
+                          setSelectedCategories((prev) =>
+                            prev.filter((c) => c !== cat),
+                          )
+                        }
                         className="hover:text-slate-900 ml-0.5"
                       >
                         <X className="w-3 h-3" />
@@ -693,7 +656,11 @@ export default function FindJobs() {
                     >
                       {mode}
                       <button
-                        onClick={() => setSelectedModes((prev) => prev.filter((m) => m !== mode))}
+                        onClick={() =>
+                          setSelectedModes((prev) =>
+                            prev.filter((m) => m !== mode),
+                          )
+                        }
                         className="hover:text-slate-900 ml-0.5"
                       >
                         <X className="w-3 h-3" />
@@ -708,7 +675,11 @@ export default function FindJobs() {
                     >
                       {type}
                       <button
-                        onClick={() => setSelectedTypes((prev) => prev.filter((t) => t !== type))}
+                        onClick={() =>
+                          setSelectedTypes((prev) =>
+                            prev.filter((t) => t !== type),
+                          )
+                        }
                         className="hover:text-slate-900 ml-0.5"
                       >
                         <X className="w-3 h-3" />
@@ -723,7 +694,11 @@ export default function FindJobs() {
                     >
                       Exp: {exp} yrs
                       <button
-                        onClick={() => setSelectedExperience((prev) => prev.filter((e) => e !== exp))}
+                        onClick={() =>
+                          setSelectedExperience((prev) =>
+                            prev.filter((e) => e !== exp),
+                          )
+                        }
                         className="hover:text-slate-900 ml-0.5"
                       >
                         <X className="w-3 h-3" />
@@ -787,12 +762,21 @@ export default function FindJobs() {
                 {jobsData.map((job) => {
                   const isSaved = savedJobIds.has(job._id);
                   const isSaving = savingJobId === job._id;
-                  const workModeConfig = getWorkModeConfig(job.location?.workMode);
-                  const companyName = job.companyProfile?.companyName || job.companyProfile?.name || "Verified Employer";
-                  const deadlineStatus = formatDeadline(job.applicationDeadline);
+                  const workModeConfig = getWorkModeConfig(
+                    job.location?.workMode,
+                  );
+                  const companyName =
+                    job.companyProfile?.companyName ||
+                    job.companyProfile?.name ||
+                    "Verified Employer";
+                  const deadlineStatus = formatDeadline(
+                    job.applicationDeadline,
+                  );
 
                   // Extract benefits & match
-                  const benefitsList = Array.isArray(job.companyProfile?.benefits)
+                  const benefitsList = Array.isArray(
+                    job.companyProfile?.benefits,
+                  )
                     ? job.companyProfile.benefits
                     : [];
 
@@ -829,7 +813,10 @@ export default function FindJobs() {
                                 {getInitials(companyName)}
                               </div>
                             )}
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center shadow-xs" title="Verified Employer">
+                            <div
+                              className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center shadow-xs"
+                              title="Verified Employer"
+                            >
                               <ShieldCheck className="w-3 h-3 text-white" />
                             </div>
                           </div>
@@ -900,8 +887,12 @@ export default function FindJobs() {
                           </span>
 
                           {/* Work Mode Badge */}
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border shadow-2xs ${workModeConfig.badge}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${workModeConfig.dot}`} />
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border shadow-2xs ${workModeConfig.badge}`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${workModeConfig.dot}`}
+                            />
                             {workModeConfig.label}
                           </span>
 
@@ -916,7 +907,9 @@ export default function FindJobs() {
                           {/* Location Badge */}
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 text-slate-700 border border-slate-200/80 rounded-xl text-xs font-semibold capitalize">
                             <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                            {job.location?.city ? `${job.location.city}${job.location?.state ? `, ${job.location.state}` : ""}` : "India"}
+                            {job.location?.city
+                              ? `${job.location.city}${job.location?.state ? `, ${job.location.state}` : ""}`
+                              : "India"}
                           </span>
 
                           {/* Job Shift / Timings Badge */}
@@ -1016,7 +1009,9 @@ export default function FindJobs() {
                   No Matching Roles Found
                 </h3>
                 <p className="text-slate-500 max-w-md mx-auto text-sm leading-relaxed mb-6">
-                  We couldn't find any job opportunities matching your criteria. Try adjusting your search keywords, broadening your location, or clearing specific filters.
+                  We couldn't find any job opportunities matching your criteria.
+                  Try adjusting your search keywords, broadening your location,
+                  or clearing specific filters.
                 </p>
                 <button
                   onClick={clearAllFilters}
@@ -1063,4 +1058,3 @@ export default function FindJobs() {
     </div>
   );
 }
-
