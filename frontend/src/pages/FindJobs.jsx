@@ -17,7 +17,6 @@ import {
   Calendar,
   LayoutGrid,
   List,
-  Eye,
   ShieldCheck,
   X,
   Flame,
@@ -32,7 +31,6 @@ import toast from "react-hot-toast";
 import customerservice from "../customer/customerservice";
 import CommonFilters from "../components/CommonFilters";
 import ApplyJobModal from "../components/Modals/ApplyJobModal";
-import JobDetailsModal from "../components/Modals/JobDetailsModal";
 import { JOB_ROLES_CATEGORY_TYPE } from "../Utility/utilites";
 
 // Animation Variants
@@ -204,7 +202,6 @@ export default function FindJobs() {
   const [savingJobId, setSavingJobId] = useState(null);
 
   // Modal States
-  const [selectedJobDetails, setSelectedJobDetails] = useState(null);
   const [applyModalJob, setApplyModalJob] = useState(null);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
 
@@ -800,7 +797,10 @@ export default function FindJobs() {
                           <div className="relative shrink-0">
                             {job.companyProfile?.logo ? (
                               <img
-                                src={job.companyProfile.logo}
+                                src={
+                                  import.meta.env.VITE_API_URL +
+                                  job.companyProfile.logo
+                                }
                                 alt={companyName}
                                 className="w-14 h-14 rounded-2xl object-contain p-1.5 border border-slate-100 shadow-xs bg-white group-hover:scale-105 transition-transform"
                                 onError={(e) => {
@@ -972,17 +972,6 @@ export default function FindJobs() {
 
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedJobDetails(job);
-                            }}
-                            className="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold border border-slate-200/80 transition-all flex items-center gap-1"
-                          >
-                            <Eye className="w-3.5 h-3.5 text-slate-500" />
-                            <span>Quick View</span>
-                          </button>
-
-                          <button
                             onClick={(e) => handleOpenApplyModal(job, e)}
                             className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-xs hover:shadow-sm active:scale-[0.98] transition-all flex items-center gap-1.5"
                           >
@@ -1025,23 +1014,6 @@ export default function FindJobs() {
           </div>
         </div>
       </div>
-
-      {/* Quick View Job Modal */}
-      {selectedJobDetails && (
-        <JobDetailsModal
-          selectedJob={selectedJobDetails}
-          setSelectedJob={setSelectedJobDetails}
-          onSaveJob={(id) => handleToggleSaveJob(id)}
-          isSavingJob={savingJobId === selectedJobDetails._id}
-          onUnsaveJob={(id) => handleToggleSaveJob(id)}
-          onApplyClick={() => {
-            const current = selectedJobDetails;
-            setSelectedJobDetails(null);
-            handleOpenApplyModal(current);
-          }}
-          isSavedJobMode={savedJobIds.has(selectedJobDetails._id)}
-        />
-      )}
 
       {/* Apply Job Modal */}
       {isApplyModalOpen && applyModalJob && (

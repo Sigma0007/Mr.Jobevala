@@ -137,7 +137,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
           <div className="relative">
             {profile.logo ? (
               <img
-                src={profile.logo}
+                src={import.meta.env.VITE_API_URL + profile.logo}
                 alt={profile.companyName || "Company"}
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border border-slate-100 shadow-sm"
               />

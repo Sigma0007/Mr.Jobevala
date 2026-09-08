@@ -362,10 +362,11 @@ export default function UserAppliedJobDetail() {
             <div className="flex items-start sm:items-center gap-4 sm:gap-5 flex-1 min-w-0">
               <img
                 src={
-                  company.logo ||
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    company.companyName || job.title || "Job",
-                  )}&background=2563eb&color=fff&size=128`
+                  company.logo
+                    ? import.meta.env.VITE_API_URL + company.logo
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        company.companyName || job.title || "Job",
+                      )}&background=2563eb&color=fff&size=128`
                 }
                 alt={company.companyName || "Company"}
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-contain border border-slate-100 p-1.5 bg-white shadow-sm shrink-0"
@@ -866,10 +867,11 @@ export default function UserAppliedJobDetail() {
               <div className="flex items-center gap-3.5 border-b border-slate-100 pb-4">
                 <img
                   src={
-                    company.logo ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      company.companyName || "C",
-                    )}&background=random`
+                    company.logo
+                      ? import.meta.env.VITE_API_URL + company.logo
+                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          company.companyName || "C",
+                        )}&background=random`
                   }
                   alt={company.companyName || "Company"}
                   className="w-12 h-12 rounded-xl object-contain border border-slate-100 p-1 bg-white shrink-0"

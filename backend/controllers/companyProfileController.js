@@ -4,6 +4,7 @@ import Application from "../models/Application.js";
 import UserProfile from "../models/UserProfile.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
+import { uploadToR2, deleteFromR2 } from "../utils/r2Storage.js";
 
 // @desc    Get provider dashboard overview statistics, company completeness, recent applicants and recent jobs
 // @route   GET /api/companyprofile/overview
@@ -157,29 +158,137 @@ export const getCompanyProfile = catchAsync(async (req, res, next) => {
     });
 });
 
+// @desc    Upload company logo to Cloudflare R2
+// @route   POST /api/companyprofile/upload-logo
+// @access  Private (Provider)
+export const uploadCompanyLogo = catchAsync(async (req, res, next) => {
+    if (!req.file) {
+        return next(new AppError("Please provide an image file to upload.", 400));
+    }
+
+    const providerId = req.user.id || req.user._id;
+    let profile = await CompanyProfile.findOne({ user: providerId });
+    if (!profile) {
+        profile = await CompanyProfile.create({
+            user: providerId,
+            name: req.user.name || "Company Name",
+            companyName: req.user.name || "Company Name",
+        });
+    }
+
+    // Delete old logo from R2 if it exists
+    if (profile.logo) {
+        await deleteFromR2(profile.logo);
+    }
+
+    const ext = req.file.originalname.split(".").pop() || "jpg";
+    const key = `company-logos/${providerId}-${Date.now()}.${ext}`;
+
+    const { url } = await uploadToR2({
+        buffer: req.file.buffer,
+        key,
+        contentType: req.file.mimetype || "image/jpeg",
+    });
+
+    profile.logo = url;
+    await profile.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Company logo uploaded to Cloudflare R2 successfully",
+        logo: url,
+        data: profile,
+    });
+});
+
+// @desc    Delete company logo from Cloudflare R2
+// @route   DELETE /api/companyprofile/logo
+// @access  Private (Provider)
+export const deleteCompanyLogo = catchAsync(async (req, res, next) => {
+    const providerId = req.user.id || req.user._id;
+    const profile = await CompanyProfile.findOne({ user: providerId });
+
+    if (profile && profile.logo) {
+        await deleteFromR2(profile.logo);
+        profile.logo = "";
+        await profile.save();
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "Company logo removed successfully",
+        data: profile,
+    });
+});
+
 // @desc    Update current company profile
 // @route   PUT /api/companyprofile
 // @access  Private
 export const updateCompanyProfile = catchAsync(async (req, res, next) => {
     // Prevent updating the user reference itself
-    const { user, ...updateData } = req.body;
+    let updateData = { ...req.body };
+    delete updateData.user;
+
+    // Parse stringified objects/arrays if submitted via FormData
+    if (typeof updateData.benefits === "string") {
+        try {
+            const parsed = JSON.parse(updateData.benefits);
+            if (Array.isArray(parsed)) updateData.benefits = parsed;
+        } catch (e) {
+            updateData.benefits = updateData.benefits.split(",").map((b) => b.trim()).filter(Boolean);
+        }
+    }
 
     let profile = await CompanyProfile.findOne({ user: req.user.id });
 
     if (!profile) {
-        // Create if it doesn't exist
-        profile = await CompanyProfile.create({ user: req.user.id, ...updateData });
-    } else {
-        // Update existing
-        profile = await CompanyProfile.findOneAndUpdate(
-            { user: req.user.id },
-            updateData,
-            { new: true, runValidators: true }
-        );
+        profile = await CompanyProfile.create({ user: req.user.id, name: req.user.name || "Company Name" });
     }
+
+    // Handle logo file if passed through multipart form-data
+    if (req.file) {
+        if (profile.logo) {
+            await deleteFromR2(profile.logo);
+        }
+        const ext = req.file.originalname.split(".").pop() || "jpg";
+        const key = `company-logos/${req.user.id}-${Date.now()}.${ext}`;
+        const { url } = await uploadToR2({
+            buffer: req.file.buffer,
+            key,
+            contentType: req.file.mimetype || "image/jpeg",
+        });
+        updateData.logo = url;
+    } else if (req.files && (req.files.logo || req.files.image)) {
+        const logoFile = (req.files.logo && req.files.logo[0]) || (req.files.image && req.files.image[0]);
+        if (logoFile) {
+            if (profile.logo) {
+                await deleteFromR2(profile.logo);
+            }
+            const ext = logoFile.originalname.split(".").pop() || "jpg";
+            const key = `company-logos/${req.user.id}-${Date.now()}.${ext}`;
+            const { url } = await uploadToR2({
+                buffer: logoFile.buffer,
+                key,
+                contentType: logoFile.mimetype || "image/jpeg",
+            });
+            updateData.logo = url;
+        }
+    }
+
+    // Clean up R2 if logo was explicitly cleared
+    if (updateData.logo === "" && profile.logo) {
+        await deleteFromR2(profile.logo);
+    }
+
+    const updatedProfile = await CompanyProfile.findOneAndUpdate(
+        { user: req.user.id },
+        updateData,
+        { new: true, runValidators: true }
+    );
 
     res.status(200).json({
         success: true,
-        data: profile,
+        message: "Company profile updated successfully",
+        data: updatedProfile,
     });
 });

@@ -397,10 +397,11 @@ export default function UserApplied() {
                   >
                     <img
                       src={
-                        company.logo ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          company.companyName || job.title || "Job",
-                        )}&background=2563eb&color=fff&size=128`
+                        company.logo
+                          ? import.meta.env.VITE_API_URL + company.logo
+                          : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                              company.companyName || job.title || "Job",
+                            )}&background=2563eb&color=fff&size=128`
                       }
                       alt={company.companyName || "Company Logo"}
                       className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl object-contain border border-slate-100 p-1 bg-white shadow-xs shrink-0"
@@ -530,10 +531,11 @@ export default function UserApplied() {
                     {job._id && (
                       <button
                         onClick={() => navigate(`/jobs/${job._id}`)}
-                        className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition cursor-pointer"
+                        className="p-2 flex items-center gap-1 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition cursor-pointer"
                         title="View Public Job Posting"
                       >
                         <ExternalLink className="w-4 h-4" />
+                        <span className="text-xs">View Job Details</span>
                       </button>
                     )}
                     <button

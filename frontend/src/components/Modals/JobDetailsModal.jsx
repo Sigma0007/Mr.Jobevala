@@ -70,8 +70,12 @@ export default function JobDetailsModal({
               <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 relative z-10 pr-8 sm:pr-12">
                 <img
                   src={
-                    selectedJob.companyProfile?.logo ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedJob.companyProfile?.companyName || "C")}&background=random`
+                    selectedJob.companyProfile?.logo
+                      ? import.meta.env.VITE_API_URL +
+                        selectedJob.companyProfile.logo
+                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          selectedJob.companyProfile?.companyName || "C",
+                        )}&background=random`
                   }
                   alt="logo"
                   className="w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-[1.25rem] object-contain p-2 sm:p-3 border-2 border-white shadow-md bg-white shrink-0"

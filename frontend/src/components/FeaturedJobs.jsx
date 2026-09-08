@@ -95,12 +95,11 @@ export default function FeaturedJobs() {
               job.companyProfile?.name ||
               job.company ||
               "Company";
-            const companyLogo =
-              job.companyProfile?.logo ||
-              job.logo ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                companyName,
-              )}&background=random`;
+            const companyLogo = job.companyProfile?.logo
+              ? import.meta.env.VITE_API_URL + job.companyProfile.logo
+              : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  companyName,
+                )}&background=random`;
             const locationText = job.location?.city
               ? `${job.location.city}${
                   job.location.state ? `, ${job.location.state}` : ""

@@ -467,8 +467,9 @@ export default function UserSaved() {
                 No saved jobs yet
               </h3>
               <p className="text-slate-500 text-sm max-w-md mx-auto mb-6">
-                When you find a job you love on the job board, click the bookmark
-                icon to save it here for quick review and one-click application.
+                When you find a job you love on the job board, click the
+                bookmark icon to save it here for quick review and one-click
+                application.
               </p>
               <button
                 onClick={() => navigate("/jobs")}
@@ -493,11 +494,11 @@ export default function UserSaved() {
                 const job = item.job;
                 if (!job) return null;
 
-                const companyLogo =
-                  job.companyProfile?.logo ||
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    job.companyProfile?.companyName || job.title || "Company",
-                  )}&background=2563eb&color=ffffff&bold=true`;
+                const companyLogo = job.companyProfile?.logo
+                  ? import.meta.env.VITE_API_URL + job.companyProfile.logo
+                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      job.companyProfile?.companyName || job.title || "Company",
+                    )}&background=2563eb&color=ffffff&bold=true`;
 
                 const isRemoving = removingId === job._id;
                 const workMode = getWorkMode(job);

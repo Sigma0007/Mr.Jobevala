@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Sparkles,
   X,
+  Loader2,
 } from "lucide-react";
 import customerService from "../../customer/customerservice";
 import LocationPickerMap from "./LocationPickerMap";
@@ -42,6 +43,7 @@ export default function EmployerProfile() {
     aboutCompany: "",
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -111,6 +113,45 @@ export default function EmployerProfile() {
     }));
   };
 
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (JPG, PNG, WEBP)");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Logo image file size should be less than 10MB");
+      return;
+    }
+
+    try {
+      setUploadingLogo(true);
+      const formData = new FormData();
+      formData.append("logo", file);
+
+      const res = await customerService.uploadCompanyLogo(formData);
+      if (res?.success) {
+        const newLogoUrl = res.logo || res.data?.logo;
+        setProfile((prev) => ({
+          ...prev,
+          logo: newLogoUrl || prev.logo,
+        }));
+        toast.success("Company logo uploaded to Cloudflare R2 successfully!");
+      } else {
+        toast.error(res?.message || "Failed to upload company logo");
+      }
+    } catch (error) {
+      console.error("Logo upload error:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to upload company logo",
+      );
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     try {
@@ -137,32 +178,33 @@ export default function EmployerProfile() {
       {/* Header with Logo Upload */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-8 pb-6 border-b border-slate-100">
         <div className="relative group cursor-pointer">
-          <label className="cursor-pointer block">
+          <label className="cursor-pointer block relative">
             <img
               src={
-                profile.logo ||
-                "https://images.unsplash.com/photo-1549924293-3b909efef92d?w=150&q=80"
+                profile.logo
+                  ? import.meta.env.VITE_API_URL + profile.logo
+                  : "https://images.unsplash.com/photo-1549924293-3b909efef92d?w=150&q=80"
               }
               alt="Company Logo"
-              className="w-20 h-20 rounded-2xl object-cover border border-slate-200 group-hover:opacity-75 transition-opacity"
+              className={`w-20 h-20 rounded-2xl object-cover border border-slate-200 group-hover:opacity-75 transition-opacity ${
+                uploadingLogo ? "opacity-40" : ""
+              }`}
             />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-2xl">
-              <Upload className="w-6 h-6 text-white drop-shadow-md" />
-            </div>
+            {uploadingLogo ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl">
+                <Loader2 className="w-6 h-6 text-white animate-spin drop-shadow-md" />
+              </div>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-2xl">
+                <Upload className="w-6 h-6 text-white drop-shadow-md" />
+              </div>
+            )}
             <input
               type="file"
               accept="image/*"
+              disabled={uploadingLogo}
               className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    setProfile({ ...profile, logo: reader.result });
-                  };
-                  reader.readAsDataURL(file);
-                }
-              }}
+              onChange={handleLogoUpload}
             />
           </label>
         </div>
@@ -577,7 +619,7 @@ export default function EmployerProfile() {
         <div className="flex justify-end pt-6 border-t border-slate-100">
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || uploadingLogo}
             className="bg-brand-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-brand-700 shadow-[0_4px_14px_0_rgb(37,99,235,0.39)] transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:pointer-events-none"
           >
             Save Changes

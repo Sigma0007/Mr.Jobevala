@@ -21,18 +21,11 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import customerservice from "../../customer/customerservice";
-import toast from "react-hot-toast";
-import ApplyJobModal from "../Modals/ApplyJobModal";
-import JobDetailsModal from "../Modals/JobDetailsModal";
 
 export default function UserOverview({ setActiveTab }) {
   const [overviewData, setOverviewData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Modal states for recommended jobs
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -54,23 +47,6 @@ export default function UserOverview({ setActiveTab }) {
       setError("An error occurred while loading dashboard overview");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleApplySubmit = async (formData) => {
-    try {
-      const response = await customerservice.createApplication(formData);
-      if (response.success) {
-        toast.success("Application Submitted Successfully! 🎉");
-        setIsApplyModalOpen(false);
-        setSelectedJob(null);
-        fetchOverview(); // Refresh stats and lists
-      } else {
-        toast.error(response?.message || "Failed to submit application");
-      }
-    } catch (error) {
-      console.error("Error applying for job:", error);
-      toast.error("An error occurred while applying");
     }
   };
 
@@ -455,10 +431,12 @@ export default function UserOverview({ setActiveTab }) {
                     <div className="flex items-center gap-3.5">
                       <img
                         src={
-                          app.job?.companyProfile?.logo ||
-                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            app.job?.companyProfile?.companyName || "C",
-                          )}&background=random`
+                          app.job?.companyProfile?.logo
+                            ? import.meta.env.VITE_API_URL +
+                              app.job.companyProfile.logo
+                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                app.job?.companyProfile?.companyName || "C",
+                              )}&background=random`
                         }
                         alt={app.job?.companyProfile?.companyName || "Company"}
                         className="w-11 h-11 rounded-xl object-contain border border-slate-100 bg-white p-1 shrink-0"
@@ -552,10 +530,12 @@ export default function UserOverview({ setActiveTab }) {
                       <div className="flex items-center gap-3 min-w-0">
                         <img
                           src={
-                            job.companyProfile?.logo ||
-                            `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                              job.companyProfile?.companyName || "C",
-                            )}&background=random`
+                            job.companyProfile?.logo
+                              ? import.meta.env.VITE_API_URL +
+                                job.companyProfile?.logo
+                              : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                  job.companyProfile?.companyName || "C",
+                                )}&background=random`
                           }
                           alt={job.companyProfile?.companyName || "Company"}
                           className="w-10 h-10 rounded-xl object-contain border border-slate-100 bg-white p-1 shrink-0"
@@ -571,7 +551,7 @@ export default function UserOverview({ setActiveTab }) {
                         </div>
                       </div>
                       <button
-                        onClick={() => setSelectedJob(job)}
+                        onClick={() => navigate(`/jobs/${job._id}`)}
                         className="px-3 py-1.5 bg-brand-50 text-brand-700 hover:bg-brand-600 hover:text-white rounded-xl text-xs font-semibold transition shrink-0 cursor-pointer"
                       >
                         View
@@ -630,7 +610,8 @@ export default function UserOverview({ setActiveTab }) {
                   <div className="flex items-center justify-between gap-3 mb-3">
                     <img
                       src={
-                        job.companyProfile?.logo ||
+                        import.meta.env.VITE_API_URL +
+                          job.companyProfile?.logo ||
                         `https://ui-avatars.com/api/?name=${encodeURIComponent(
                           job.companyProfile?.companyName || "C",
                         )}&background=random`
@@ -667,7 +648,7 @@ export default function UserOverview({ setActiveTab }) {
                 </div>
 
                 <button
-                  onClick={() => setSelectedJob(job)}
+                  onClick={() => navigate(`/jobs/${job._id}`)}
                   className="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition-colors mt-auto cursor-pointer"
                 >
                   View Details
@@ -677,20 +658,6 @@ export default function UserOverview({ setActiveTab }) {
           </div>
         </div>
       )}
-
-      {/* --- Responsive Job Details Modal & Apply Modal --- */}
-      <JobDetailsModal
-        selectedJob={selectedJob}
-        setSelectedJob={setSelectedJob}
-        onApplyClick={() => setIsApplyModalOpen(true)}
-      />
-
-      <ApplyJobModal
-        isOpen={isApplyModalOpen}
-        onClose={() => setIsApplyModalOpen(false)}
-        job={selectedJob}
-        onSubmit={handleApplySubmit}
-      />
     </motion.div>
   );
 }

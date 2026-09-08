@@ -96,6 +96,16 @@ const updateCompanyProfile = (data = {}) => {
   return Auth(endpoint, data, "PUT");
 };
 
+const uploadCompanyLogo = (formData) => {
+  const endpoint = `/api/companyprofile/upload-logo`;
+  return Auth(endpoint, formData, "POST", true);
+};
+
+const deleteCompanyLogo = () => {
+  const endpoint = `/api/companyprofile/logo`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
 const getAllJobs = (query = "") => {
   const endpoint = `/api/jobs/getAllJobs${query}`;
   return Auth(endpoint, {}, "GET");
@@ -303,6 +313,8 @@ export default {
   deleteResume,
   getCompanyProfile,
   updateCompanyProfile,
+  uploadCompanyLogo,
+  deleteCompanyLogo,
   getAllJobs,
   getJobById,
   getAllUserProfiles,

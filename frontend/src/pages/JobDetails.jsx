@@ -228,11 +228,11 @@ export default function JobDetails() {
     job.companyProfile?.companyName ||
     job.companyProfile?.name ||
     "Innovative Tech Corp";
-  const companyLogo =
-    job.companyProfile?.logo ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      companyName,
-    )}&background=2563eb&color=fff&bold=true`;
+  const companyLogo = job.companyProfile?.logo
+    ? import.meta.env.VITE_API_URL + job.companyProfile.logo
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        companyName,
+      )}&background=2563eb&color=fff&bold=true`;
   const workModeLabel =
     workModeType.find((mode) => mode.value === job.location?.workMode)?.label ||
     "On-Site";
@@ -753,11 +753,12 @@ export default function JobDetails() {
                   {similarJobs.map((simJob) => {
                     const simCompanyName =
                       simJob.companyProfile?.companyName || "Company";
-                    const simLogo =
-                      simJob.companyProfile?.logo ||
-                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        simCompanyName,
-                      )}&background=random`;
+                    const simLogo = simJob.companyProfile?.logo
+                      ? import.meta.env.VITE_API_URL +
+                        simJob.companyProfile.logo
+                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          simCompanyName,
+                        )}&background=random`;
 
                     return (
                       <Link

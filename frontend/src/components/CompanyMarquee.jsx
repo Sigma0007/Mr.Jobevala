@@ -77,7 +77,7 @@ export default function CompanyMarquee() {
                 className="flex items-center justify-center w-32 md:w-40"
               >
                 <img
-                  src={company.logo}
+                  src={import.meta.env.VITE_API_URL + company.logo}
                   alt={`${company.name} logo`}
                   // Removed grayscale and adjusted base opacity to 70%
                   className="w-full h-auto object-contain opacity-70 hover:opacity-100 transition-all duration-300 cursor-pointer"

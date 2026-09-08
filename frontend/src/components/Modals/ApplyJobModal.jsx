@@ -189,10 +189,11 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSubmit }) {
               <div className="relative">
                 <img
                   src={
-                    job?.companyProfile?.logo ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      job?.companyProfile?.companyName || "C",
-                    )}&background=2563eb&color=fff&bold=true`
+                    job?.companyProfile?.logo
+                      ? import.meta.env.VITE_API_URL + job.companyProfile.logo
+                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          job?.companyProfile?.companyName || "C",
+                        )}&background=2563eb&color=fff&bold=true`
                   }
                   alt="Company Logo"
                   className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-contain p-2 border-2 border-white/20 shadow-lg bg-white shrink-0"
