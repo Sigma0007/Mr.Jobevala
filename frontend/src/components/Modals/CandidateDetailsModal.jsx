@@ -149,7 +149,7 @@ export default function CandidateDetailsModal({
             <div className="flex items-start sm:items-center gap-4 sm:gap-5 flex-1 pr-4">
               {userProfile.profileImage ? (
                 <img
-                  src={userProfile.profileImage}
+                  src={import.meta.env.VITE_API_URL + userProfile.profileImage}
                   alt={candidateName}
                   className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-white shadow-md shadow-slate-200/60 shrink-0"
                 />
@@ -417,7 +417,7 @@ export default function CandidateDetailsModal({
                   </div>
                 </div>
                 <a
-                  href={userProfile.resume}
+                  href={import.meta.env.VITE_API_URL + userProfile.resume}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm transition shrink-0"

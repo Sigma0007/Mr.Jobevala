@@ -125,7 +125,9 @@ export default function UserOverview({ setActiveTab }) {
     return (
       <div className="flex flex-col items-center justify-center py-28 space-y-4">
         <Loader2 className="w-10 h-10 text-brand-600 animate-spin" />
-        <p className="text-sm font-medium text-slate-500">Loading your candidate dashboard...</p>
+        <p className="text-sm font-medium text-slate-500">
+          Loading your candidate dashboard...
+        </p>
       </div>
     );
   }
@@ -134,7 +136,9 @@ export default function UserOverview({ setActiveTab }) {
     return (
       <div className="bg-red-50 border border-red-200 p-6 rounded-3xl text-center space-y-3">
         <AlertCircle className="w-8 h-8 text-red-600 mx-auto" />
-        <h3 className="text-base font-semibold text-red-900">Failed to load overview</h3>
+        <h3 className="text-base font-semibold text-red-900">
+          Failed to load overview
+        </h3>
         <p className="text-sm text-red-600">{error}</p>
         <button
           onClick={fetchOverview}
@@ -173,9 +177,9 @@ export default function UserOverview({ setActiveTab }) {
           <div className="flex items-center gap-4 sm:gap-5">
             <img
               src={
-                profile.profileImage ||
+                `${import.meta.env.VITE_API_URL}${profile.profileImage}` ||
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  profile.name || "Candidate"
+                  profile.name || "Candidate",
                 )}&background=3b82f6&color=fff`
               }
               alt={profile.name || "Candidate"}
@@ -226,7 +230,9 @@ export default function UserOverview({ setActiveTab }) {
               <span className="text-slate-300 flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-amber-400" /> Profile Strength
               </span>
-              <span className="text-brand-300">{completeness.score}% Completed</span>
+              <span className="text-brand-300">
+                {completeness.score}% Completed
+              </span>
             </div>
             <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
               <motion.div
@@ -237,8 +243,8 @@ export default function UserOverview({ setActiveTab }) {
                   completeness.score >= 80
                     ? "bg-gradient-to-r from-emerald-400 to-emerald-500"
                     : completeness.score >= 50
-                    ? "bg-gradient-to-r from-brand-400 to-indigo-500"
-                    : "bg-gradient-to-r from-amber-400 to-orange-500"
+                      ? "bg-gradient-to-r from-brand-400 to-indigo-500"
+                      : "bg-gradient-to-r from-amber-400 to-orange-500"
                 }`}
               />
             </div>
@@ -275,7 +281,9 @@ export default function UserOverview({ setActiveTab }) {
           <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">
             {stats.totalApplied || 0}
           </h3>
-          <p className="text-sm font-medium text-slate-500 mt-1">Applied Jobs</p>
+          <p className="text-sm font-medium text-slate-500 mt-1">
+            Applied Jobs
+          </p>
         </div>
 
         {/* In Review / Pending */}
@@ -291,7 +299,9 @@ export default function UserOverview({ setActiveTab }) {
           <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">
             {stats.inReview || 0}
           </h3>
-          <p className="text-sm font-medium text-slate-500 mt-1">Under Review</p>
+          <p className="text-sm font-medium text-slate-500 mt-1">
+            Under Review
+          </p>
         </div>
 
         {/* Shortlisted & Interviews */}
@@ -339,7 +349,9 @@ export default function UserOverview({ setActiveTab }) {
       <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-7 shadow-[0_4px_20px_rgb(0,0,0,0.03)]">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Application Funnel</h2>
+            <h2 className="text-lg font-bold text-slate-900">
+              Application Funnel
+            </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Current progress across all active job applications
             </p>
@@ -360,13 +372,17 @@ export default function UserOverview({ setActiveTab }) {
             </p>
           </div>
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-            <span className="text-xs font-medium text-slate-500">Shortlisted</span>
+            <span className="text-xs font-medium text-slate-500">
+              Shortlisted
+            </span>
             <p className="text-xl font-bold text-purple-600 mt-1">
               {statusBreakdown.shortlisted || 0}
             </p>
           </div>
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-            <span className="text-xs font-medium text-slate-500">Interview</span>
+            <span className="text-xs font-medium text-slate-500">
+              Interview
+            </span>
             <p className="text-xl font-bold text-blue-600 mt-1">
               {statusBreakdown.interview || 0}
             </p>
@@ -393,7 +409,9 @@ export default function UserOverview({ setActiveTab }) {
           <div>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Recent Applications</h2>
+                <h2 className="text-lg font-bold text-slate-900">
+                  Recent Applications
+                </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Latest status updates on your applications
                 </p>
@@ -410,7 +428,9 @@ export default function UserOverview({ setActiveTab }) {
               {recentApplications.length === 0 ? (
                 <div className="py-12 text-center">
                   <FileText className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                  <p className="text-sm font-semibold text-slate-700">No applications yet</p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    No applications yet
+                  </p>
                   <p className="text-xs text-slate-400 mt-1 mb-4">
                     Start applying to relevant jobs to track your progress here.
                   </p>
@@ -437,7 +457,7 @@ export default function UserOverview({ setActiveTab }) {
                         src={
                           app.job?.companyProfile?.logo ||
                           `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                            app.job?.companyProfile?.companyName || "C"
+                            app.job?.companyProfile?.companyName || "C",
                           )}&background=random`
                         }
                         alt={app.job?.companyProfile?.companyName || "Company"}
@@ -453,10 +473,13 @@ export default function UserOverview({ setActiveTab }) {
                           </span>
                           <span>•</span>
                           <span>
-                            {new Date(app.createdAt).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}
+                            {new Date(app.createdAt).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )}
                           </span>
                         </div>
                       </div>
@@ -488,7 +511,9 @@ export default function UserOverview({ setActiveTab }) {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Saved Jobs</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Quick access to bookmarked jobs</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Quick access to bookmarked jobs
+                </p>
               </div>
               <button
                 onClick={() => setActiveTab && setActiveTab("saved")}
@@ -502,7 +527,9 @@ export default function UserOverview({ setActiveTab }) {
               {recentSavedJobs.length === 0 ? (
                 <div className="py-12 text-center">
                   <Bookmark className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                  <p className="text-sm font-semibold text-slate-700">No saved jobs</p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    No saved jobs
+                  </p>
                   <p className="text-xs text-slate-400 mt-1 mb-4">
                     Save interesting job posts to review or apply later.
                   </p>
@@ -527,7 +554,7 @@ export default function UserOverview({ setActiveTab }) {
                           src={
                             job.companyProfile?.logo ||
                             `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                              job.companyProfile?.companyName || "C"
+                              job.companyProfile?.companyName || "C",
                             )}&background=random`
                           }
                           alt={job.companyProfile?.companyName || "Company"}
@@ -538,7 +565,8 @@ export default function UserOverview({ setActiveTab }) {
                             {job.title}
                           </h4>
                           <p className="text-xs text-slate-500 truncate capitalize">
-                            {job.companyProfile?.companyName} • {job.location?.city || "Remote"}
+                            {job.companyProfile?.companyName} •{" "}
+                            {job.location?.city || "Remote"}
                           </p>
                         </div>
                       </div>
@@ -575,10 +603,13 @@ export default function UserOverview({ setActiveTab }) {
             <div>
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-amber-500" />
-                <h2 className="text-lg font-bold text-slate-900">Recommended For You</h2>
+                <h2 className="text-lg font-bold text-slate-900">
+                  Recommended For You
+                </h2>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                New job opportunities curated based on your profile & preferences
+                New job opportunities curated based on your profile &
+                preferences
               </p>
             </div>
             <button
@@ -601,7 +632,7 @@ export default function UserOverview({ setActiveTab }) {
                       src={
                         job.companyProfile?.logo ||
                         `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          job.companyProfile?.companyName || "C"
+                          job.companyProfile?.companyName || "C",
                         )}&background=random`
                       }
                       alt={job.companyProfile?.companyName || "Company"}
@@ -620,13 +651,16 @@ export default function UserOverview({ setActiveTab }) {
                   <div className="space-y-1.5 text-xs text-slate-500 mb-4">
                     <div className="flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="truncate capitalize">{job.location?.city || "Remote"}</span>
+                      <span className="truncate capitalize">
+                        {job.location?.city || "Remote"}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <DollarSign className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       <span>
                         {job.salary?.currency === "INR" ? "₹" : "$"}
-                        {job.salary?.min?.toLocaleString()} - {job.salary?.max?.toLocaleString()}
+                        {job.salary?.min?.toLocaleString()} -{" "}
+                        {job.salary?.max?.toLocaleString()}
                       </span>
                     </div>
                   </div>

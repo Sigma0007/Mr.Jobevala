@@ -132,12 +132,14 @@ export default function ApplyJobModal({ isOpen, onClose, job, onSubmit }) {
   const candidateEmail = authUser?.email || "No email available";
   const candidatePhone =
     userProfile?.phone || authUser?.phone || "No phone provided";
-  const candidateImage =
-    userProfile?.profileImage ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      candidateName,
-    )}&background=3b82f6&color=fff&bold=true`;
-  const candidateResume = userProfile?.resume;
+  const candidateImage = userProfile?.profileImage
+    ? import.meta.env.VITE_API_URL + userProfile.profileImage
+    : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        candidateName,
+      )}&background=3b82f6&color=fff&bold=true`;
+  const candidateResume = userProfile?.resume
+    ? import.meta.env.VITE_API_URL + userProfile.resume
+    : "";
   const candidateSkills = Array.isArray(userProfile?.skills)
     ? userProfile.skills
     : [];

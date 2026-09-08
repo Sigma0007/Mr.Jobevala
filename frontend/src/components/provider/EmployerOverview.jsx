@@ -501,8 +501,10 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
                       <div className="flex items-center gap-3.5">
                         <img
                           src={
-                            app.userProfile?.profileImage ||
-                            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80"
+                            app.userProfile?.profileImage
+                              ? import.meta.env.VITE_API_URL +
+                                app.userProfile?.profileImage
+                              : "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80"
                           }
                           alt={app.userProfile?.name || "Applicant"}
                           className="w-12 h-12 rounded-full object-cover border border-slate-100 shadow-sm"

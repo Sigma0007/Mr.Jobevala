@@ -1,7 +1,15 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { User, UploadCloud, FileText, Loader2 } from "lucide-react";
+import {
+  User,
+  UploadCloud,
+  FileText,
+  Loader2,
+  ExternalLink,
+  Trash2,
+  CheckCircle2,
+} from "lucide-react";
 import customerservice from "../../customer/customerservice";
 import {
   workModeType,
@@ -45,6 +53,8 @@ export default function UserProfile() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingResume, setUploadingResume] = useState(false);
   const [locationHierarchy, setLocationHierarchy] = useState([]);
   const [locationsLoading, setLocationsLoading] = useState(false);
 
@@ -160,6 +170,94 @@ export default function UserProfile() {
     }
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (JPG, PNG, WEBP)");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image file size should be less than 10MB");
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await customerservice.uploadProfileImage(formData);
+      if (res?.success) {
+        const newImgUrl = res.profileImage || res.data?.profileImage;
+        setProfile((prev) => ({
+          ...prev,
+          profileImage: newImgUrl || prev.profileImage,
+        }));
+        toast.success("Profile photo uploaded successfully!");
+      } else {
+        toast.error(res?.message || "Failed to upload profile photo");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload profile photo");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("Resume file size should be less than 15MB");
+      return;
+    }
+
+    try {
+      setUploadingResume(true);
+      const formData = new FormData();
+      formData.append("resume", file);
+
+      const res = await customerservice.uploadResume(formData);
+      if (res?.success) {
+        const newResumeUrl = res.resume || res.data?.resume;
+        setProfile((prev) => ({
+          ...prev,
+          resume: newResumeUrl || prev.resume,
+        }));
+        toast.success("Resume uploaded successfully!");
+      } else {
+        toast.error(res?.message || "Failed to upload resume");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload resume");
+    } finally {
+      setUploadingResume(false);
+    }
+  };
+
+  const handleResumeDelete = async () => {
+    try {
+      setUploadingResume(true);
+      const res = await customerservice.deleteResume();
+      if (res?.success) {
+        setProfile((prev) => ({ ...prev, resume: "" }));
+        toast.success("Resume removed from storage");
+      } else {
+        toast.error(res?.message || "Failed to remove resume");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to remove resume");
+    } finally {
+      setUploadingResume(false);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     try {
@@ -235,46 +333,47 @@ export default function UserProfile() {
       {/* Profile Info Card */}
       <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)]">
         <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100">
-          <label className="cursor-pointer">
-            <div className="bg-brand-50 w-16 h-16 rounded-full flex items-center justify-center text-brand-600 overflow-hidden relative group">
-              {profile.profileImage ? (
+          <label className="cursor-pointer relative group">
+            <div className="bg-brand-50 w-20 h-20 rounded-2xl flex items-center justify-center text-brand-600 overflow-hidden border-2 border-slate-100 shadow-sm transition-all group-hover:border-brand-300">
+              {uploadingImage ? (
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
+                  <span className="text-[10px] font-semibold text-brand-600">
+                    Uploading
+                  </span>
+                </div>
+              ) : profile.profileImage ? (
                 <img
-                  src={profile.profileImage}
+                  src={`${import.meta.env.VITE_API_URL}${profile.profileImage}`}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <User className="w-8 h-8" />
+                <User className="w-9 h-9 text-brand-500" />
               )}
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <UploadCloud className="w-5 h-5 text-white" />
-              </div>
+              {!uploadingImage && (
+                <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <UploadCloud className="w-6 h-6 text-white" />
+                </div>
+              )}
             </div>
             <input
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    setProfile({
-                      ...profile,
-                      profileImage: reader.result,
-                    });
-                  };
-                  reader.readAsDataURL(file);
-                }
-              }}
+              disabled={uploadingImage}
+              onChange={handleImageUpload}
             />
           </label>
           <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Personal Information
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                Personal Information
+              </h1>
+            </div>
             <p className="text-sm text-slate-500">
-              Update your details to stand out to employers.
+              Update your details to stand out to employers. Click photo to
+              change.
             </p>
           </div>
         </div>
@@ -680,55 +779,91 @@ export default function UserProfile() {
 
       {/* Resume Upload Card */}
       <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)]">
-        <h2 className="text-lg font-bold text-slate-900 mb-4">
-          Resume & Documents
-        </h2>
-        <label className="block border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:bg-slate-50 hover:border-brand-300 transition-colors cursor-pointer group">
-          <div className="mx-auto w-12 h-12 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <UploadCloud className="w-6 h-6" />
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">
+              Resume & Documents
+            </h2>
+            <p className="text-xs text-slate-500">
+              Upload your resume to apply for jobs directly.
+            </p>
           </div>
-          <p className="text-sm font-medium text-slate-900">
-            Click to upload or drag and drop
-          </p>
-          <p className="text-xs text-slate-500 mt-1">PDF, DOCX up to 5MB</p>
-          <input
-            type="file"
-            accept=".pdf,.doc,.docx"
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                setProfile({
-                  ...profile,
-                  resume: URL.createObjectURL(e.target.files[0]),
-                });
-              }
-            }}
-          />
-        </label>
+        </div>
 
-        {profile.resume && (
-          <div className="mt-4 flex items-center justify-between p-4 border border-slate-100 rounded-xl bg-slate-50">
+        {profile.resume ? (
+          <div className="mt-5 p-4 border border-slate-100 rounded-2xl bg-gradient-to-r from-slate-50 to-blue-50/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-3">
-              <FileText className="w-5 h-5 text-brand-600" />
+              <div className="p-2.5 bg-white text-brand-600 rounded-xl shadow-xs border border-slate-100">
+                <FileText className="w-5 h-5" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-slate-900 truncate max-w-[200px]">
-                  {profile.resume.startsWith("blob:")
-                    ? "New_Resume_Uploaded.pdf"
-                    : profile.resume.substring(
-                        profile.resume.lastIndexOf("/") + 1,
-                      ) || "Resume Document"}
+                <p className="text-sm font-semibold text-slate-900 truncate max-w-[260px] sm:max-w-xs">
+                  {profile.resume.substring(
+                    profile.resume.lastIndexOf("/") + 1,
+                  ) || "Resume_Document.pdf"}
                 </p>
-                <p className="text-xs text-slate-500">Ready</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[11px] text-emerald-600 font-medium">
+                    ● R2 Active
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    • Ready for Applications
+                  </span>
+                </div>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setProfile({ ...profile, resume: "" })}
-              className="text-xs font-medium text-red-500 hover:text-red-600"
-            >
-              Remove
-            </button>
+
+            <div className="flex items-center gap-2 self-end sm:self-center">
+              <a
+                href={`${import.meta.env.VITE_API_URL}${profile.resume}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-2xs transition"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-brand-600" /> View /
+                Download
+              </a>
+              <button
+                type="button"
+                disabled={uploadingResume}
+                onClick={handleResumeDelete}
+                className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-xl border border-transparent hover:border-red-100 transition disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Remove
+              </button>
+            </div>
           </div>
+        ) : (
+          <label
+            className={`block border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center transition-all cursor-pointer group ${
+              uploadingResume
+                ? "bg-slate-50 opacity-80 pointer-events-none"
+                : "hover:bg-slate-50 hover:border-brand-400"
+            }`}
+          >
+            <div className="mx-auto w-12 h-12 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              {uploadingResume ? (
+                <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
+              ) : (
+                <UploadCloud className="w-6 h-6" />
+              )}
+            </div>
+            <p className="text-sm font-medium text-slate-900">
+              {uploadingResume
+                ? "Uploading..."
+                : "Click to upload or drag and drop new resume"}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              PDF, DOC, DOCX up to 15MB
+            </p>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              className="hidden"
+              disabled={uploadingResume}
+              onChange={handleResumeUpload}
+            />
+          </label>
         )}
       </div>
     </motion.div>

@@ -4,6 +4,7 @@ import SavedJob from "../models/SavedJob.js";
 import Job from "../models/Job.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
+import { uploadToR2, deleteFromR2 } from "../utils/r2Storage.js";
 
 // @desc    Get user dashboard overview stats, profile completeness, recent applications & saved jobs
 // @route   GET /api/userprofile/overview
@@ -240,29 +241,184 @@ export const getAllUserProfile = catchAsync(async (req, res, next) => {
 });
 
 
-// @desc    Update current user profile
-// @route   PUT /api/userprofile
-// @access  Private
-export const updateUserProfile = catchAsync(async (req, res, next) => {
-    // Prevent updating the user reference itself
-    const { user, ...updateData } = req.body;
+// @desc    Upload profile image to Cloudflare R2
+// @route   POST /api/userprofile/upload-image
+// @access  Private (User)
+export const uploadProfileImage = catchAsync(async (req, res, next) => {
+    if (!req.file) {
+        return next(new AppError("Please provide an image file to upload.", 400));
+    }
 
-    let profile = await UserProfile.findOne({ user: req.user.id });
-
+    const userId = req.user.id || req.user._id;
+    let profile = await UserProfile.findOne({ user: userId });
     if (!profile) {
-        // Create if it doesn't exist
-        profile = await UserProfile.create({ user: req.user.id, ...updateData });
-    } else {
-        // Update existing
-        profile = await UserProfile.findOneAndUpdate(
-            { user: req.user.id },
-            updateData,
-            { new: true, runValidators: true }
-        );
+        profile = await UserProfile.create({ user: userId, name: req.user.name || "User" });
+    }
+
+    // Delete old profile image if exists on R2
+    if (profile.profileImage) {
+        await deleteFromR2(profile.profileImage);
+    }
+
+    const ext = req.file.originalname.split(".").pop() || "jpg";
+    const key = `profiles/${userId}-${Date.now()}.${ext}`;
+
+    const { url } = await uploadToR2({
+        buffer: req.file.buffer,
+        key,
+        contentType: req.file.mimetype || "image/jpeg",
+    });
+
+    profile.profileImage = url;
+    await profile.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Profile image uploaded to Cloudflare R2 successfully",
+        profileImage: url,
+        data: profile,
+    });
+});
+
+// @desc    Upload resume to Cloudflare R2
+// @route   POST /api/userprofile/upload-resume
+// @access  Private (User)
+export const uploadResume = catchAsync(async (req, res, next) => {
+    if (!req.file) {
+        return next(new AppError("Please provide a resume document (PDF/DOC/DOCX) to upload.", 400));
+    }
+
+    const userId = req.user.id || req.user._id;
+    let profile = await UserProfile.findOne({ user: userId });
+    if (!profile) {
+        profile = await UserProfile.create({ user: userId, name: req.user.name || "User" });
+    }
+
+    // Delete old resume if exists on R2
+    if (profile.resume) {
+        await deleteFromR2(profile.resume);
+    }
+
+    const ext = req.file.originalname.split(".").pop() || "pdf";
+    const safeOriginalName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const key = `resumes/${userId}-${Date.now()}-${safeOriginalName}`;
+
+    const { url } = await uploadToR2({
+        buffer: req.file.buffer,
+        key,
+        contentType: req.file.mimetype || "application/pdf",
+    });
+
+    profile.resume = url;
+    await profile.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Resume uploaded to Cloudflare R2 successfully",
+        resume: url,
+        data: profile,
+    });
+});
+
+// @desc    Delete resume from Cloudflare R2
+// @route   DELETE /api/userprofile/resume
+// @access  Private (User)
+export const deleteResume = catchAsync(async (req, res, next) => {
+    const userId = req.user.id || req.user._id;
+    const profile = await UserProfile.findOne({ user: userId });
+
+    if (profile && profile.resume) {
+        await deleteFromR2(profile.resume);
+        profile.resume = "";
+        await profile.save();
     }
 
     res.status(200).json({
         success: true,
+        message: "Resume removed successfully",
         data: profile,
+    });
+});
+
+// @desc    Update current user profile
+// @route   PUT /api/userprofile
+// @access  Private
+export const updateUserProfile = catchAsync(async (req, res, next) => {
+    const userId = req.user.id || req.user._id;
+    let updateData = { ...req.body };
+    delete updateData.user;
+
+    // Parse stringified objects if submitted via FormData
+    if (typeof updateData.location === "string") {
+        try { updateData.location = JSON.parse(updateData.location); } catch (e) {}
+    }
+    if (typeof updateData.salary === "string") {
+        try { updateData.salary = JSON.parse(updateData.salary); } catch (e) {}
+    }
+    if (typeof updateData.skills === "string") {
+        try { 
+            const parsed = JSON.parse(updateData.skills);
+            if (Array.isArray(parsed)) updateData.skills = parsed;
+        } catch (e) {
+            updateData.skills = updateData.skills.split(",").map(s => s.trim()).filter(Boolean);
+        }
+    }
+
+    let profile = await UserProfile.findOne({ user: userId });
+    if (!profile) {
+        profile = await UserProfile.create({ user: userId, name: req.user.name || "User" });
+    }
+
+    // Handle files if passed through multipart form-data
+    if (req.files) {
+        if (req.files.profileImage && req.files.profileImage[0]) {
+            const imgFile = req.files.profileImage[0];
+            if (profile.profileImage) {
+                await deleteFromR2(profile.profileImage);
+            }
+            const ext = imgFile.originalname.split(".").pop() || "jpg";
+            const key = `profiles/${userId}-${Date.now()}.${ext}`;
+            const { url } = await uploadToR2({
+                buffer: imgFile.buffer,
+                key,
+                contentType: imgFile.mimetype || "image/jpeg",
+            });
+            updateData.profileImage = url;
+        }
+
+        if (req.files.resume && req.files.resume[0]) {
+            const resFile = req.files.resume[0];
+            if (profile.resume) {
+                await deleteFromR2(profile.resume);
+            }
+            const safeName = resFile.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+            const key = `resumes/${userId}-${Date.now()}-${safeName}`;
+            const { url } = await uploadToR2({
+                buffer: resFile.buffer,
+                key,
+                contentType: resFile.mimetype || "application/pdf",
+            });
+            updateData.resume = url;
+        }
+    }
+
+    // Clean up R2 if fields were explicitly cleared
+    if (updateData.resume === "" && profile.resume) {
+        await deleteFromR2(profile.resume);
+    }
+    if (updateData.profileImage === "" && profile.profileImage) {
+        await deleteFromR2(profile.profileImage);
+    }
+
+    const updatedProfile = await UserProfile.findOneAndUpdate(
+        { user: userId },
+        updateData,
+        { new: true, runValidators: true }
+    );
+
+    res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+        data: updatedProfile,
     });
 });

@@ -828,24 +828,24 @@ export default function JobApplications() {
               const profile = app.userProfile || {};
               const user = app.user || {};
 
-              const candidateName =
-                profile.name || user.name || "Candidate";
+              const candidateName = profile.name || user.name || "Candidate";
               const candidateEmail = user.email || profile.email;
               const candidatePhone = profile.phone || user.phone;
               const candidateTitle =
                 profile.title || app.currentRole || "Candidate";
-              const candidateImage =
-                profile.profileImage ||
-                user.profilePicture ||
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(candidateName)}&background=eff6ff&color=2563eb&bold=true`;
+              const candidateImage = profile.profileImage
+                ? import.meta.env.VITE_API_URL + profile.profileImage
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(candidateName)}&background=eff6ff&color=2563eb&bold=true`;
 
-              const resumeLink = app.resume || profile.resume;
+              const resumeLink = profile.resume
+                ? import.meta.env.VITE_API_URL + profile.resume
+                : "";
               const currentStatus = (app.status || "pending").toLowerCase();
-              const config = statusConfig[currentStatus] || statusConfig.pending;
+              const config =
+                statusConfig[currentStatus] || statusConfig.pending;
               const StatusIcon = config.icon;
 
-              const totalExp =
-                app.totalExperience ?? profile.experience ?? "0";
+              const totalExp = app.totalExperience ?? profile.experience ?? "0";
 
               return (
                 <motion.div
@@ -899,7 +899,10 @@ export default function JobApplications() {
                                 title="Copy Email"
                               >
                                 {copiedId === `${app._id}-Email` ? (
-                                  <Check size={12} className="text-emerald-600" />
+                                  <Check
+                                    size={12}
+                                    className="text-emerald-600"
+                                  />
                                 ) : (
                                   <Copy size={12} />
                                 )}
@@ -928,7 +931,10 @@ export default function JobApplications() {
                                 title="Copy Phone"
                               >
                                 {copiedId === `${app._id}-Phone` ? (
-                                  <Check size={12} className="text-emerald-600" />
+                                  <Check
+                                    size={12}
+                                    className="text-emerald-600"
+                                  />
                                 ) : (
                                   <Copy size={12} />
                                 )}
@@ -1001,7 +1007,10 @@ export default function JobApplications() {
                       <span className="text-[10px] font-bold uppercase text-slate-400 block mb-0.5">
                         Current Company
                       </span>
-                      <span className="font-bold text-slate-800 truncate block" title={app.currentCompany || "N/A"}>
+                      <span
+                        className="font-bold text-slate-800 truncate block"
+                        title={app.currentCompany || "N/A"}
+                      >
                         {app.currentCompany || "Not Employed"}
                       </span>
                     </div>

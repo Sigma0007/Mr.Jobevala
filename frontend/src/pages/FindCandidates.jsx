@@ -565,7 +565,10 @@ export default function FindCandidates() {
                                 <div className="relative flex-shrink-0">
                                   {candidate.profileImage ? (
                                     <img
-                                      src={candidate.profileImage}
+                                      src={
+                                        import.meta.env.VITE_API_URL +
+                                        candidate?.profileImage
+                                      }
                                       alt={candidateName}
                                       className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-md group-hover:scale-105 transition-transform duration-300"
                                     />
@@ -736,7 +739,10 @@ export default function FindCandidates() {
                             <div className="relative">
                               {candidate.profileImage ? (
                                 <img
-                                  src={candidate.profileImage}
+                                  src={
+                                    import.meta.env.VITE_API_URL +
+                                    candidate?.profileImage
+                                  }
                                   alt={candidateName}
                                   className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-4 border-white shadow-md"
                                 />
@@ -950,7 +956,10 @@ export default function FindCandidates() {
                   <div className="relative flex-shrink-0">
                     {selectedCandidate.profileImage ? (
                       <img
-                        src={selectedCandidate.profileImage}
+                        src={
+                          import.meta.env.VITE_API_URL +
+                          selectedCandidate.profileImage
+                        }
                         alt={selectedCandidate.name}
                         className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-4 border-white/20 shadow-xl"
                       />
@@ -1224,7 +1233,7 @@ export default function FindCandidates() {
                       </div>
                     </div>
                     <a
-                      href={selectedCandidate.resume}
+                      href={`${import.meta.env.VITE_API_URL}${selectedCandidate.resume}`}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-sm transition shrink-0"

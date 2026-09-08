@@ -196,7 +196,9 @@ export default function EmployerApplicants() {
             app.userProfile?.location?.city ||
             ""
           ).toLowerCase();
-          const skills = (app.userProfile?.skills || []).join(" ").toLowerCase();
+          const skills = (app.userProfile?.skills || [])
+            .join(" ")
+            .toLowerCase();
 
           const matches =
             name.includes(term) ||
@@ -238,7 +240,11 @@ export default function EmployerApplicants() {
     { id: "all", label: "All Applicants", count: statusCounts.all },
     { id: "pending", label: "Pending", count: statusCounts.pending },
     { id: "reviewed", label: "Reviewed", count: statusCounts.reviewed },
-    { id: "shortlisted", label: "Shortlisted", count: statusCounts.shortlisted },
+    {
+      id: "shortlisted",
+      label: "Shortlisted",
+      count: statusCounts.shortlisted,
+    },
     { id: "interview", label: "Interview", count: statusCounts.interview },
     { id: "hired", label: "Hired", count: statusCounts.hired },
     { id: "rejected", label: "Rejected", count: statusCounts.rejected },
@@ -262,7 +268,8 @@ export default function EmployerApplicants() {
               Applicants Management
             </h2>
             <p className="text-sm text-slate-500 mt-1">
-              Review, filter, evaluate candidate profiles, and manage status transitions.
+              Review, filter, evaluate candidate profiles, and manage status
+              transitions.
             </p>
           </div>
 
@@ -273,7 +280,9 @@ export default function EmployerApplicants() {
               className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition"
               title="Refresh applicants list"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`}
+              />
               Refresh
             </button>
           </div>
@@ -397,7 +406,9 @@ export default function EmployerApplicants() {
               No applications match your current filter and search criteria. Try
               adjusting search terms or status filters.
             </p>
-            {(searchTerm || selectedStatus !== "all" || selectedJobId !== "all") && (
+            {(searchTerm ||
+              selectedStatus !== "all" ||
+              selectedJobId !== "all") && (
               <button
                 onClick={() => {
                   setSearchTerm("");
@@ -416,14 +427,11 @@ export default function EmployerApplicants() {
             const userProfile = applicant.userProfile || {};
             const job = applicant.job || {};
 
-            const candidateName =
-              userProfile.name || user.name || "Candidate";
+            const candidateName = userProfile.name || user.name || "Candidate";
             const candidateEmail = user.email || "";
             const candidatePhone = userProfile.phone || user.phone || "";
             const candidateRole =
-              applicant.currentRole ||
-              userProfile.title ||
-              "Applicant";
+              applicant.currentRole || userProfile.title || "Applicant";
             const candidateCompany = applicant.currentCompany;
             const expYears =
               applicant.totalExperience ?? userProfile.experience;
@@ -441,7 +449,9 @@ export default function EmployerApplicants() {
               statusConfig[statusKey]?.name || applicant.status;
 
             const currentCTCFormatted = formatCompactCTC(applicant.currentCTC);
-            const expectedCTCFormatted = formatCompactCTC(applicant.expectedCTC);
+            const expectedCTCFormatted = formatCompactCTC(
+              applicant.expectedCTC,
+            );
 
             return (
               <motion.div
@@ -458,7 +468,10 @@ export default function EmployerApplicants() {
                   >
                     {userProfile.profileImage ? (
                       <img
-                        src={userProfile.profileImage}
+                        src={
+                          import.meta.env.VITE_API_URL +
+                          userProfile.profileImage
+                        }
                         alt={candidateName}
                         className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-slate-100 shadow-sm shrink-0"
                       />

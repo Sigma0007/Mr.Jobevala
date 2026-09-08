@@ -71,6 +71,21 @@ const updateUserProfile = (data = {}) => {
   return Auth(endpoint, data, "PUT");
 };
 
+const uploadProfileImage = (formData) => {
+  const endpoint = `/api/userprofile/upload-image`;
+  return Auth(endpoint, formData, "POST", true);
+};
+
+const uploadResume = (formData) => {
+  const endpoint = `/api/userprofile/upload-resume`;
+  return Auth(endpoint, formData, "POST", true);
+};
+
+const deleteResume = () => {
+  const endpoint = `/api/userprofile/resume`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
 const getCompanyProfile = () => {
   const endpoint = `/api/companyprofile`;
   return Auth(endpoint, {}, "GET");
@@ -283,6 +298,9 @@ export default {
   getUserProfile,
   getUserOverview,
   updateUserProfile,
+  uploadProfileImage,
+  uploadResume,
+  deleteResume,
   getCompanyProfile,
   updateCompanyProfile,
   getAllJobs,
