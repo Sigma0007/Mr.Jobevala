@@ -20,7 +20,7 @@ app.use(
     cors({
         origin: [
             "http://localhost:5173",
-            "https://job-portal-lake-psi.vercel.app",
+            "https://job-portal-jmcn.onrender.com",
         ],
         credentials: true,
     })
