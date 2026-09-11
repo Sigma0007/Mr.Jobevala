@@ -10,6 +10,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
 import storageRoutes from "./routes/storageRoutes.js";
+import msgRoutes from "./routes/msgRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 
 import { errorHandler } from "./middleware/errorMiddleware.js";
@@ -48,6 +49,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/locations", locationRoutes);
 app.use("/api/storage", storageRoutes);
+app.use("/api/msg", msgRoutes);
 app.use("/api/payment", paymentRoutes);
 
 app.use(errorHandler);
