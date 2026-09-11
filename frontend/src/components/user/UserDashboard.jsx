@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { User, FileText, Bookmark, LayoutDashboard } from "lucide-react";
+import { User, FileText, Bookmark, LayoutDashboard, CreditCard, Sparkles } from "lucide-react";
 
 // Candidate Components
 import UserOverview from "./UserOverview";
 import UserApplied from "./UserApplied";
 import UserSaved from "./UserSaved";
 import UserProfile from "./UserProfile";
+import PaymentHistory from "../../pages/PaymentHistory";
 
 export function UserDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -15,6 +15,7 @@ export function UserDashboard() {
     { id: "applied", name: "Applied Jobs", icon: FileText },
     { id: "saved", name: "Saved Jobs", icon: Bookmark },
     { id: "profile", name: "My Profile", icon: User },
+    { id: "payments", name: "Payments & Invoices", icon: CreditCard },
   ];
 
   return (
@@ -60,6 +61,7 @@ export function UserDashboard() {
             {activeTab === "applied" && <UserApplied />}
             {activeTab === "saved" && <UserSaved />}
             {activeTab === "profile" && <UserProfile />}
+            {activeTab === "payments" && <PaymentHistory />}
           </div>
         </div>
       </div>

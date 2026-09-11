@@ -17,6 +17,7 @@ export default function Navbar() {
     { name: "Home", href: "/", protected: false },
     { name: "Find Jobs", href: "/jobs", protected: false },
     { name: "Find Candidates", href: "/candidates", protected: true },
+    { name: "Pricing & Plans", href: "/pricing", protected: false },
   ];
 
   const requireAuth = (e, path) => {

@@ -1,19 +1,21 @@
-import { Briefcase, Building2, LayoutDashboard, PlusCircle, Users } from 'lucide-react';
+import { Briefcase, Building2, LayoutDashboard, PlusCircle, Users, CreditCard } from 'lucide-react';
 import React, { useState } from 'react'
 import EmployerJobs from './EmployerJobs';
 import EmployerPostJob from './EmployerPostJob';
 import EmployerProfile from './EmployerProfile';
 import EmployerApplicants from './EmployerApplicants';
 import EmployerOverview from './EmployerOverview';
+import PaymentHistory from '../../pages/PaymentHistory';
 
 const EmployerDashboard = () => {
     const [activeTab, setActiveTab] = useState("overview");
     const menuItems = [
         { id: "overview", name: "Dashboard", icon: LayoutDashboard },
         { id: "jobs", name: "View All Jobs", icon: Briefcase },
-        { id: "applicants", name: "Applicants", icon: Users }, // Added Applicants Option
+        { id: "applicants", name: "Applicants", icon: Users },
         { id: "post-job", name: "Create Job", icon: PlusCircle },
         { id: "profile", name: "Company Profile", icon: Building2 },
+        { id: "billing", name: "Billing & Receipts", icon: CreditCard },
     ];
 
     return (
@@ -55,6 +57,7 @@ const EmployerDashboard = () => {
                         {activeTab === "applicants" && <EmployerApplicants />}
                         {activeTab === "post-job" && <EmployerPostJob setActiveTab={setActiveTab} />}
                         {activeTab === "profile" && <EmployerProfile />}
+                        {activeTab === "billing" && <PaymentHistory />}
                     </div>
                 </div>
             </div>

@@ -19,6 +19,8 @@ import Register from "./pages/Register";
 import JobApplications from "./components/provider/JobApplications";
 import FindCandidates from "./pages/FindCandidates";
 import UserAppliedJobDetail from "./pages/UserAppliedJobDetail";
+import PricingPlans from "./pages/PricingPlans";
+import PaymentHistory from "./pages/PaymentHistory";
 import { useEffect } from "react";
 import { setAllCategoriesType } from "./Redux/Dashboard/DashboardAction";
 import { useDispatch } from "react-redux";
@@ -87,6 +89,8 @@ export default function App() {
           <Route path="/jobs" element={<FindJobs />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/candidates" element={<FindCandidates />} />
+          <Route path="/pricing" element={<PricingPlans />} />
+          <Route path="/payments/history" element={<PaymentHistory />} />
 
           {/* ADMIN */}
 

@@ -68,3 +68,28 @@ export const protect = catchAsync(
         next();
     }
 );
+
+export const optionalAuth = catchAsync(async (req, res, next) => {
+    let token;
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.split(" ")[1];
+    }
+
+    if (!token) {
+        return next();
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+        if (user && user.isActive) {
+            req.user = user;
+        }
+    } catch (err) {
+        // Silently continue as unauthenticated
+    }
+
+    next();
+});

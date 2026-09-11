@@ -292,6 +292,38 @@ const deleteSubDivision = (id) => {
   return Auth(endpoint, {}, "DELETE");
 };
 
+// --- Payment APIs (Razorpay) ---
+
+const getRazorpayKey = () => {
+  const endpoint = `/api/payment/key`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const createPaymentOrder = (data = {}) => {
+  const endpoint = `/api/payment/create-order`;
+  return Auth(endpoint, data, "POST");
+};
+
+const verifyPayment = (data = {}) => {
+  const endpoint = `/api/payment/verify`;
+  return Auth(endpoint, data, "POST");
+};
+
+const getMyPayments = (query = "") => {
+  const endpoint = `/api/payment/my-payments${query}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getAllPaymentsAdmin = (query = "") => {
+  const endpoint = `/api/payment/all${query}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getPaymentById = (id) => {
+  const endpoint = `/api/payment/${id}`;
+  return Auth(endpoint, {}, "GET");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -351,4 +383,10 @@ export default {
   createSubDivision,
   updateSubDivision,
   deleteSubDivision,
+  getRazorpayKey,
+  createPaymentOrder,
+  verifyPayment,
+  getMyPayments,
+  getAllPaymentsAdmin,
+  getPaymentById,
 };
