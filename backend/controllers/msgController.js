@@ -87,3 +87,59 @@ export const verifyOtp = async (req, res) => {
         });
     }
 };
+
+export const verifywidget = async (req, res) => {
+    try {
+        const { accessToken, mobile } = req.body;
+
+        if (!accessToken) {
+            return res.status(400).json({
+                success: false,
+                message: "Access token is required",
+            });
+        }
+
+        const response = await fetch(
+            "https://control.msg91.com/api/v5/widget/verifyAccessToken",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                body: JSON.stringify({
+                    authkey: process.env.MSG91_AUTH_KEY,
+                    "access-token": accessToken,
+                }),
+            }
+        );
+
+        const data = await response.json();
+
+        console.log("MSG91 verification:", data);
+
+        if (!response.ok) {
+            return res.status(401).json({
+                success: false,
+                message: "MSG91 token verification failed",
+                data,
+            });
+        }
+
+        // Token is valid.
+        // Now find/create your user in MongoDB.
+
+        return res.json({
+            success: true,
+            message: "OTP verified successfully",
+            data,
+        });
+    } catch (error) {
+        console.error("MSG91 error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};

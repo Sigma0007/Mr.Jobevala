@@ -324,6 +324,11 @@ const getPaymentById = (id) => {
   return Auth(endpoint, {}, "GET");
 };
 
+const msg91WidgetVerify = (data) => {
+  const endpoint = `/api/msg/msg91-widget/verify`;
+  return Auth(endpoint, data, "POST");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -389,4 +394,5 @@ export default {
   getMyPayments,
   getAllPaymentsAdmin,
   getPaymentById,
+  msg91WidgetVerify,
 };

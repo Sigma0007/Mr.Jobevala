@@ -25,6 +25,7 @@ import { useEffect } from "react";
 import { setAllCategoriesType } from "./Redux/Dashboard/DashboardAction";
 import { useDispatch } from "react-redux";
 import customerservice from "./customer/customerservice";
+import MSGLogin from "./components/MSG/MSGLogin";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -84,6 +85,7 @@ export default function App() {
           {/* Call the clean HomePage component here */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/msglogin" element={<MSGLogin />} />
           <Route path="/register" element={<Register />} />
 
           <Route path="/jobs" element={<FindJobs />} />
