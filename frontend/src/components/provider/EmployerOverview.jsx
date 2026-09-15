@@ -17,11 +17,14 @@ import {
   RefreshCw,
   Eye,
   Calendar,
+  Crown,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import customerservice from "../../customer/customerservice";
 import toast from "react-hot-toast";
 import { statusConfig } from "../../Utility/utilites";
 import CandidateDetailsModal from "../Modals/CandidateDetailsModal";
+import SubscriptionModal from "../Modals/SubscriptionModal";
 
 export default function EmployerOverview({ setActiveTab = () => {} }) {
   const [overviewData, setOverviewData] = useState(null);
@@ -29,6 +32,8 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
   const [error, setError] = useState(null);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState(null);
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
 
   const fetchOverview = async () => {
     try {
@@ -48,8 +53,20 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
     }
   };
 
+  const fetchSubscription = async () => {
+    try {
+      const res = await customerservice.getCurrentSubscription();
+      if (res?.success && res?.data) {
+        setCurrentSubscription(res.data);
+      }
+    } catch (err) {
+      console.warn("Could not fetch employer subscription:", err);
+    }
+  };
+
   useEffect(() => {
     fetchOverview();
+    fetchSubscription();
   }, []);
 
   const handleStatusChange = async (applicationId, newStatus) => {
@@ -98,16 +115,13 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 p-8 rounded-3xl text-center space-y-3">
-        <AlertCircle className="w-10 h-10 text-red-600 mx-auto" />
-        <h3 className="text-lg font-bold text-red-900">
-          Failed to load dashboard
-        </h3>
-        <p className="text-sm text-red-600">{error}</p>
+        <AlertCircle className="w-8 h-8 text-red-500 mx-auto" />
+        <p className="text-sm font-semibold text-red-700">{error}</p>
         <button
           onClick={fetchOverview}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white text-xs font-semibold rounded-xl hover:bg-red-700 transition shadow-sm"
+          className="px-4 py-2 bg-red-600 text-white text-xs font-semibold rounded-xl hover:bg-red-700"
         >
-          <RefreshCw className="w-4 h-4" /> Try Again
+          Try Again
         </button>
       </div>
     );
@@ -115,8 +129,8 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
 
   const {
     profile = {},
-    completeness = { score: 0, criteria: [] },
     stats = {},
+    completeness = { score: 0, missingFields: [] },
     recentApplications = [],
     recentJobs = [],
   } = overviewData || {};
@@ -175,20 +189,81 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setActiveTab("post-job")}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-2xl shadow-lg shadow-brand-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-2xl shadow-lg shadow-brand-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
             Post New Job
           </button>
           <button
             onClick={() => setActiveTab("applicants")}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-semibold rounded-2xl border border-slate-200 transition-all"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-semibold rounded-2xl border border-slate-200 transition-all cursor-pointer"
           >
             <Users className="w-4 h-4 text-slate-500" />
             Applicants ({stats.totalApplications || 0})
           </button>
         </div>
       </div>
+
+      {/* Subscription Status Card */}
+      {currentSubscription && currentSubscription.status === "active" ? (
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 text-white shadow-xl border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Active Employer Plan
+              </span>
+              <span className="text-xs text-indigo-300">
+                {currentSubscription.planDetails?.category || "For Employers"}
+              </span>
+            </div>
+            <h3 className="text-xl font-bold flex items-center gap-2 text-white">
+              <Crown className="w-5 h-5 text-amber-400" />
+              {currentSubscription.planDetails?.name || currentSubscription.planId}
+            </h3>
+            <p className="text-xs text-slate-300">
+              Valid until{" "}
+              <span className="font-semibold text-white">
+                {new Date(currentSubscription.endDate).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </span>{" "}
+              • Posts: {currentSubscription.jobPostsUsed || 0}/{currentSubscription.jobPostsLimit || "Unlimited"} • Candidate Unlocks: {currentSubscription.unlockContactsUsed || 0}/{currentSubscription.unlockContactsLimit || "Unlimited"}
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsSubModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md cursor-pointer"
+          >
+            <Crown className="w-4 h-4 text-amber-300" />
+            <span>View Subscription Modal</span>
+          </button>
+        </div>
+      ) : (
+        <div className="bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 rounded-3xl p-6 border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-indigo-600" />
+              <h3 className="text-base font-bold text-slate-900">
+                Supercharge Your Candidate Hiring
+              </h3>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-600">
+              Unlock verified candidate contact details and boost your job posts with a featured employer plan.
+            </p>
+          </div>
+          <Link
+            to="/pricing"
+            className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md cursor-pointer"
+          >
+            <Crown className="w-4 h-4 text-amber-300" />
+            <span>Browse Employer Plans</span>
+          </Link>
+        </div>
+      )}
 
       {/* 2. Company Profile Completeness Bar (if < 100%) */}
       {completeness.score < 100 && (
@@ -218,9 +293,9 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
             </div>
             <button
               onClick={() => setActiveTab("profile")}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-brand-600 hover:bg-brand-50 border border-brand-200 text-xs font-bold rounded-xl shadow-sm transition whitespace-nowrap"
+              className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-md cursor-pointer"
             >
-              Update Profile <ChevronRight className="w-4 h-4" />
+              Complete Profile
             </button>
           </div>
         </div>
@@ -676,6 +751,16 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
         onStatusChange={handleStatusChange}
         updatingStatus={updatingStatus}
         onViewAll={() => setActiveTab("applicants")}
+      />
+
+      {/* Subscription Details Modal */}
+      <SubscriptionModal
+        isOpen={isSubModalOpen}
+        onClose={() => setIsSubModalOpen(false)}
+        subscription={currentSubscription}
+        onSubscriptionCancelled={() => {
+          fetchSubscription();
+        }}
       />
     </motion.div>
   );

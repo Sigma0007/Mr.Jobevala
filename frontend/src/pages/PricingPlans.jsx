@@ -21,12 +21,15 @@ import {
   MessageSquare,
   Briefcase,
   UserCheck,
+  Calendar,
+  ExternalLink,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import customerservice from "../customer/customerservice";
 import { loadRazorpayScript } from "../Utility/loadRazorpay";
+import SubscriptionModal from "../components/Modals/SubscriptionModal";
 
 export const DEFAULT_PLAN_CATEGORIES = [
   {
@@ -66,6 +69,9 @@ export default function PricingPlans() {
   const [loadingPlan, setLoadingPlan] = useState(null);
   const [razorpayKey, setRazorpayKey] = useState("");
   const [lastPaymentSuccess, setLastPaymentSuccess] = useState(null);
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
+  const [selectedSubForModal, setSelectedSubForModal] = useState(null);
 
   // Sync tab if user loads later
   useEffect(() => {
@@ -92,9 +98,31 @@ export default function PricingPlans() {
     }
   };
 
+  // Fetch Current Active Subscription
+  const fetchCurrentSubscription = async () => {
+    if (!user) {
+      setCurrentSubscription(null);
+      return;
+    }
+    try {
+      const res = await customerservice.getCurrentSubscription();
+      if (res?.success && res?.data) {
+        setCurrentSubscription(res.data);
+      } else {
+        setCurrentSubscription(null);
+      }
+    } catch (err) {
+      console.warn("Could not fetch current subscription:", err);
+    }
+  };
+
   useEffect(() => {
     fetchPlans();
   }, []);
+
+  useEffect(() => {
+    fetchCurrentSubscription();
+  }, [user]);
 
   // Fetch Razorpay public key on load
   useEffect(() => {
@@ -234,6 +262,14 @@ export default function PricingPlans() {
                 category: plan.category,
                 date: new Date().toLocaleString(),
               });
+
+              if (verifyRes?.subscription) {
+                setCurrentSubscription(verifyRes.subscription);
+                setSelectedSubForModal(verifyRes.subscription);
+                setIsSubModalOpen(true);
+              } else {
+                fetchCurrentSubscription();
+              }
             } else {
               toast.error(
                 verifyRes?.message || "Payment signature verification failed.",
@@ -306,7 +342,7 @@ export default function PricingPlans() {
         </p>
 
         {user && (
-          <div className="mt-6 flex items-center justify-center gap-4">
+          <div className="mt-6 flex items-center justify-center gap-4 flex-wrap">
             <Link
               to="/payments/history"
               className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-all border border-indigo-100"
@@ -314,9 +350,75 @@ export default function PricingPlans() {
               <CreditCard className="w-4 h-4" />
               View My Transaction History
             </Link>
+
+            {currentSubscription && currentSubscription.status === "active" && (
+              <button
+                onClick={() => {
+                  setSelectedSubForModal(currentSubscription);
+                  setIsSubModalOpen(true);
+                }}
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-4 py-2 rounded-xl transition-all border border-emerald-200 cursor-pointer"
+              >
+                <Crown className="w-4 h-4 text-amber-500" />
+                <span>My Active Subscription Details</span>
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {/* Current Active Plan Top Card if User is Subscribed */}
+      {currentSubscription && currentSubscription.status === "active" && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-4xl mx-auto mb-10 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-7 rounded-3xl shadow-xl border border-indigo-500/30 relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Active Plan
+                </span>
+                <span className="text-xs text-indigo-300 font-medium">
+                  {currentSubscription.planDetails?.category || "Subscription Plan"}
+                </span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-white">
+                <Crown className="w-6 h-6 text-amber-400" />
+                {currentSubscription.planDetails?.name || currentSubscription.planId}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300">
+                Valid until{" "}
+                <span className="font-semibold text-white">
+                  {new Date(currentSubscription.endDate).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>{" "}
+                • Instant privileges & quota limits activated
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={() => {
+                  setSelectedSubForModal(currentSubscription);
+                  setIsSubModalOpen(true);
+                }}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white px-5 py-3 rounded-2xl text-xs sm:text-sm font-semibold transition-all shadow-md cursor-pointer"
+              >
+                <Crown className="w-4 h-4 text-amber-300" />
+                <span>View Subscription Modal</span>
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Category Tab Selector */}
       <div className="max-w-4xl mx-auto mb-12">
@@ -427,16 +529,21 @@ export default function PricingPlans() {
             <div className="flex gap-3">
               <button
                 onClick={() => setLastPaymentSuccess(null)}
-                className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 rounded-xl transition-colors text-sm"
+                className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 rounded-xl transition-colors text-sm cursor-pointer"
               >
                 Close Receipt
               </button>
-              <Link
-                to="/payments/history"
-                className="flex-1 text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium py-2.5 rounded-xl transition-colors text-sm"
-              >
-                All Receipts
-              </Link>
+              {currentSubscription && (
+                <button
+                  onClick={() => {
+                    setSelectedSubForModal(currentSubscription);
+                    setIsSubModalOpen(true);
+                  }}
+                  className="flex-1 text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium py-2.5 rounded-xl transition-colors text-sm cursor-pointer"
+                >
+                  View Subscription Modal
+                </button>
+              )}
             </div>
           </motion.div>
         )}
@@ -463,7 +570,7 @@ export default function PricingPlans() {
             </p>
             <button
               onClick={fetchPlans}
-              className="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700"
+              className="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700 cursor-pointer"
             >
               Refresh
             </button>
@@ -494,19 +601,33 @@ export default function PricingPlans() {
 
               const planKey = plan.planId || plan._id || plan.id;
 
+              const isCurrentActive =
+                currentSubscription &&
+                currentSubscription.status === "active" &&
+                (currentSubscription.planId === plan.planId ||
+                  currentSubscription.plan?._id === plan._id ||
+                  currentSubscription.plan === plan._id);
+
               return (
                 <motion.div
                   key={planKey}
                   whileHover={{ y: -6 }}
                   transition={{ duration: 0.2 }}
                   className={`relative rounded-3xl p-7 sm:p-8 flex flex-col justify-between bg-white transition-all shadow-xl ${
-                    plan.highlighted
+                    isCurrentActive
+                      ? "border-2 border-emerald-500 shadow-emerald-100 ring-4 ring-emerald-50/80"
+                      : plan.highlighted
                       ? "border-2 border-indigo-500 shadow-indigo-100 ring-4 ring-indigo-50/70"
                       : "border border-slate-200/90 hover:border-slate-300"
                   }`}
                 >
                   {/* Highlight / Category Badges */}
-                  {plan.badge && (
+                  {isCurrentActive ? (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider text-white shadow-md flex items-center gap-1.5 bg-emerald-600">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Your Active Plan</span>
+                    </div>
+                  ) : plan.badge ? (
                     <div
                       className={`absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider text-white shadow-md flex items-center gap-1.5 ${
                         plan.highlighted
@@ -519,7 +640,7 @@ export default function PricingPlans() {
                       )}
                       <span>{plan.badge}</span>
                     </div>
-                  )}
+                  ) : null}
 
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-2">
@@ -613,7 +734,10 @@ export default function PricingPlans() {
                   <div className="mt-8 pt-4">
                     <button
                       onClick={() => {
-                        if (user) {
+                        if (isCurrentActive) {
+                          setSelectedSubForModal(currentSubscription);
+                          setIsSubModalOpen(true);
+                        } else if (user) {
                           handlePayment(plan);
                         } else {
                           toast.error("Please login to purchase a plan");
@@ -622,7 +746,9 @@ export default function PricingPlans() {
                       }}
                       disabled={loadingPlan === planKey}
                       className={`w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl font-semibold text-sm transition-all cursor-pointer shadow-lg disabled:opacity-70 ${
-                        plan.highlighted
+                        isCurrentActive
+                          ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/25"
+                          : plan.highlighted
                           ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/25"
                           : "bg-slate-900 hover:bg-slate-800 text-white shadow-slate-900/20"
                       }`}
@@ -632,6 +758,11 @@ export default function PricingPlans() {
                           <RefreshCw className="w-4 h-4 animate-spin" />
                           Connecting Razorpay...
                         </>
+                      ) : isCurrentActive ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          Active Plan (View Modal)
+                        </>
                       ) : (
                         <>
                           <CreditCard className="w-4 h-4" />
@@ -640,7 +771,9 @@ export default function PricingPlans() {
                       )}
                     </button>
                     <p className="text-center text-[11px] text-slate-400 mt-2">
-                      Instant automated activation after payment
+                      {isCurrentActive
+                        ? "Currently active on your account"
+                        : "Instant automated activation after payment"}
                     </p>
                   </div>
                 </motion.div>
@@ -671,6 +804,17 @@ export default function PricingPlans() {
           </div>
         </div>
       </div>
+
+      {/* Interactive Subscription Details Modal */}
+      <SubscriptionModal
+        isOpen={isSubModalOpen}
+        onClose={() => setIsSubModalOpen(false)}
+        subscription={selectedSubForModal || currentSubscription}
+        onSubscriptionCancelled={() => {
+          fetchCurrentSubscription();
+        }}
+      />
     </div>
   );
 }
+

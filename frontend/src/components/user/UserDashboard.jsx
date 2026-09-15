@@ -1,4 +1,11 @@
-import { User, FileText, Bookmark, LayoutDashboard, CreditCard, Sparkles } from "lucide-react";
+import {
+  User,
+  FileText,
+  Bookmark,
+  LayoutDashboard,
+  CreditCard,
+  Sparkles,
+} from "lucide-react";
 
 // Candidate Components
 import UserOverview from "./UserOverview";
@@ -6,6 +13,7 @@ import UserApplied from "./UserApplied";
 import UserSaved from "./UserSaved";
 import UserProfile from "./UserProfile";
 import PaymentHistory from "../../pages/PaymentHistory";
+import { useState } from "react";
 
 export function UserDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -57,7 +65,9 @@ export function UserDashboard() {
 
           {/* Dynamic Main Content Area */}
           <div className="flex-1">
-            {activeTab === "overview" && <UserOverview setActiveTab={setActiveTab} />}
+            {activeTab === "overview" && (
+              <UserOverview setActiveTab={setActiveTab} />
+            )}
             {activeTab === "applied" && <UserApplied />}
             {activeTab === "saved" && <UserSaved />}
             {activeTab === "profile" && <UserProfile />}
@@ -68,4 +78,3 @@ export function UserDashboard() {
     </div>
   );
 }
-

@@ -1,8 +1,73 @@
 import crypto from "crypto";
 import { getRazorpayInstance } from "../config/razorpay.js";
 import Payment from "../models/Payment.js";
+import PricingPlan from "../models/PricingPlan.js";
+import Subscription from "../models/Subscription.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
+
+/**
+ * Helper to create/activate subscription record upon successful payment
+ */
+const createOrActivateSubscription = async (payment, userId) => {
+    if (!payment || !userId) return null;
+
+    // Find matching pricing plan
+    let planDoc = null;
+    if (payment.planId) {
+        if (payment.planId.match(/^[0-9a-fA-F]{24}$/)) {
+            planDoc = await PricingPlan.findById(payment.planId);
+        }
+        if (!planDoc) {
+            planDoc = await PricingPlan.findOne({ planId: payment.planId });
+        }
+    }
+
+    const validityDays = planDoc?.validityDays || 30;
+    const startDate = new Date();
+    const endDate = new Date(startDate.getTime() + validityDays * 24 * 60 * 60 * 1000);
+
+    // Deactivate previous active subscriptions for this user
+    await Subscription.updateMany(
+        { user: userId, status: "active" },
+        { $set: { status: "inactive" } }
+    );
+
+    // Create new active subscription
+    const newSubscription = await Subscription.create({
+        user: userId,
+        plan: planDoc?._id || null,
+        planId: payment.planId || planDoc?.planId || "custom_plan",
+        planDetails: {
+            name: planDoc?.name || payment.purpose || "Custom Plan",
+            category: planDoc?.category || (planDoc?.categoryId === "employers" ? "For Employers" : "For Job Seekers"),
+            categoryId: planDoc?.categoryId || "seekers",
+            price: payment.amount,
+            originalPrice: planDoc?.originalPrice || payment.amount,
+            badge: planDoc?.badge || "",
+            description: planDoc?.description || "",
+            features: planDoc?.features || [],
+            validityDays,
+        },
+        payment: payment._id,
+        paymentId: payment.paymentId || "pay_verified",
+        orderId: payment.orderId,
+        startDate,
+        endDate,
+        status: "active",
+        directMessagesLimit: planDoc?.directMessagesLimit || 0,
+        directMessagesUsed: 0,
+        jobPostsLimit: planDoc?.jobPostsLimit || 0,
+        jobPostsUsed: 0,
+        unlockContactsLimit: planDoc?.unlockContactsLimit || 0,
+        unlockContactsUsed: 0,
+    });
+
+    return await Subscription.findById(newSubscription._id)
+        .populate("user", "name email phone role")
+        .populate("plan")
+        .populate("payment");
+};
 
 /**
  * @desc Get Razorpay Public Key
@@ -145,10 +210,22 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
         { new: true }
     );
 
+    // Create & activate Subscription for user/provider
+    let subscription = null;
+    const targetUserId = req.user?._id || payment?.user;
+    if (targetUserId && payment) {
+        try {
+            subscription = await createOrActivateSubscription(payment, targetUserId);
+        } catch (subErr) {
+            console.error("Auto subscription creation warning:", subErr);
+        }
+    }
+
     res.status(200).json({
         success: true,
         message: "Payment verified and recorded successfully!",
         payment,
+        subscription,
     });
 });
 
@@ -180,13 +257,22 @@ export const handleWebhook = catchAsync(async (req, res, next) => {
         const paymentId = paymentEntity?.id;
 
         if (orderId) {
-            await Payment.findOneAndUpdate(
+            const updatedPayment = await Payment.findOneAndUpdate(
                 { orderId },
                 {
                     paymentId,
                     status: "paid",
-                }
+                },
+                { new: true }
             );
+
+            if (updatedPayment && updatedPayment.user) {
+                try {
+                    await createOrActivateSubscription(updatedPayment, updatedPayment.user);
+                } catch (subErr) {
+                    console.error("Webhook subscription creation error:", subErr);
+                }
+            }
         }
     } else if (event === "payment.failed") {
         const paymentEntity = payload?.payment?.entity;

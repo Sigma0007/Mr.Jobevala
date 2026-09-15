@@ -18,20 +18,37 @@ import {
   AlertCircle,
   Award,
   Loader2,
+  Crown,
+  MessageSquare,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import customerservice from "../../customer/customerservice";
+import SubscriptionModal from "../Modals/SubscriptionModal";
 
 export default function UserOverview({ setActiveTab }) {
   const [overviewData, setOverviewData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchOverview();
+    fetchSubscription();
   }, []);
+
+  const fetchSubscription = async () => {
+    try {
+      const res = await customerservice.getCurrentSubscription();
+      if (res?.success && res?.data) {
+        setCurrentSubscription(res.data);
+      }
+    } catch (err) {
+      console.warn("Could not fetch user subscription:", err);
+    }
+  };
 
   const fetchOverview = async () => {
     try {
@@ -235,6 +252,67 @@ export default function UserOverview({ setActiveTab }) {
           )}
         </div>
       </div>
+
+      {/* Subscription Status Card */}
+      {currentSubscription && currentSubscription.status === "active" ? (
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 text-white shadow-xl border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Active Candidate Boost Plan
+              </span>
+              <span className="text-xs text-indigo-300">
+                {currentSubscription.planDetails?.category || "Job Seeker Plan"}
+              </span>
+            </div>
+            <h3 className="text-xl font-bold flex items-center gap-2 text-white">
+              <Crown className="w-5 h-5 text-amber-400" />
+              {currentSubscription.planDetails?.name || currentSubscription.planId}
+            </h3>
+            <p className="text-xs text-slate-300">
+              Valid until{" "}
+              <span className="font-semibold text-white">
+                {new Date(currentSubscription.endDate).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </span>{" "}
+              • Direct Recruiter Outreach: {currentSubscription.directMessagesUsed || 0}/{currentSubscription.directMessagesLimit >= 1000 ? "Unlimited" : currentSubscription.directMessagesLimit || "Standard"}
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsSubModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md cursor-pointer"
+          >
+            <Crown className="w-4 h-4 text-amber-300" />
+            <span>View Subscription Modal</span>
+          </button>
+        </div>
+      ) : (
+        <div className="bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 rounded-3xl p-6 border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-indigo-600" />
+              <h3 className="text-base font-bold text-slate-900">
+                Fast-Track Your Job Applications
+              </h3>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-600">
+              Get highlighted to verified recruiters, AI resume review, and direct messaging privileges.
+            </p>
+          </div>
+          <Link
+            to="/pricing"
+            className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md cursor-pointer"
+          >
+            <Crown className="w-4 h-4 text-amber-300" />
+            <span>Browse Seeker Plans</span>
+          </Link>
+        </div>
+      )}
 
       {/* --- 2. STATS KPI METRICS GRID --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -658,6 +736,16 @@ export default function UserOverview({ setActiveTab }) {
           </div>
         </div>
       )}
+
+      {/* Subscription Details Modal */}
+      <SubscriptionModal
+        isOpen={isSubModalOpen}
+        onClose={() => setIsSubModalOpen(false)}
+        subscription={currentSubscription}
+        onSubscriptionCancelled={() => {
+          fetchSubscription();
+        }}
+      />
     </motion.div>
   );
 }

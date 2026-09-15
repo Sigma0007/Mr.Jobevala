@@ -361,6 +361,38 @@ const seedPricingPlans = (data = {}) => {
   return Auth(endpoint, data, "POST");
 };
 
+// --- Subscription APIs ---
+
+const getCurrentSubscription = () => {
+  const endpoint = `/api/subscription/current`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getMySubscriptionHistory = (params = "") => {
+  const endpoint = `/api/subscription/my-history${params}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getAllSubscriptionsAdmin = (params = "") => {
+  const endpoint = `/api/subscription/all${params}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getSubscriptionById = (id) => {
+  const endpoint = `/api/subscription/${id}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const cancelSubscription = (id) => {
+  const endpoint = `/api/subscription/cancel/${id}`;
+  return Auth(endpoint, {}, "POST");
+};
+
+const validateSubscriptionAction = (data = {}) => {
+  const endpoint = `/api/subscription/validate-action`;
+  return Auth(endpoint, data, "POST");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -433,4 +465,10 @@ export default {
   updatePricingPlan,
   deletePricingPlan,
   seedPricingPlans,
+  getCurrentSubscription,
+  getMySubscriptionHistory,
+  getAllSubscriptionsAdmin,
+  getSubscriptionById,
+  cancelSubscription,
+  validateSubscriptionAction,
 };
