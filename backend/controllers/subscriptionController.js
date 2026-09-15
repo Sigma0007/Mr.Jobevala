@@ -1,5 +1,6 @@
 import Subscription from "../models/Subscription.js";
 import PricingPlan from "../models/PricingPlan.js";
+import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
 
@@ -115,8 +116,29 @@ export const getAllSubscriptionsAdmin = catchAsync(async (req, res, next) => {
     );
 
     const query = {};
-    if (status) {
+    if (status && status !== "all") {
         query.status = status;
+    }
+
+    if (search && search.trim()) {
+        const searchRegex = new RegExp(search.trim(), "i");
+        // Find matching users first
+        const matchedUsers = await User.find({
+            $or: [
+                { name: searchRegex },
+                { email: searchRegex },
+                { phone: searchRegex },
+            ],
+        }).select("_id");
+        const userIds = matchedUsers.map((u) => u._id);
+
+        query.$or = [
+            { user: { $in: userIds } },
+            { "planDetails.name": searchRegex },
+            { planId: searchRegex },
+            { paymentId: searchRegex },
+            { orderId: searchRegex },
+        ];
     }
 
     let subscriptionsQuery = Subscription.find(query)
@@ -132,20 +154,24 @@ export const getAllSubscriptionsAdmin = catchAsync(async (req, res, next) => {
         Subscription.countDocuments(query),
     ]);
 
-    // Aggregate statistics
+    // Aggregate statistics across all subscriptions
     const stats = await Subscription.aggregate([
         {
             $group: {
                 _id: "$status",
                 count: { $sum: 1 },
+                totalRevenue: { $sum: "$planDetails.price" },
             },
         },
     ]);
+
+    const totalAll = await Subscription.countDocuments({});
 
     res.status(200).json({
         success: true,
         count: subscriptions.length,
         total,
+        totalAll,
         page,
         totalPages: Math.ceil(total / limit),
         stats,

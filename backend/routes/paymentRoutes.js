@@ -7,6 +7,7 @@ import {
     getMyPayments,
     getAllPaymentsAdmin,
     getPaymentById,
+    recordPaymentFailure,
 } from "../controllers/paymentController.js";
 import { protect, optionalAuth } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
@@ -19,6 +20,7 @@ router.get("/key", getRazorpayKey);
 // Order creation & verification
 router.post("/create-order", optionalAuth, createOrder);
 router.post("/verify", optionalAuth, verifyPayment);
+router.post("/record-failure", optionalAuth, recordPaymentFailure);
 
 // Webhook endpoint (Razorpay calls this)
 router.post("/webhook", handleWebhook);

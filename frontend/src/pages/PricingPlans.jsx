@@ -293,10 +293,19 @@ export default function PricingPlans() {
 
       const razorpayInstance = new window.Razorpay(options);
 
-      razorpayInstance.on("payment.failed", function (failResponse) {
+      razorpayInstance.on("payment.failed", async function (failResponse) {
         console.error("Payment failed:", failResponse.error);
+        try {
+          await customerservice.recordPaymentFailure({
+            orderId: order.id,
+            paymentId: failResponse.error?.metadata?.payment_id,
+            error: failResponse.error,
+          });
+        } catch (e) {
+          console.warn("Could not sync payment failure to server:", e);
+        }
         toast.error(
-          `Payment Failed: ${failResponse.error.description || "Transaction failed"}`,
+          `Payment Failed: ${failResponse.error?.description || failResponse.error?.reason || "Transaction failed"}`,
         );
         setLoadingPlan(null);
       });

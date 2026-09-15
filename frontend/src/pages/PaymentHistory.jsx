@@ -151,6 +151,15 @@ export default function PaymentHistory() {
           </div>
 
           <div className="flex items-center gap-3">
+            {user?.role === "admin" && (
+              <Link
+                to="/admin/dashboard"
+                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3.5 py-2.5 rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <Crown className="w-3.5 h-3.5 text-amber-400" />
+                <span>Admin Billing Center</span>
+              </Link>
+            )}
             <button
               onClick={handleRefresh}
               className="p-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-slate-600 hover:text-slate-900 shadow-sm transition-all cursor-pointer"
@@ -355,59 +364,77 @@ export default function PaymentHistory() {
                     <th className="py-4 px-6">Status</th>
                     <th className="py-4 px-6">Payment ID</th>
                     <th className="py-4 px-6">Order ID</th>
+                    <th className="py-4 px-6">Details / Reason</th>
                     <th className="py-4 px-6">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
-                  {payments.map((p) => (
-                    <tr
-                      key={p._id}
-                      className="hover:bg-slate-50/70 transition-colors"
-                    >
-                      <td className="py-4 px-6">
-                        <div className="font-semibold text-slate-900">
-                          {p.purpose || "Job Portal Plan"}
-                        </div>
-                        <div className="text-xs text-slate-400">
-                          Receipt: {p.receipt}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="font-bold text-slate-900 text-base">
-                          ₹{p.amount}
-                        </span>
-                        <span className="text-xs text-slate-400 ml-1">
-                          {p.currency}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">{getStatusBadge(p.status)}</td>
-                      <td className="py-4 px-6">
-                        {p.paymentId ? (
-                          <span className="font-mono text-xs bg-slate-100 text-slate-800 px-2 py-1 rounded">
-                            {p.paymentId}
+                  {payments.map((p) => {
+                    const isFailed = p.status === "failed";
+                    return (
+                      <tr
+                        key={p._id}
+                        className={`transition-colors ${isFailed ? "bg-red-50/30 hover:bg-red-50/50" : "hover:bg-slate-50/70"}`}
+                      >
+                        <td className="py-4 px-6">
+                          <div className="font-semibold text-slate-900">
+                            {p.purpose || "Job Portal Plan"}
+                          </div>
+                          <div className="text-xs text-slate-400 font-mono">
+                            Receipt: {p.receipt || "N/A"}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="font-bold text-slate-900 text-base">
+                            ₹{p.amount?.toLocaleString("en-IN")}
                           </span>
-                        ) : (
-                          <span className="text-slate-400 text-xs italic">
-                            N/A
+                          <span className="text-xs text-slate-400 ml-1">
+                            {p.currency}
                           </span>
-                        )}
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="font-mono text-xs text-slate-500">
-                          {p.orderId}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-xs text-slate-500">
-                        {new Date(p.createdAt).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="py-4 px-6">{getStatusBadge(p.status)}</td>
+                        <td className="py-4 px-6">
+                          {p.paymentId ? (
+                            <span className="font-mono text-xs bg-slate-100 text-slate-800 px-2 py-1 rounded">
+                              {p.paymentId}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 text-xs italic">
+                              N/A
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="font-mono text-xs text-slate-500">
+                            {p.orderId}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          {isFailed ? (
+                            <div className="text-xs text-red-600 bg-red-50 border border-red-200 px-2.5 py-1 rounded-lg">
+                              <span className="font-semibold block">Failed:</span>
+                              <span className="text-[11px] leading-tight block">
+                                {p.errorDetails || "Transaction failed or cancelled"}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-emerald-600 font-medium">
+                              Paid & Verified
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-4 px-6 text-xs text-slate-500">
+                          {new Date(p.createdAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

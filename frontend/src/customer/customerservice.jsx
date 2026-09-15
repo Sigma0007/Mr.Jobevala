@@ -324,6 +324,11 @@ const getPaymentById = (id) => {
   return Auth(endpoint, {}, "GET");
 };
 
+const recordPaymentFailure = (data = {}) => {
+  const endpoint = `/api/payment/record-failure`;
+  return Auth(endpoint, data, "POST");
+};
+
 const msg91WidgetVerify = (data) => {
   const endpoint = `/api/msg/msg91-widget/verify`;
   return Auth(endpoint, data, "POST");
@@ -458,6 +463,7 @@ export default {
   getMyPayments,
   getAllPaymentsAdmin,
   getPaymentById,
+  recordPaymentFailure,
   msg91WidgetVerify,
   getPricingPlans,
   getPricingPlanById,

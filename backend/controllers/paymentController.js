@@ -3,6 +3,7 @@ import { getRazorpayInstance } from "../config/razorpay.js";
 import Payment from "../models/Payment.js";
 import PricingPlan from "../models/PricingPlan.js";
 import Subscription from "../models/Subscription.js";
+import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
 
@@ -329,12 +330,34 @@ export const getMyPayments = catchAsync(async (req, res, next) => {
 export const getAllPaymentsAdmin = catchAsync(async (req, res, next) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
-    const status = req.query.status;
+    const { status, search } = req.query;
     const skip = (page - 1) * limit;
 
     const query = {};
-    if (status) {
+    if (status && status !== "all") {
         query.status = status;
+    }
+
+    if (search && search.trim()) {
+        const searchRegex = new RegExp(search.trim(), "i");
+        const matchedUsers = await User.find({
+            $or: [
+                { name: searchRegex },
+                { email: searchRegex },
+                { phone: searchRegex },
+            ],
+        }).select("_id");
+        const userIds = matchedUsers.map((u) => u._id);
+
+        query.$or = [
+            { user: { $in: userIds } },
+            { orderId: searchRegex },
+            { paymentId: searchRegex },
+            { purpose: searchRegex },
+            { receipt: searchRegex },
+            { "customerDetails.name": searchRegex },
+            { "customerDetails.email": searchRegex },
+        ];
     }
 
     const payments = await Payment.find(query)
@@ -344,6 +367,7 @@ export const getAllPaymentsAdmin = catchAsync(async (req, res, next) => {
         .limit(limit);
 
     const total = await Payment.countDocuments(query);
+    const totalAll = await Payment.countDocuments({});
 
     // Summary statistics
     const stats = await Payment.aggregate([
@@ -360,10 +384,45 @@ export const getAllPaymentsAdmin = catchAsync(async (req, res, next) => {
         success: true,
         count: payments.length,
         total,
+        totalAll,
         page,
         totalPages: Math.ceil(total / limit),
         stats,
         data: payments,
+    });
+});
+
+/**
+ * @desc Record Payment Failure from Gateway/Frontend
+ * @route POST /api/payment/record-failure
+ * @access Optional Auth / Public
+ */
+export const recordPaymentFailure = catchAsync(async (req, res, next) => {
+    const { orderId, paymentId, error } = req.body;
+
+    if (!orderId) {
+        return next(new AppError("Order ID is required to record failure.", 400));
+    }
+
+    const errorMsg =
+        typeof error === "object"
+            ? error?.description || error?.message || JSON.stringify(error)
+            : error || "Payment failed at gateway or was cancelled";
+
+    const payment = await Payment.findOneAndUpdate(
+        { orderId },
+        {
+            paymentId: paymentId || undefined,
+            status: "failed",
+            errorDetails: errorMsg,
+        },
+        { new: true }
+    );
+
+    res.status(200).json({
+        success: true,
+        message: "Payment failure recorded successfully.",
+        data: payment,
     });
 });
 
