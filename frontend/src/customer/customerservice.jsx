@@ -329,6 +329,38 @@ const msg91WidgetVerify = (data) => {
   return Auth(endpoint, data, "POST");
 };
 
+// --- Pricing Plan APIs ---
+
+const getPricingPlans = (params = "") => {
+  const endpoint = `/api/plans${params}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getPricingPlanById = (id) => {
+  const endpoint = `/api/plans/${id}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const createPricingPlan = (data = {}) => {
+  const endpoint = `/api/plans`;
+  return Auth(endpoint, data, "POST");
+};
+
+const updatePricingPlan = (id, data = {}) => {
+  const endpoint = `/api/plans/${id}`;
+  return Auth(endpoint, data, "PUT");
+};
+
+const deletePricingPlan = (id) => {
+  const endpoint = `/api/plans/${id}`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
+const seedPricingPlans = (data = {}) => {
+  const endpoint = `/api/plans/seed`;
+  return Auth(endpoint, data, "POST");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -395,4 +427,10 @@ export default {
   getAllPaymentsAdmin,
   getPaymentById,
   msg91WidgetVerify,
+  getPricingPlans,
+  getPricingPlanById,
+  createPricingPlan,
+  updatePricingPlan,
+  deletePricingPlan,
+  seedPricingPlans,
 };

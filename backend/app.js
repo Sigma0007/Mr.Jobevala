@@ -12,6 +12,7 @@ import locationRoutes from "./routes/locationRoutes.js";
 import storageRoutes from "./routes/storageRoutes.js";
 import msgRoutes from "./routes/msgRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import pricingPlanRoutes from "./routes/pricingPlanRoutes.js";
 
 import { errorHandler } from "./middleware/errorMiddleware.js";
 
@@ -51,6 +52,7 @@ app.use("/api/locations", locationRoutes);
 app.use("/api/storage", storageRoutes);
 app.use("/api/msg", msgRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/plans", pricingPlanRoutes);
 
 app.use(errorHandler);
 

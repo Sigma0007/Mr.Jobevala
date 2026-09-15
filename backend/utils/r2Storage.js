@@ -84,9 +84,7 @@ export const deleteFromR2 = async (keyOrUrl) => {
 
 // Get file object stream from Cloudflare R2
 export const getFileStreamFromR2 = async (key) => {
-    console.log("Key", key)
     const cleanKey = extractR2Key(key);
-    console.log("cleanKey", cleanKey)
     const command = new GetObjectCommand({
         Bucket: BUCKET_NAME,
         Key: cleanKey,

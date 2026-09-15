@@ -28,8 +28,6 @@ export const sendOtpSms = async (mobile) => {
             }
         );
 
-        console.log("MSG91 response:", response.data);
-
         return response.data;
     } catch (error) {
         console.error(

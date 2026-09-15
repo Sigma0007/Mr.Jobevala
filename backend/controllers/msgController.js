@@ -116,8 +116,6 @@ export const verifywidget = async (req, res) => {
 
         const data = await response.json();
 
-        console.log("MSG91 verification:", data);
-
         if (!response.ok) {
             return res.status(401).json({
                 success: false,
