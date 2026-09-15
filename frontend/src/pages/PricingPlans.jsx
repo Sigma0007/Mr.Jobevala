@@ -458,7 +458,8 @@ export default function PricingPlans() {
               No Plans Available
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 mt-1 mb-4">
-              There are currently no active plans listed under {currentCategoryInfo?.name}.
+              There are currently no active plans listed under{" "}
+              {currentCategoryInfo?.name}.
             </p>
             <button
               onClick={fetchPlans}
@@ -482,7 +483,9 @@ export default function PricingPlans() {
           >
             {filteredPlans.map((plan) => {
               const discountPercent =
-                plan.originalPrice && plan.price && plan.originalPrice > plan.price
+                plan.originalPrice &&
+                plan.price &&
+                plan.originalPrice > plan.price
                   ? Math.round(
                       ((plan.originalPrice - plan.price) / plan.originalPrice) *
                         100,
@@ -547,7 +550,10 @@ export default function PricingPlans() {
                         </span>
                       )}
                       <span className="text-xs text-slate-500 font-medium">
-                        / {plan.validityDays ? `${plan.validityDays} days` : "one-time"}
+                        /{" "}
+                        {plan.validityDays
+                          ? `${plan.validityDays} days`
+                          : "one-time"}
                       </span>
                     </div>
 
@@ -606,7 +612,14 @@ export default function PricingPlans() {
 
                   <div className="mt-8 pt-4">
                     <button
-                      onClick={() => handlePayment(plan)}
+                      onClick={() => {
+                        if (user) {
+                          handlePayment(plan);
+                        } else {
+                          toast.error("Please login to purchase a plan");
+                          navigate("/login");
+                        }
+                      }}
                       disabled={loadingPlan === planKey}
                       className={`w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl font-semibold text-sm transition-all cursor-pointer shadow-lg disabled:opacity-70 ${
                         plan.highlighted
