@@ -87,6 +87,12 @@ const subscriptionSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        unlockedCandidates: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
         autoRenew: {
             type: Boolean,
             default: false,

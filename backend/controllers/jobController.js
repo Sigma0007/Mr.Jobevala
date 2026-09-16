@@ -5,6 +5,7 @@ import Application from "../models/Application.js";
 
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
+import { validateSubscriptionQuota } from "../utils/subscriptionValidator.js";
 
 // CREATE JOB
 export const createJob = catchAsync(async (req, res, next) => {
@@ -46,6 +47,9 @@ export const createJob = catchAsync(async (req, res, next) => {
         );
     }
 
+    // Validate active subscription and job posting quota
+    const quotaResult = await validateSubscriptionQuota(req.user, "job_post", true);
+
     const job = await Job.create({
         provider: req.user._id,
         companyProfile: companyData?._id,
@@ -73,6 +77,11 @@ export const createJob = catchAsync(async (req, res, next) => {
         success: true,
         message: "Job created successfully",
         data: job,
+        quota: {
+            remaining: quotaResult.remaining,
+            used: quotaResult.used,
+            limit: quotaResult.limit,
+        },
     });
 });
 

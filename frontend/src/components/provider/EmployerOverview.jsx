@@ -206,41 +206,170 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
 
       {/* Subscription Status Card */}
       {currentSubscription && currentSubscription.status === "active" ? (
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 text-white shadow-xl border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                Active Employer Plan
-              </span>
-              <span className="text-xs text-indigo-300">
-                {currentSubscription.planDetails?.category || "For Employers"}
-              </span>
+        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-7 text-white shadow-xl border border-indigo-500/30 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Active Plan
+                </span>
+                <span className="text-xs text-indigo-300 font-medium">
+                  {currentSubscription.planDetails?.category || "For Employers"}
+                </span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black flex items-center gap-2 text-white">
+                <Crown className="w-5 h-5 text-amber-400" />
+                {currentSubscription.planDetails?.name || currentSubscription.planId}
+              </h3>
+              <p className="text-xs text-slate-300">
+                Active until{" "}
+                <span className="font-semibold text-white">
+                  {new Date(currentSubscription.endDate).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>
+              </p>
             </div>
-            <h3 className="text-xl font-bold flex items-center gap-2 text-white">
-              <Crown className="w-5 h-5 text-amber-400" />
-              {currentSubscription.planDetails?.name || currentSubscription.planId}
-            </h3>
-            <p className="text-xs text-slate-300">
-              Valid until{" "}
-              <span className="font-semibold text-white">
-                {new Date(currentSubscription.endDate).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </span>{" "}
-              • Posts: {currentSubscription.jobPostsUsed || 0}/{currentSubscription.jobPostsLimit || "Unlimited"} • Candidate Unlocks: {currentSubscription.unlockContactsUsed || 0}/{currentSubscription.unlockContactsLimit || "Unlimited"}
-            </p>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsSubModalOpen(true)}
+                className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition-all border border-white/10 cursor-pointer"
+              >
+                <Crown className="w-4 h-4 text-amber-300" />
+                <span>Subscription Details</span>
+              </button>
+              <Link
+                to="/pricing"
+                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-indigo-500 hover:from-brand-600 hover:to-indigo-600 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-md cursor-pointer"
+              >
+                <span>Upgrade</span>
+              </Link>
+            </div>
           </div>
 
-          <button
-            onClick={() => setIsSubModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md cursor-pointer"
-          >
-            <Crown className="w-4 h-4 text-amber-300" />
-            <span>View Subscription Modal</span>
-          </button>
+          {/* Plan Quotas Breakdown Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2 border-t border-indigo-800/40">
+            {/* Direct Messages */}
+            <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col justify-between">
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="text-indigo-200 font-medium">Direct Messages</span>
+                <span className="font-bold text-white">
+                  {currentSubscription.directMessagesUsed || 0} / {currentSubscription.directMessagesLimit || "∞"}
+                </span>
+              </div>
+              <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden mb-2">
+                <div
+                  className="bg-gradient-to-r from-blue-400 to-indigo-400 h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${
+                      currentSubscription.directMessagesLimit > 0
+                        ? Math.min(
+                            100,
+                            Math.round(
+                              ((currentSubscription.directMessagesUsed || 0) /
+                                currentSubscription.directMessagesLimit) *
+                                100
+                            )
+                          )
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
+              <span className="text-[11px] text-emerald-400 font-semibold">
+                Remaining:{" "}
+                {currentSubscription.directMessagesLimit > 0
+                  ? Math.max(
+                      0,
+                      currentSubscription.directMessagesLimit -
+                        (currentSubscription.directMessagesUsed || 0)
+                    )
+                  : "Unlimited"}
+              </span>
+            </div>
+
+            {/* Job Posts */}
+            <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col justify-between">
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="text-indigo-200 font-medium">Job Posts</span>
+                <span className="font-bold text-white">
+                  {currentSubscription.jobPostsUsed || 0} / {currentSubscription.jobPostsLimit || "∞"}
+                </span>
+              </div>
+              <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden mb-2">
+                <div
+                  className="bg-gradient-to-r from-amber-400 to-orange-400 h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${
+                      currentSubscription.jobPostsLimit > 0
+                        ? Math.min(
+                            100,
+                            Math.round(
+                              ((currentSubscription.jobPostsUsed || 0) /
+                                currentSubscription.jobPostsLimit) *
+                                100
+                            )
+                          )
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
+              <span className="text-[11px] text-emerald-400 font-semibold">
+                Remaining:{" "}
+                {currentSubscription.jobPostsLimit > 0
+                  ? Math.max(
+                      0,
+                      currentSubscription.jobPostsLimit -
+                        (currentSubscription.jobPostsUsed || 0)
+                    )
+                  : "Unlimited"}
+              </span>
+            </div>
+
+            {/* Candidate Unlocks */}
+            <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col justify-between">
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="text-indigo-200 font-medium">Candidate Unlocks</span>
+                <span className="font-bold text-white">
+                  {currentSubscription.unlockContactsUsed || 0} / {currentSubscription.unlockContactsLimit || "∞"}
+                </span>
+              </div>
+              <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden mb-2">
+                <div
+                  className="bg-gradient-to-r from-emerald-400 to-teal-400 h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${
+                      currentSubscription.unlockContactsLimit > 0
+                        ? Math.min(
+                            100,
+                            Math.round(
+                              ((currentSubscription.unlockContactsUsed || 0) /
+                                currentSubscription.unlockContactsLimit) *
+                                100
+                            )
+                          )
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
+              <span className="text-[11px] text-emerald-400 font-semibold">
+                Remaining:{" "}
+                {currentSubscription.unlockContactsLimit > 0
+                  ? Math.max(
+                      0,
+                      currentSubscription.unlockContactsLimit -
+                        (currentSubscription.unlockContactsUsed || 0)
+                    )
+                  : "Unlimited"}
+              </span>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 rounded-3xl p-6 border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -751,6 +880,9 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
         onStatusChange={handleStatusChange}
         updatingStatus={updatingStatus}
         onViewAll={() => setActiveTab("applicants")}
+        onCandidateUnlocked={() => {
+          fetchSubscription();
+        }}
       />
 
       {/* Subscription Details Modal */}

@@ -398,6 +398,11 @@ const validateSubscriptionAction = (data = {}) => {
   return Auth(endpoint, data, "POST");
 };
 
+const unlockCandidateContact = (data = {}) => {
+  const endpoint = `/api/subscription/unlock-candidate`;
+  return Auth(endpoint, data, "POST");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -477,4 +482,5 @@ export default {
   getSubscriptionById,
   cancelSubscription,
   validateSubscriptionAction,
+  unlockCandidateContact,
 };

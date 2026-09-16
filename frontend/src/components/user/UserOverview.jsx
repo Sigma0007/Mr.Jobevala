@@ -255,41 +255,95 @@ export default function UserOverview({ setActiveTab }) {
 
       {/* Subscription Status Card */}
       {currentSubscription && currentSubscription.status === "active" ? (
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 text-white shadow-xl border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                Active Candidate Boost Plan
-              </span>
-              <span className="text-xs text-indigo-300">
-                {currentSubscription.planDetails?.category || "Job Seeker Plan"}
-              </span>
+        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-7 text-white shadow-xl border border-indigo-500/30 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Active Candidate Boost Plan
+                </span>
+                <span className="text-xs text-indigo-300 font-medium">
+                  {currentSubscription.planDetails?.category || "Job Seeker Plan"}
+                </span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black flex items-center gap-2 text-white">
+                <Crown className="w-5 h-5 text-amber-400" />
+                {currentSubscription.planDetails?.name || currentSubscription.planId}
+              </h3>
+              <p className="text-xs text-slate-300">
+                Active until{" "}
+                <span className="font-semibold text-white">
+                  {new Date(currentSubscription.endDate).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>
+              </p>
             </div>
-            <h3 className="text-xl font-bold flex items-center gap-2 text-white">
-              <Crown className="w-5 h-5 text-amber-400" />
-              {currentSubscription.planDetails?.name || currentSubscription.planId}
-            </h3>
-            <p className="text-xs text-slate-300">
-              Valid until{" "}
-              <span className="font-semibold text-white">
-                {new Date(currentSubscription.endDate).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </span>{" "}
-              • Direct Recruiter Outreach: {currentSubscription.directMessagesUsed || 0}/{currentSubscription.directMessagesLimit >= 1000 ? "Unlimited" : currentSubscription.directMessagesLimit || "Standard"}
-            </p>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsSubModalOpen(true)}
+                className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition-all border border-white/10 cursor-pointer"
+              >
+                <Crown className="w-4 h-4 text-amber-300" />
+                <span>Plan Details</span>
+              </button>
+              <Link
+                to="/pricing"
+                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-indigo-500 hover:from-brand-600 hover:to-indigo-600 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-md cursor-pointer"
+              >
+                <span>Upgrade</span>
+              </Link>
+            </div>
           </div>
 
-          <button
-            onClick={() => setIsSubModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md cursor-pointer"
-          >
-            <Crown className="w-4 h-4 text-amber-300" />
-            <span>View Subscription Modal</span>
-          </button>
+          {/* Quota Tracker */}
+          <div className="pt-3 border-t border-indigo-800/40">
+            <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <span className="text-xs text-indigo-200 font-semibold block">Direct Recruiter Outreach Messages</span>
+                <span className="text-sm font-black text-white">
+                  {currentSubscription.directMessagesUsed || 0} / {currentSubscription.directMessagesLimit || "∞"} Used
+                </span>
+              </div>
+              <div className="w-full sm:max-w-xs space-y-1">
+                <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-emerald-400 to-teal-400 h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${
+                        currentSubscription.directMessagesLimit > 0
+                          ? Math.min(
+                              100,
+                              Math.round(
+                                ((currentSubscription.directMessagesUsed || 0) /
+                                  currentSubscription.directMessagesLimit) *
+                                  100
+                              )
+                            )
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <span className="text-[11px] text-emerald-400 font-semibold">
+                    Remaining:{" "}
+                    {currentSubscription.directMessagesLimit > 0
+                      ? Math.max(
+                          0,
+                          currentSubscription.directMessagesLimit -
+                            (currentSubscription.directMessagesUsed || 0)
+                        )
+                      : "Unlimited"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 rounded-3xl p-6 border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

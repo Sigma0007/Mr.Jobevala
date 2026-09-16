@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   X,
   MapPin,
@@ -26,8 +27,12 @@ import {
   Tag,
   AlertCircle,
   HelpCircle,
+  Lock,
+  Unlock,
+  Crown,
 } from "lucide-react";
 import { formatCTC, statusConfig } from "../../Utility/utilites";
+import customerservice from "../../customer/customerservice";
 import toast from "react-hot-toast";
 
 export default function CandidateDetailsModal({
@@ -36,9 +41,52 @@ export default function CandidateDetailsModal({
   onStatusChange,
   updatingStatus = null,
   onViewAll,
+  onCandidateUnlocked,
 }) {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
+  const [subscription, setSubscription] = useState(null);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
+  const [subLoading, setSubLoading] = useState(true);
+
+  const candidateUserId =
+    applicant?.user?._id ||
+    (typeof applicant?.user === "string" ? applicant.user : null);
+
+  useEffect(() => {
+    if (!candidateUserId) return;
+
+    const checkSubscriptionAndUnlockStatus = async () => {
+      try {
+        setSubLoading(true);
+        const res = await customerservice.getCurrentSubscription();
+        if (res?.success) {
+          const sub = res.activeSubscription || res.data || null;
+          setSubscription(sub);
+
+          // Check if candidate already unlocked or user is admin
+          const currentUserRole = localStorage.getItem("userRole");
+          if (
+            currentUserRole === "admin" ||
+            (sub?.unlockedCandidates &&
+              candidateUserId &&
+              sub.unlockedCandidates.some(
+                (id) => (id._id || id).toString() === candidateUserId.toString()
+              ))
+          ) {
+            setIsUnlocked(true);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not check subscription status:", err);
+      } finally {
+        setSubLoading(false);
+      }
+    };
+
+    checkSubscriptionAndUnlockStatus();
+  }, [candidateUserId]);
 
   if (!applicant) return null;
 
@@ -47,9 +95,23 @@ export default function CandidateDetailsModal({
   const job = applicant.job || {};
 
   const candidateName = userProfile.name || user.name || "Candidate";
-  const candidateEmail = user.email || "No email available";
-  const candidatePhone =
-    userProfile.phone || user.phone || "No phone available";
+  const rawEmail = user.email || "";
+  const rawPhone = userProfile.phone || user.phone || "";
+
+  const maskEmail = (email) => {
+    if (!email || !email.includes("@")) return "••••••••@••••.com";
+    const [name, domain] = email.split("@");
+    if (name.length <= 2) return `${name[0]}***@${domain}`;
+    return `${name.slice(0, 2)}••••••@${domain}`;
+  };
+
+  const maskPhone = (phone) => {
+    if (!phone || phone.length < 6) return "+91 ••••• •••••";
+    return `${phone.slice(0, 4)}••••••${phone.slice(-2)}`;
+  };
+
+  const candidateEmail = isUnlocked ? rawEmail || "No email available" : maskEmail(rawEmail);
+  const candidatePhone = isUnlocked ? rawPhone || "No phone available" : maskPhone(rawPhone);
   const candidateTitle =
     userProfile.title || applicant.currentRole || "Candidate";
   const totalExp =
@@ -61,6 +123,51 @@ export default function CandidateDetailsModal({
       .filter(Boolean)
       .join(", ") ||
     "Not specified";
+
+  const handleUnlockContact = async () => {
+    if (!candidateUserId) {
+      toast.error("Invalid candidate ID.");
+      return;
+    }
+
+    try {
+      setUnlocking(true);
+      const res = await customerservice.unlockCandidateContact({
+        candidateId: candidateUserId,
+      });
+
+      if (res.success) {
+        toast.success(res.message || "Candidate contact unlocked! 🎉");
+        setIsUnlocked(true);
+        setSubscription((prev) => {
+          if (!prev) return prev;
+          const used = res.used ?? ((prev.unlockContactsUsed || 0) + (res.alreadyUnlocked ? 0 : 1));
+          const unlockedList = prev.unlockedCandidates
+            ? [...prev.unlockedCandidates, candidateUserId]
+            : [candidateUserId];
+          return {
+            ...prev,
+            unlockContactsUsed: used,
+            unlockedCandidates: unlockedList,
+          };
+        });
+
+        if (onCandidateUnlocked) {
+          onCandidateUnlocked(candidateUserId, res);
+        }
+      } else {
+        toast.error(res.message || "Failed to unlock candidate contact");
+      }
+    } catch (error) {
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to unlock candidate contact";
+      toast.error(errorMsg);
+    } finally {
+      setUnlocking(false);
+    }
+  };
 
   const statusKey = (applicant.status || "pending").toLowerCase();
   const StatusIcon = statusConfig[statusKey]?.icon || statusConfig.pending.icon;
@@ -270,9 +377,82 @@ export default function CandidateDetailsModal({
 
             {/* 2. Contact & Personal Profile Row */}
             <div className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Candidate Contact & Profile Information
-              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  Candidate Contact & Profile Information
+                </h3>
+                {isUnlocked ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 self-start sm:self-auto">
+                    <Unlock className="w-3.5 h-3.5 text-emerald-600" />
+                    Contact Unlocked
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 self-start sm:self-auto">
+                    <Lock className="w-3.5 h-3.5 text-amber-600" />
+                    Contact Protected
+                  </span>
+                )}
+              </div>
+
+              {!isUnlocked && !subLoading && (
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50/90 via-orange-50/70 to-amber-50/90 border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+                      <h4 className="text-xs font-bold text-amber-900">
+                        Candidate Contact & Full Resume Locked
+                      </h4>
+                    </div>
+                    <p className="text-[11px] text-amber-700">
+                      {subscription && subscription.status === "active"
+                        ? `Use 1 of your remaining candidate unlocks to reveal phone, email, and CV download.`
+                        : `An active employer subscription plan is required to unlock candidate details.`}
+                    </p>
+                    {subscription && subscription.status === "active" && (
+                      <span className="inline-block text-[11px] font-bold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-md mt-1">
+                        Remaining:{" "}
+                        {subscription.unlockContactsLimit > 0
+                          ? Math.max(
+                              0,
+                              subscription.unlockContactsLimit -
+                                (subscription.unlockContactsUsed || 0)
+                            )
+                          : "Unlimited"}{" "}
+                        Unlocks
+                      </span>
+                    )}
+                  </div>
+
+                  {subscription && subscription.status === "active" ? (
+                    <button
+                      onClick={handleUnlockContact}
+                      disabled={unlocking}
+                      className="px-4 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-60"
+                    >
+                      {unlocking ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Unlocking...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Unlock className="w-3.5 h-3.5" />
+                          <span>Unlock Contact Details</span>
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <Link
+                      to="/pricing"
+                      className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 shrink-0"
+                    >
+                      <Crown className="w-3.5 h-3.5" />
+                      <span>Subscribe to Unlock</span>
+                    </Link>
+                  )}
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                 {/* Email */}
                 <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
@@ -282,25 +462,33 @@ export default function CandidateDetailsModal({
                       <p className="text-[10px] text-slate-400 uppercase font-bold">
                         Email
                       </p>
-                      <a
-                        href={`mailto:${candidateEmail}`}
-                        className="font-semibold text-slate-800 hover:text-brand-600 truncate block text-xs"
-                      >
-                        {candidateEmail}
-                      </a>
+                      {isUnlocked ? (
+                        <a
+                          href={`mailto:${candidateEmail}`}
+                          className="font-semibold text-slate-800 hover:text-brand-600 truncate block text-xs"
+                        >
+                          {candidateEmail}
+                        </a>
+                      ) : (
+                        <span className="font-semibold text-slate-500 tracking-wider truncate block text-xs select-none">
+                          {candidateEmail}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleCopy(candidateEmail, "email")}
-                    className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200/50"
-                    title="Copy Email"
-                  >
-                    {copiedEmail ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
-                  </button>
+                  {isUnlocked && (
+                    <button
+                      onClick={() => handleCopy(candidateEmail, "email")}
+                      className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200/50"
+                      title="Copy Email"
+                    >
+                      {copiedEmail ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  )}
                 </div>
 
                 {/* Phone */}
@@ -311,25 +499,33 @@ export default function CandidateDetailsModal({
                       <p className="text-[10px] text-slate-400 uppercase font-bold">
                         Phone
                       </p>
-                      <a
-                        href={`tel:${candidatePhone}`}
-                        className="font-semibold text-slate-800 hover:text-brand-600 truncate block text-xs"
-                      >
-                        {candidatePhone}
-                      </a>
+                      {isUnlocked ? (
+                        <a
+                          href={`tel:${candidatePhone}`}
+                          className="font-semibold text-slate-800 hover:text-brand-600 truncate block text-xs"
+                        >
+                          {candidatePhone}
+                        </a>
+                      ) : (
+                        <span className="font-semibold text-slate-500 tracking-wider truncate block text-xs select-none">
+                          {candidatePhone}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleCopy(candidatePhone, "phone")}
-                    className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200/50"
-                    title="Copy Phone"
-                  >
-                    {copiedPhone ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
-                  </button>
+                  {isUnlocked && (
+                    <button
+                      onClick={() => handleCopy(candidatePhone, "phone")}
+                      className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200/50"
+                      title="Copy Phone"
+                    >
+                      {copiedPhone ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  )}
                 </div>
 
                 {/* Education */}
@@ -416,15 +612,26 @@ export default function CandidateDetailsModal({
                     </p>
                   </div>
                 </div>
-                <a
-                  href={import.meta.env.VITE_API_URL + userProfile.resume}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm transition shrink-0"
-                >
-                  View / Download Resume{" "}
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
+                {isUnlocked ? (
+                  <a
+                    href={import.meta.env.VITE_API_URL + userProfile.resume}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm transition shrink-0"
+                  >
+                    View / Download Resume{" "}
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                ) : (
+                  <button
+                    onClick={handleUnlockContact}
+                    disabled={unlocking}
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl shadow-sm transition shrink-0 cursor-pointer disabled:opacity-60"
+                  >
+                    <Lock className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Unlock CV Access</span>
+                  </button>
+                )}
               </div>
             ) : (
               <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center gap-3 text-xs text-slate-500">

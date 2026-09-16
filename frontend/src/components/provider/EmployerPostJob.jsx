@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
+import {
+  Sparkles,
+  Crown,
+  AlertTriangle,
+  CheckCircle2,
+  ArrowRight,
+} from "lucide-react";
 import customerservice from "../../customer/customerservice";
 import { clearSelectedJob } from "../../Redux/Job/JobAction";
 import {
@@ -18,11 +25,13 @@ export default function EmployerPostJob() {
   const selectedJob = useSelector((state) => state.job?.selectedJob);
   const { categoriesType } = useSelector((state) => state.dashboard);
   const isEditMode = Boolean(id);
-
+  console.log("categoriesType", categoriesType);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(isEditMode);
   const [locationHierarchy, setLocationHierarchy] = useState([]);
   const [locationsLoading, setLocationsLoading] = useState(false);
+  const [subscription, setSubscription] = useState(null);
+  const [subLoading, setSubLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -49,6 +58,24 @@ export default function EmployerPostJob() {
     vacancies: 1,
     applicationDeadline: "",
   });
+
+  const fetchSubscription = async () => {
+    try {
+      setSubLoading(true);
+      const res = await customerservice.getCurrentSubscription();
+      if (res?.success) {
+        setSubscription(res.activeSubscription || res.data || null);
+      }
+    } catch (err) {
+      console.warn("Error fetching current subscription:", err);
+    } finally {
+      setSubLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubscription();
+  }, []);
 
   useEffect(() => {
     const fetchJobData = async () => {
@@ -221,13 +248,15 @@ export default function EmployerPostJob() {
     }
 
     if (!formData.state) {
-      toast.error("Please select a State");
-      return;
+      formData.state = "Maharashtra";
+      // toast.error("Please select a State");
+      // return;
     }
 
     if (!formData.city) {
-      toast.error("Please select a District / City");
-      return;
+      formData.city = "Pune";
+      // toast.error("Please select a District / City");
+      // return;
     }
 
     try {
@@ -278,7 +307,8 @@ export default function EmployerPostJob() {
       } else {
         const res = await customerservice.createJob(payload);
         if (res.success) {
-          toast.success("Job posted successfully");
+          toast.success("Job posted successfully 🎉");
+          fetchSubscription();
           setFormData({
             title: "",
             description: "",
@@ -304,13 +334,16 @@ export default function EmployerPostJob() {
             vacancies: 1,
             applicationDeadline: "",
           });
+        } else {
+          toast.error(res.message);
         }
       }
     } catch (error) {
-      toast.error(
+      const errorMsg =
         error?.response?.data?.message ||
-          `Failed to ${isEditMode ? "update" : "create"} job`,
-      );
+        error?.message ||
+        `Failed to ${isEditMode ? "update" : "create"} job`;
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -327,18 +360,108 @@ export default function EmployerPostJob() {
     );
   }
 
+  const hasActiveSub = subscription && subscription.status === "active";
+  const jobLimit = subscription?.jobPostsLimit || 0;
+  const jobUsed = subscription?.jobPostsUsed || 0;
+  const jobRemaining = Math.max(0, jobLimit - jobUsed);
+  const isQuotaExhausted = hasActiveSub && jobLimit > 0 && jobUsed >= jobLimit;
+
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">
-          {isEditMode ? "Edit Job" : "Post a New Job"}
-        </h1>
-        <p className="text-slate-500 mt-2">
-          {isEditMode
-            ? "Update your job details below."
-            : "Find the right candidate for your company."}
-        </p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">
+            {isEditMode ? "Edit Job" : "Post a New Job"}
+          </h1>
+          <p className="text-slate-500 mt-1 text-sm">
+            {isEditMode
+              ? "Update your job details below."
+              : "Find the right candidate for your company."}
+          </p>
+        </div>
+
+        {!isEditMode && !subLoading && (
+          <div>
+            {hasActiveSub ? (
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                <span>
+                  Quota:{" "}
+                  <strong>
+                    {jobUsed} / {jobLimit > 0 ? jobLimit : "∞"}
+                  </strong>{" "}
+                  used (
+                  {jobLimit > 0 ? `${jobRemaining} remaining` : "Unlimited"})
+                </span>
+              </div>
+            ) : (
+              <Link
+                to="/pricing"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors"
+              >
+                <Crown className="w-3.5 h-3.5 text-amber-500" />
+                <span>Subscription Required</span>
+                <ArrowRight className="w-3 h-3 ml-0.5" />
+              </Link>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Subscription Alerts for New Job Posts */}
+      {!isEditMode && !subLoading && (
+        <>
+          {!hasActiveSub ? (
+            <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm font-bold text-amber-900">
+                    Active Subscription Plan Required
+                  </h4>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    You need an active employer plan to publish new job listings
+                    on the platform.
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/pricing"
+                className="px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 text-white text-xs font-semibold rounded-xl hover:shadow-md transition-all whitespace-nowrap flex items-center gap-1.5"
+              >
+                <Crown className="w-3.5 h-3.5" />
+                View Employer Plans
+              </Link>
+            </div>
+          ) : isQuotaExhausted ? (
+            <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-rose-50 to-red-50 border border-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-rose-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm font-bold text-rose-900">
+                    Job Post Quota Exhausted ({jobUsed}/{jobLimit})
+                  </h4>
+                  <p className="text-xs text-rose-700 mt-0.5">
+                    You have reached the maximum job posting limit for your
+                    current plan (
+                    <strong>
+                      {subscription.planDetails?.name || "Active Plan"}
+                    </strong>
+                    ).
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/pricing"
+                className="px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 text-white text-xs font-semibold rounded-xl hover:shadow-md transition-all whitespace-nowrap flex items-center gap-1.5"
+              >
+                <Crown className="w-3.5 h-3.5" />
+                Upgrade Plan
+              </Link>
+            </div>
+          ) : null}
+        </>
+      )}
 
       <form
         onSubmit={handleSubmit}
@@ -375,7 +498,7 @@ export default function EmployerPostJob() {
               <option value="">Select Category Type</option>
               {categoriesType.map((cat) => (
                 <option key={cat.value} value={cat.value}>
-                  {cat.label}
+                  {cat.label || cat.title}
                 </option>
               ))}
             </select>
@@ -399,7 +522,7 @@ export default function EmployerPostJob() {
                     </option>
                   ))
                 : categoriesType.map((cat) => (
-                    <optgroup key={cat.value} label={cat.label}>
+                    <optgroup key={cat.value} label={cat.label || cat.title}>
                       {(cat.roles || []).map((role) => (
                         <option key={role.value} value={role.value}>
                           {role.label}
@@ -663,7 +786,7 @@ export default function EmployerPostJob() {
                 value={formData.state}
                 onChange={handleStateChange}
                 disabled={locationsLoading}
-                required
+                // required
                 className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white disabled:bg-slate-100 disabled:text-slate-400"
               >
                 <option value="">
@@ -686,7 +809,7 @@ export default function EmployerPostJob() {
                 value={formData.city}
                 onChange={handleDistrictChange}
                 disabled={!formData.state || availableDistricts.length === 0}
-                required
+                // required
                 className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 bg-white disabled:bg-slate-100 disabled:text-slate-400"
               >
                 <option value="">
@@ -801,7 +924,7 @@ export default function EmployerPostJob() {
         <div className="flex justify-end pt-4">
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || isQuotaExhausted}
             className="px-8 py-3.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-medium rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           >
             {loading

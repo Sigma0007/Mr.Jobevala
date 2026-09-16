@@ -338,3 +338,102 @@ export const validateSubscriptionAction = catchAsync(async (req, res, next) => {
         remaining: limit > 0 ? (consume ? remaining - 1 : remaining) : "unlimited",
     });
 });
+
+/**
+ * @desc Unlock Candidate Contact and Consume Quota
+ * @route POST /api/subscription/unlock-candidate
+ * @access Private
+ */
+export const unlockCandidateContact = catchAsync(async (req, res, next) => {
+    const { candidateId } = req.body;
+    const userId = req.user._id;
+
+    if (!candidateId) {
+        return next(new AppError("Candidate ID is required to unlock contact details.", 400));
+    }
+
+    // Admin bypasses all checks
+    if (req.user.role === "admin") {
+        return res.status(200).json({
+            success: true,
+            allowed: true,
+            candidateId,
+            message: "Candidate contact unlocked (Admin Access).",
+            remaining: "unlimited",
+        });
+    }
+
+    // Find active subscription
+    const sub = await Subscription.findOne({
+        user: userId,
+        status: "active",
+    });
+
+    if (!sub || (sub.endDate && new Date() > sub.endDate)) {
+        if (sub) {
+            sub.status = "expired";
+            await sub.save();
+        }
+
+        return res.status(403).json({
+            success: false,
+            allowed: false,
+            message: "No active subscription found. Please choose an employer plan to unlock candidate contacts.",
+            subscriptionRequired: true,
+        });
+    }
+
+    // Check if candidate already unlocked under this subscription
+    const alreadyUnlocked = sub.unlockedCandidates && sub.unlockedCandidates.some(
+        (id) => id.toString() === candidateId.toString()
+    );
+
+    const limit = sub.unlockContactsLimit || 0;
+    const used = sub.unlockContactsUsed || 0;
+    const remaining = Math.max(0, limit - used);
+
+    if (alreadyUnlocked) {
+        return res.status(200).json({
+            success: true,
+            allowed: true,
+            alreadyUnlocked: true,
+            candidateId,
+            message: "Candidate contact was previously unlocked.",
+            limit,
+            used,
+            remaining: limit > 0 ? remaining : "unlimited",
+        });
+    }
+
+    // If limit reached
+    if (limit > 0 && used >= limit) {
+        return res.status(403).json({
+            success: false,
+            allowed: false,
+            message: `You have reached your candidate unlock limit (${used}/${limit}). Please upgrade your plan.`,
+            quotaExhausted: true,
+            limit,
+            used,
+            remaining: 0,
+        });
+    }
+
+    // Consume 1 candidate unlock and record candidate ID
+    sub.unlockContactsUsed = used + 1;
+    if (!sub.unlockedCandidates) {
+        sub.unlockedCandidates = [];
+    }
+    sub.unlockedCandidates.push(candidateId);
+    await sub.save();
+
+    res.status(200).json({
+        success: true,
+        allowed: true,
+        candidateId,
+        message: "Candidate contact unlocked successfully.",
+        limit,
+        used: used + 1,
+        remaining: limit > 0 ? Math.max(0, remaining - 1) : "unlimited",
+    });
+});
+

@@ -6,6 +6,7 @@ import {
     getSubscriptionById,
     cancelSubscription,
     validateSubscriptionAction,
+    unlockCandidateContact,
 } from "../controllers/subscriptionController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
@@ -19,6 +20,7 @@ router.get("/current", getCurrentSubscription);
 router.get("/my-history", getMySubscriptionHistory);
 router.get("/all", authorize("admin"), getAllSubscriptionsAdmin);
 router.post("/validate-action", validateSubscriptionAction);
+router.post("/unlock-candidate", unlockCandidateContact);
 router.get("/:id", getSubscriptionById);
 router.post("/cancel/:id", cancelSubscription);
 
