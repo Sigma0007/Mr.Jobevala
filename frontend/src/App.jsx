@@ -26,6 +26,7 @@ import { setAllCategoriesType } from "./Redux/Dashboard/DashboardAction";
 import { useDispatch } from "react-redux";
 import customerservice from "./customer/customerservice";
 import MSGLogin from "./components/MSG/MSGLogin";
+import { SocketProvider } from "./context/SocketContext";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -46,7 +47,7 @@ export default function App() {
   }, []);
 
   return (
-    <>
+    <SocketProvider>
       <div className="min-h-screen bg-slate-50 font-sans relative">
         {/* 
             The InitialLoader sits here. It blocks the UI visually 
@@ -156,6 +157,6 @@ export default function App() {
         </Routes>
         <Footer />
       </div>
-    </>
+    </SocketProvider>
   );
 }

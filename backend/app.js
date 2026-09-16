@@ -14,6 +14,7 @@ import msgRoutes from "./routes/msgRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import pricingPlanRoutes from "./routes/pricingPlanRoutes.js";
 import subscriptionRoutes from "./routes/subscriptionRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 import { errorHandler } from "./middleware/errorMiddleware.js";
 
@@ -55,6 +56,7 @@ app.use("/api/msg", msgRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/plans", pricingPlanRoutes);
 app.use("/api/subscription", subscriptionRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use(errorHandler);
 

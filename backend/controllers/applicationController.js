@@ -1,6 +1,7 @@
 import Application from "../models/Application.js";
 import Job from "../models/Job.js";
 import UserProfile from "../models/UserProfile.js";
+import { createAndSendNotification } from "../utils/notificationService.js";
 
 // @desc    Create a new application
 // @route   POST /api/applications
@@ -43,6 +44,27 @@ export const createApplication = async (req, res, next) => {
             currentRole
         });
 
+        // 1. Notify Employer / Provider that a candidate applied
+        createAndSendNotification({
+            recipient: job.provider,
+            sender: req.user._id,
+            title: "New Candidate Application 📄",
+            message: `${req.user.name || "A candidate"} applied for your job post "${job.title}".`,
+            type: "application",
+            link: "/provider/dashboard",
+            data: { tab: "applicants", jobId: job._id, applicationId: application._id },
+        });
+
+        // 2. Notify Candidate that application was submitted
+        createAndSendNotification({
+            recipient: req.user._id,
+            title: "Application Submitted Successfully ✅",
+            message: `You have successfully applied for "${job.title}".`,
+            type: "application",
+            link: `/user/applied/${application._id}`,
+            data: { tab: "applied", jobId: job._id, applicationId: application._id },
+        });
+        ``
         res.status(201).json({
             success: true,
             data: application,
@@ -249,6 +271,18 @@ export const updateApplicationStatus = async (req, res, next) => {
 
         application.status = status;
         await application.save();
+
+        // Notify Candidate that status changed
+        const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1);
+        createAndSendNotification({
+            recipient: application.user,
+            sender: req.user._id,
+            title: `Application Status Updated: ${formattedStatus} 🔔`,
+            message: `Your application for "${application.job?.title || "the position"}" was marked as "${formattedStatus}".`,
+            type: "status_update",
+            link: `/user/applied/${application._id}`,
+            data: { tab: "applied", applicationId: application._id, status },
+        });
 
         res.status(200).json({
             success: true,

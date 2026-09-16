@@ -6,6 +6,7 @@ import Subscription from "../models/Subscription.js";
 import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
+import { createAndSendNotification } from "../utils/notificationService.js";
 
 /**
  * Helper to create/activate subscription record upon successful payment
@@ -64,10 +65,22 @@ const createOrActivateSubscription = async (payment, userId) => {
         unlockContactsUsed: 0,
     });
 
-    return await Subscription.findById(newSubscription._id)
+    const populatedSub = await Subscription.findById(newSubscription._id)
         .populate("user", "name email phone role")
         .populate("plan")
         .populate("payment");
+
+    const role = populatedSub?.user?.role || "user";
+    createAndSendNotification({
+        recipient: userId,
+        title: "Subscription Activated! 🌟",
+        message: `Your "${newSubscription.planDetails?.name || "Premium"}" plan is now active for ${validityDays} days.`,
+        type: "subscription",
+        link: role === "provider" ? "/provider/dashboard" : "/user/dashboard",
+        data: { tab: role === "provider" ? "billing" : "payments" },
+    });
+
+    return populatedSub;
 };
 
 /**

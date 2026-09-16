@@ -403,6 +403,37 @@ const unlockCandidateContact = (data = {}) => {
   return Auth(endpoint, data, "POST");
 };
 
+// Notification APIs
+const getNotifications = (params = "") => {
+  const endpoint = `/api/notifications${params}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getUnreadNotificationsCount = () => {
+  const endpoint = `/api/notifications/unread-count`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const markNotificationAsRead = (id) => {
+  const endpoint = `/api/notifications/${id}/read`;
+  return Auth(endpoint, {}, "PATCH");
+};
+
+const markAllNotificationsAsRead = () => {
+  const endpoint = `/api/notifications/read-all`;
+  return Auth(endpoint, {}, "PATCH");
+};
+
+const deleteNotificationApi = (id) => {
+  const endpoint = `/api/notifications/${id}`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
+const clearAllNotificationsApi = () => {
+  const endpoint = `/api/notifications/clear-all`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -483,4 +514,10 @@ export default {
   cancelSubscription,
   validateSubscriptionAction,
   unlockCandidateContact,
+  getNotifications,
+  getUnreadNotificationsCount,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotificationApi,
+  clearAllNotificationsApi,
 };

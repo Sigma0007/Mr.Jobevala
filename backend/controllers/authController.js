@@ -4,6 +4,7 @@ import UserProfile from "../models/UserProfile.js";
 
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
+import { createAndSendNotification } from "../utils/notificationService.js";
 
 import {
     generatetoken,
@@ -103,6 +104,16 @@ export const register = catchAsync(
                 phone: phone || "",
                 name: name || "",
             });
+
+            // Send real-time notification to user to complete profile 100%
+            createAndSendNotification({
+                recipient: user._id,
+                title: "Welcome to JobPortal! 🎯",
+                message: "Complete your profile 100% to boost your visibility and get recommended to top employers.",
+                type: "profile",
+                link: "/user/dashboard",
+                data: { tab: "profile" },
+            });
         }
 
         if (userRole === "provider") {
@@ -111,6 +122,16 @@ export const register = catchAsync(
                 ownerPhone: phone || "",
                 ownerName: name || "",
                 ownerEmail: email || ""
+            });
+
+            // Send real-time notification to employer to complete company profile
+            createAndSendNotification({
+                recipient: user._id,
+                title: "Welcome Employer! 🏢",
+                message: "Complete your company profile and post your first job to start receiving applications from top talent.",
+                type: "profile",
+                link: "/provider/dashboard",
+                data: { tab: "profile" },
             });
         }
 

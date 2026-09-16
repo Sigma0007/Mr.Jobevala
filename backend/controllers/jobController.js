@@ -6,6 +6,7 @@ import Application from "../models/Application.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
 import { validateSubscriptionQuota } from "../utils/subscriptionValidator.js";
+import { createAndSendNotification } from "../utils/notificationService.js";
 
 // CREATE JOB
 export const createJob = catchAsync(async (req, res, next) => {
@@ -71,6 +72,16 @@ export const createJob = catchAsync(async (req, res, next) => {
         vacancies,
         status,
         applicationDeadline,
+    });
+
+    // Notify Provider that their job is live
+    createAndSendNotification({
+        recipient: req.user._id,
+        title: "Job Posted Successfully 🚀",
+        message: `Your job post "${job.title}" is now active and receiving applications.`,
+        type: "job",
+        link: "/provider/dashboard",
+        data: { tab: "jobs", jobId: job._id },
     });
 
     res.status(201).json({

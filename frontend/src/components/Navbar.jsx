@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { logoutUser } from "../Redux/Auth/AuthAction";
+import NotificationCenter from "./NotificationCenter";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -80,7 +81,10 @@ export default function Navbar() {
           {/* Desktop Auth / Dashboard */}
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                {/* Real-time Notification Center */}
+                <NotificationCenter />
+
                 {/* Redirects to /user/dashboard, /provider/dashboard, or /admin/dashboard based on role */}
                 <Link
                   to={`/${user.role}/dashboard`}
@@ -91,7 +95,7 @@ export default function Navbar() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-slate-400 hover:text-red-500 transition-colors p-2 bg-slate-50 rounded-full border border-slate-100 hover:bg-red-50 hover:border-red-100"
+                  className="text-slate-400 hover:text-red-500 transition-colors p-2 bg-slate-50 rounded-full border border-slate-100 hover:bg-red-50 hover:border-red-100 cursor-pointer"
                   title="Log Out"
                 >
                   <LogOut className="w-5 h-5" />
@@ -115,8 +119,9 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex md:hidden items-center">
+          {/* Mobile Right Bar (Notification + Menu Button) */}
+          <div className="flex md:hidden items-center gap-2">
+            {user && <NotificationCenter />}
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="text-slate-600 hover:text-brand-600 focus:outline-none p-2"
