@@ -248,15 +248,13 @@ export default function EmployerPostJob() {
     }
 
     if (!formData.state) {
-      formData.state = "Maharashtra";
-      // toast.error("Please select a State");
-      // return;
+      toast.error("Please select a State");
+      return;
     }
 
     if (!formData.city) {
-      formData.city = "Pune";
-      // toast.error("Please select a District / City");
-      // return;
+      toast.error("Please select a District / City");
+      return;
     }
 
     try {
