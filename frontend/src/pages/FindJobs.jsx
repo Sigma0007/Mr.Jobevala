@@ -201,7 +201,8 @@ export default function FindJobs() {
   const navigate = useNavigate();
 
   const { categoriesType = [] } = useSelector((state) => state.dashboard);
-
+  const { user } = useSelector((state) => state.auth);
+  console.log("user", user);
   // Extract popular roles from categoriesType
   const popularRoles = React.useMemo(() => {
     if (!Array.isArray(categoriesType)) return [];
@@ -261,7 +262,9 @@ export default function FindJobs() {
         console.error("Error fetching saved job IDs:", err);
       }
     };
-    fetchSavedJobsList();
+    if (user?.role === "user") {
+      fetchSavedJobsList();
+    }
   }, []);
 
   // Fetch Jobs with dynamic query debounce

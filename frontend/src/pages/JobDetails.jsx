@@ -31,7 +31,7 @@ import {
 import toast from "react-hot-toast";
 import customerservice from "../customer/customerservice";
 import ApplyJobModal from "../components/Modals/ApplyJobModal";
-import { IndustryType, workModeType } from "../Utility/utilites";
+import { IndustryType, workModeType, BENEFITS } from "../Utility/utilites";
 import { useSelector } from "react-redux";
 
 const timeAgo = (dateString) => {
@@ -567,6 +567,42 @@ export default function JobDetails() {
                 )}
               </div>
             </motion.div>
+
+            {/* Company Perks & Benefits */}
+            {job.companyProfile.benefits &&
+              job.companyProfile.benefits.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/70 shadow-[0_4px_20px_rgb(0,0,0,0.03)] space-y-6"
+                >
+                  <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5 pb-4 border-b border-slate-100">
+                    <Layers className="w-5 h-5 text-purple-600" /> Perks &
+                    Benefits
+                  </h2>
+                  <div className="flex flex-wrap gap-1.5">
+                    {job.companyProfile.benefits.map((benefit, idx) => {
+                      const benefitConfig = BENEFITS.find(
+                        (b) => b.value === benefit,
+                      );
+                      const BenefitIcon = benefitConfig?.icon;
+                      const BenefitLabel = benefitConfig?.label;
+                      return (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200/60 rounded-xl text-[11px] font-medium text-slate-700"
+                        >
+                          {BenefitIcon && (
+                            <BenefitIcon className="w-3 h-3 text-brand-600" />
+                          )}
+                          {BenefitLabel}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
 
             {/* About Company Card */}
             {job.companyProfile && (
