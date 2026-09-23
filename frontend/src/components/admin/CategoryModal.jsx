@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { X, Loader2, Sparkles, FolderPlus, Edit3, Plus, Trash2, Tag } from "lucide-react";
+import {
+  X,
+  Loader2,
+  Sparkles,
+  FolderPlus,
+  Edit3,
+  Plus,
+  Trash2,
+  Tag,
+  Flame,
+} from "lucide-react";
 import api from "../../customer/customerservice";
 import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
@@ -17,6 +27,7 @@ const CategoryModal = ({
   const [roles, setRoles] = useState([]);
   const [newRoleLabel, setNewRoleLabel] = useState("");
   const [newRoleValue, setNewRoleValue] = useState("");
+  const [newRoleIsPopular, setNewRoleIsPopular] = useState(false);
   const [loading, setLoading] = useState(false);
   const [autoSlug, setAutoSlug] = useState(true);
   const [autoRoleSlug, setAutoRoleSlug] = useState(true);
@@ -25,7 +36,15 @@ const CategoryModal = ({
     if (categoryToEdit) {
       setLabel(categoryToEdit.label || "");
       setValue(categoryToEdit.value || "");
-      setRoles(Array.isArray(categoryToEdit.roles) ? [...categoryToEdit.roles] : []);
+      setRoles(
+        Array.isArray(categoryToEdit.roles)
+          ? categoryToEdit.roles.map((r) => ({
+              label: r.label || "",
+              value: r.value || "",
+              is_popular: Boolean(r.is_popular),
+            }))
+          : []
+      );
       setAutoSlug(false);
     } else {
       setLabel("");
@@ -35,6 +54,7 @@ const CategoryModal = ({
     }
     setNewRoleLabel("");
     setNewRoleValue("");
+    setNewRoleIsPopular(false);
     setAutoRoleSlug(true);
   }, [categoryToEdit, isOpen]);
 
@@ -75,7 +95,9 @@ const CategoryModal = ({
   const handleAddRole = (e) => {
     e?.preventDefault();
     const cleanLabel = newRoleLabel.trim();
-    const cleanValue = newRoleValue.trim() ? newRoleValue.trim() : generateSlug(cleanLabel);
+    const cleanValue = newRoleValue.trim()
+      ? newRoleValue.trim()
+      : generateSlug(cleanLabel);
 
     if (!cleanLabel) {
       toast.error("Role label cannot be empty.");
@@ -87,10 +109,28 @@ const CategoryModal = ({
       return;
     }
 
-    setRoles((prev) => [...prev, { label: cleanLabel, value: cleanValue }]);
+    setRoles((prev) => [
+      ...prev,
+      {
+        label: cleanLabel,
+        value: cleanValue,
+        is_popular: Boolean(newRoleIsPopular),
+      },
+    ]);
     setNewRoleLabel("");
     setNewRoleValue("");
+    setNewRoleIsPopular(false);
     setAutoRoleSlug(true);
+  };
+
+  const handleToggleRolePopular = (indexToToggle) => {
+    setRoles((prev) =>
+      prev.map((role, idx) =>
+        idx === indexToToggle
+          ? { ...role, is_popular: !role.is_popular }
+          : role
+      )
+    );
   };
 
   const handleRemoveRole = (indexToRemove) => {
@@ -285,11 +325,60 @@ const CategoryModal = ({
                   </div>
                 </div>
 
-                <div className="flex justify-end">
+                {/* Subcategory Status (is_popular) radio selection and Add button */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-200/70">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs font-semibold text-slate-700">
+                      Popular Status:
+                    </span>
+                    <div className="inline-flex items-center bg-white p-0.5 rounded-lg border border-slate-200">
+                      <label
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs cursor-pointer transition-all ${
+                          !newRoleIsPopular
+                            ? "bg-slate-100 text-slate-800 font-semibold shadow-xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="newRoleIsPopular"
+                          checked={!newRoleIsPopular}
+                          onChange={() => setNewRoleIsPopular(false)}
+                          className="sr-only"
+                        />
+                        <span>Standard</span>
+                      </label>
+                      <label
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs cursor-pointer transition-all ${
+                          newRoleIsPopular
+                            ? "bg-amber-50 text-amber-900 font-semibold shadow-xs border border-amber-200"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="newRoleIsPopular"
+                          checked={newRoleIsPopular}
+                          onChange={() => setNewRoleIsPopular(true)}
+                          className="sr-only"
+                        />
+                        <Flame
+                          size={12}
+                          className={
+                            newRoleIsPopular
+                              ? "text-amber-500 fill-amber-500"
+                              : "text-slate-400"
+                          }
+                        />
+                        <span>Popular</span>
+                      </label>
+                    </div>
+                  </div>
+
                   <button
                     type="button"
                     onClick={handleAddRole}
-                    className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm"
+                    className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-colors shadow-sm"
                   >
                     <Plus size={14} /> Add Role
                   </button>
@@ -302,13 +391,13 @@ const CategoryModal = ({
                   No roles added to this category yet. Use the form above to add sub-roles.
                 </div>
               ) : (
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
                   {roles.map((role, idx) => (
                     <div
                       key={idx}
                       className="flex items-center justify-between p-2.5 bg-white border border-slate-200/80 rounded-xl shadow-xs hover:border-slate-300 transition-colors"
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0 flex-1">
                         <span className="text-xs font-semibold text-slate-800 truncate">
                           {role.label}
                         </span>
@@ -316,14 +405,39 @@ const CategoryModal = ({
                           {role.value}
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveRole(idx)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ml-2 shrink-0"
-                        title="Remove role"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                        {/* Toggle Popular Badge / Radio Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleRolePopular(idx)}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-all ${
+                            role.is_popular
+                              ? "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
+                              : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
+                          }`}
+                          title="Click to toggle Popular / Standard"
+                        >
+                          <Flame
+                            size={11}
+                            className={
+                              role.is_popular
+                                ? "text-amber-500 fill-amber-500"
+                                : "text-slate-400"
+                            }
+                          />
+                          <span>{role.is_popular ? "Popular" : "Standard"}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveRole(idx)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Remove role"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

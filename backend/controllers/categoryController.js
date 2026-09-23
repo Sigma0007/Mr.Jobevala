@@ -496,7 +496,9 @@ export const createCategory = catchAsync(async (req, res, next) => {
     const category = await Category.create({
         label: categoryLabel.trim(),
         value,
-        roles: Array.isArray(roles) ? roles : [],
+        roles: Array.isArray(roles)
+            ? roles
+            : [],
     });
 
     res.status(201).json({

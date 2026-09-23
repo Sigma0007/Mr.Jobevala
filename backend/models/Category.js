@@ -13,6 +13,10 @@ const roleSchema = new mongoose.Schema(
             trim: true,
             lowercase: true,
         },
+        is_popular: {
+            type: Boolean,
+            default: false,
+        },
     },
     { _id: false }
 );

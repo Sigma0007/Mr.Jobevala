@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
   Tag,
+  Flame,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
@@ -193,6 +194,8 @@ const AdminCategoriesList = () => {
                 {filteredCategories.map((category, index) => {
                   const isExpanded = expandedCategoryId === category._id;
                   const roleCount = category.roles?.length || 0;
+                  const popularCount =
+                    category.roles?.filter((r) => r.is_popular)?.length || 0;
 
                   return (
                     <React.Fragment key={category._id || index}>
@@ -218,6 +221,12 @@ const AdminCategoriesList = () => {
                             >
                               <Tag size={12} />
                               <span>{roleCount} Roles</span>
+                              {popularCount > 0 && (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] bg-amber-100 text-amber-800 font-bold rounded-full">
+                                  <Flame size={10} className="fill-amber-500 text-amber-500" />
+                                  {popularCount}
+                                </span>
+                              )}
                               {isExpanded ? (
                                 <ChevronUp size={12} />
                               ) : (
@@ -268,14 +277,27 @@ const AdminCategoriesList = () => {
                               {category.roles.map((r, rIdx) => (
                                 <div
                                   key={rIdx}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs border transition-colors ${
+                                    r.is_popular
+                                      ? "bg-amber-50/80 border-amber-200 text-amber-900 shadow-2xs"
+                                      : "bg-white border-slate-200 text-slate-700"
+                                  }`}
                                 >
-                                  <span className="font-medium text-slate-700">
+                                  <span className="font-medium">
                                     {r.label}
                                   </span>
                                   <span className="text-[10px] font-mono text-slate-400 bg-slate-50 px-1 rounded">
                                     {r.value}
                                   </span>
+                                  {r.is_popular && (
+                                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full">
+                                      <Flame
+                                        size={10}
+                                        className="fill-amber-500 text-amber-500"
+                                      />
+                                      Popular
+                                    </span>
+                                  )}
                                 </div>
                               ))}
                             </div>
