@@ -922,7 +922,7 @@ export default function EmployerPostJob() {
         <div className="flex justify-end pt-4">
           <button
             type="submit"
-            disabled={loading || isQuotaExhausted}
+            disabled={loading || (isQuotaExhausted && !isEditMode)}
             className="px-8 py-3.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-medium rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           >
             {loading

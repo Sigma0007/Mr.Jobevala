@@ -43,7 +43,7 @@ const CategoryModal = ({
               value: r.value || "",
               is_popular: Boolean(r.is_popular),
             }))
-          : []
+          : [],
       );
       setAutoSlug(false);
     } else {
@@ -105,7 +105,9 @@ const CategoryModal = ({
     }
 
     if (roles.some((r) => r.value === cleanValue)) {
-      toast.error("A role with this value/slug already exists in this category.");
+      toast.error(
+        "A role with this value/slug already exists in this category.",
+      );
       return;
     }
 
@@ -128,8 +130,8 @@ const CategoryModal = ({
       prev.map((role, idx) =>
         idx === indexToToggle
           ? { ...role, is_popular: !role.is_popular }
-          : role
-      )
+          : role,
+      ),
     );
   };
 
@@ -223,7 +225,10 @@ const CategoryModal = ({
         </div>
 
         {/* Form Body - Scrollable */}
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col flex-1 overflow-hidden"
+        >
           <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
             {/* Category Label */}
             <div>
@@ -244,7 +249,8 @@ const CategoryModal = ({
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="block text-sm font-semibold text-slate-700">
-                  Slug / Value Identifier <span className="text-red-500">*</span>
+                  Slug / Value Identifier{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 {!categoryToEdit && (
                   <button
@@ -268,7 +274,8 @@ const CategoryModal = ({
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 text-slate-900 placeholder:text-slate-400 text-sm font-mono transition-all"
               />
               <p className="text-xs text-slate-500 mt-1">
-                Unique identifier used in API filters, database relations, and URLs.
+                Unique identifier used in API filters, database relations, and
+                URLs.
               </p>
             </div>
 
@@ -388,7 +395,8 @@ const CategoryModal = ({
               {/* Roles List */}
               {roles.length === 0 ? (
                 <div className="text-center py-5 border border-dashed border-slate-200 rounded-xl bg-slate-50/50 text-slate-400 text-xs">
-                  No roles added to this category yet. Use the form above to add sub-roles.
+                  No roles added to this category yet. Use the form above to add
+                  sub-roles.
                 </div>
               ) : (
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
@@ -426,7 +434,9 @@ const CategoryModal = ({
                                 : "text-slate-400"
                             }
                           />
-                          <span>{role.is_popular ? "Popular" : "Standard"}</span>
+                          <span>
+                            {role.is_popular ? "Popular" : "Standard"}
+                          </span>
                         </button>
 
                         <button

@@ -32,6 +32,7 @@ import customerservice from "../customer/customerservice";
 import CommonFilters from "../components/CommonFilters";
 import ApplyJobModal from "../components/Modals/ApplyJobModal";
 import { JOB_ROLES_CATEGORY_TYPE } from "../Utility/utilites";
+import { useSelector } from "react-redux";
 
 // Animation Variants
 const containerVariants = {
@@ -136,11 +137,25 @@ const formatExperience = (exp) => {
   return null;
 };
 
-const formatCategoryName = (catValue) => {
+const formatCategoryName = (catValue, categoriesType = []) => {
   if (!catValue) return "";
-  const found = JOB_ROLES_CATEGORY_TYPE.find((c) => c.value === catValue);
-  if (found) return found.label;
+  const found = categoriesType.find((c) => c.value === catValue);
+  if (found) return found.label || found.title;
+  const foundUtil = JOB_ROLES_CATEGORY_TYPE.find((c) => c.value === catValue);
+  if (foundUtil) return foundUtil.label;
   return catValue
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+};
+
+const formatRoleName = (roleValue, categoriesType = []) => {
+  if (!roleValue) return "";
+  for (const cat of categoriesType) {
+    const foundRole = (cat.roles || []).find((r) => r.value === roleValue);
+    if (foundRole) return foundRole.label;
+  }
+  return roleValue
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
@@ -185,11 +200,35 @@ const getInitials = (name) => {
 export default function FindJobs() {
   const navigate = useNavigate();
 
+  const { categoriesType = [] } = useSelector((state) => state.dashboard);
+
+  // Extract popular roles from categoriesType
+  const popularRoles = React.useMemo(() => {
+    if (!Array.isArray(categoriesType)) return [];
+    const popular = [];
+    categoriesType.forEach((cat) => {
+      if (Array.isArray(cat?.roles)) {
+        cat.roles.forEach((role) => {
+          if (role?.is_popular) {
+            popular.push({
+              label: role.label,
+              value: role.value,
+              categoryValue: cat.value,
+              categoryLabel: cat.label || cat.title,
+            });
+          }
+        });
+      }
+    });
+    return popular;
+  }, [categoriesType]);
+
   // State Management
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedSubCategories, setSelectedSubCategories] = useState([]);
   const [selectedExperience, setSelectedExperience] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedModes, setSelectedModes] = useState([]);
@@ -237,6 +276,8 @@ export default function FindJobs() {
           queryParams.append("locationQuery", locationQuery.trim());
         if (selectedCategories.length > 0)
           queryParams.append("category", selectedCategories.join(","));
+        if (selectedSubCategories.length > 0)
+          queryParams.append("subCategory", selectedSubCategories.join(","));
         if (selectedExperience.length > 0)
           queryParams.append("experience", selectedExperience.join(","));
         if (selectedTypes.length > 0)
@@ -270,6 +311,7 @@ export default function FindJobs() {
     searchQuery,
     locationQuery,
     selectedCategories,
+    selectedSubCategories,
     selectedExperience,
     selectedTypes,
     selectedModes,
@@ -289,6 +331,7 @@ export default function FindJobs() {
     setSearchQuery("");
     setLocationQuery("");
     setSelectedCategories([]);
+    setSelectedSubCategories([]);
     setSelectedExperience([]);
     setSelectedTypes([]);
     setSelectedModes([]);
@@ -378,20 +421,11 @@ export default function FindJobs() {
     }
   };
 
-  // Quick category pills on top
-  const quickCategories = [
-    { label: "Software Engineering", value: "software_engineering" },
-    { label: "Data Science & Analytics", value: "data_science_analytics" },
-    { label: "Design & UX", value: "design_editing_architecture" },
-    { label: "Sales & Marketing", value: "marketing_brand_digital_marketing" },
-    { label: "Finance & Accounting", value: "finance_accounting" },
-    { label: "Customer Support", value: "customer_support" },
-  ];
-
   const totalActiveFiltersCount =
     (searchQuery.trim() ? 1 : 0) +
     (locationQuery.trim() ? 1 : 0) +
     selectedCategories.length +
+    selectedSubCategories.length +
     selectedExperience.length +
     selectedModes.length +
     selectedTypes.length +
@@ -462,31 +496,33 @@ export default function FindJobs() {
             </div>
           </div>
 
-          {/* Quick Category Chips */}
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 overflow-x-auto pb-1 text-xs custom-scrollbar">
-            <span className="text-slate-400 font-bold shrink-0 flex items-center gap-1 pl-1">
-              <Layers className="w-3.5 h-3.5" /> Popular:
-            </span>
-            {quickCategories.map((cat) => {
-              const isSelected = selectedCategories.includes(cat.value);
-              return (
-                <button
-                  key={cat.value}
-                  onClick={() =>
-                    handleFilterChange(setSelectedCategories, cat.value)
-                  }
-                  className={`px-3 py-1.5 rounded-xl font-medium transition-all shrink-0 flex items-center gap-1.5 border ${
-                    isSelected
-                      ? "bg-blue-50 text-blue-700 border-blue-200 font-bold"
-                      : "bg-slate-50 text-slate-600 border-slate-200/70 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  <span>{cat.label}</span>
-                  {isSelected && <Check className="w-3 h-3 text-blue-600" />}
-                </button>
-              );
-            })}
-          </div>
+          {/* Quick Popular Subcategories / Roles Chips */}
+          {popularRoles.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 overflow-x-auto pb-1 text-xs custom-scrollbar">
+              <span className="text-slate-400 font-bold shrink-0 flex items-center gap-1 pl-1">
+                <Layers className="w-3.5 h-3.5" /> Popular:
+              </span>
+              {popularRoles.map((role) => {
+                const isSelected = selectedSubCategories.includes(role.value);
+                return (
+                  <button
+                    key={role.value}
+                    onClick={() =>
+                      handleFilterChange(setSelectedSubCategories, role.value)
+                    }
+                    className={`px-3 py-1.5 rounded-xl font-medium transition-all shrink-0 flex items-center gap-1.5 border ${
+                      isSelected
+                        ? "bg-blue-50 text-blue-700 border-blue-200 font-bold"
+                        : "bg-slate-50 text-slate-600 border-slate-200/70 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    <span>{role.label}</span>
+                    {isSelected && <Check className="w-3 h-3 text-blue-600" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Mobile Filter Toggle */}
@@ -632,7 +668,7 @@ export default function FindJobs() {
                       key={cat}
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200"
                     >
-                      {formatCategoryName(cat) || cat}
+                      {formatCategoryName(cat, categoriesType) || cat}
                       <button
                         onClick={() =>
                           setSelectedCategories((prev) =>
@@ -640,6 +676,25 @@ export default function FindJobs() {
                           )
                         }
                         className="hover:text-slate-900 ml-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+
+                  {selectedSubCategories.map((subCat) => (
+                    <span
+                      key={subCat}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-200"
+                    >
+                      Role: {formatRoleName(subCat, categoriesType) || subCat}
+                      <button
+                        onClick={() =>
+                          setSelectedSubCategories((prev) =>
+                            prev.filter((s) => s !== subCat),
+                          )
+                        }
+                        className="hover:text-blue-900 ml-0.5"
                       >
                         <X className="w-3 h-3" />
                       </button>
