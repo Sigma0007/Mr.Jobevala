@@ -25,7 +25,6 @@ export default function EmployerPostJob() {
   const selectedJob = useSelector((state) => state.job?.selectedJob);
   const { categoriesType } = useSelector((state) => state.dashboard);
   const isEditMode = Boolean(id);
-  console.log("categoriesType", categoriesType);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(isEditMode);
   const [locationHierarchy, setLocationHierarchy] = useState([]);

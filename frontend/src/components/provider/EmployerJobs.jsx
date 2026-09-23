@@ -40,8 +40,9 @@ import {
   workModeType,
   jobType as jobTypeOptions,
 } from "../../Utility/utilites";
+import { setDashboardActiveTab } from "../../Redux/Dashboard/DashboardAction";
 
-export default function EmployerJobs({ setActiveTab }) {
+export default function EmployerJobs() {
   const [jobs, setJobs] = useState([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -236,18 +237,12 @@ export default function EmployerJobs({ setActiveTab }) {
   const handleEdit = (job) => {
     dispatch(setSelectedJob(job));
     navigate(`/provider/jobs/${job._id}/edit`);
-    if (setActiveTab) {
-      setActiveTab("post-job");
-    }
+    dispatch(setDashboardActiveTab("post-job"));
   };
 
   const handlePostNewJob = () => {
     dispatch(clearSelectedJob());
-    if (setActiveTab) {
-      setActiveTab("post-job");
-    } else {
-      navigate("/provider/jobs/create");
-    }
+    dispatch(setDashboardActiveTab("post-job"));
   };
 
   const handleViewApplications = (job) => {

@@ -25,8 +25,11 @@ import toast from "react-hot-toast";
 import { statusConfig } from "../../Utility/utilites";
 import CandidateDetailsModal from "../Modals/CandidateDetailsModal";
 import SubscriptionModal from "../Modals/SubscriptionModal";
+import { useDispatch } from "react-redux";
+import { setDashboardActiveTab } from "../../Redux/Dashboard/DashboardAction";
 
-export default function EmployerOverview({ setActiveTab = () => {} }) {
+export default function EmployerOverview() {
+  const dispatch = useDispatch();
   const [overviewData, setOverviewData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -188,14 +191,14 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={() => setActiveTab("post-job")}
+            onClick={() => dispatch(setDashboardActiveTab("post-job"))}
             className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-2xl shadow-lg shadow-brand-600/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
             Post New Job
           </button>
           <button
-            onClick={() => setActiveTab("applicants")}
+            onClick={() => dispatch(setDashboardActiveTab("applicants"))}
             className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-semibold rounded-2xl border border-slate-200 transition-all cursor-pointer"
           >
             <Users className="w-4 h-4 text-slate-500" />
@@ -220,16 +223,20 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
               </div>
               <h3 className="text-xl sm:text-2xl font-black flex items-center gap-2 text-white">
                 <Crown className="w-5 h-5 text-amber-400" />
-                {currentSubscription.planDetails?.name || currentSubscription.planId}
+                {currentSubscription.planDetails?.name ||
+                  currentSubscription.planId}
               </h3>
               <p className="text-xs text-slate-300">
                 Active until{" "}
                 <span className="font-semibold text-white">
-                  {new Date(currentSubscription.endDate).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
+                  {new Date(currentSubscription.endDate).toLocaleDateString(
+                    "en-IN",
+                    {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    },
+                  )}
                 </span>
               </p>
             </div>
@@ -256,9 +263,12 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
             {/* Direct Messages */}
             <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col justify-between">
               <div className="flex items-center justify-between text-xs mb-1.5">
-                <span className="text-indigo-200 font-medium">Direct Messages</span>
+                <span className="text-indigo-200 font-medium">
+                  Direct Messages
+                </span>
                 <span className="font-bold text-white">
-                  {currentSubscription.directMessagesUsed || 0} / {currentSubscription.directMessagesLimit || "∞"}
+                  {currentSubscription.directMessagesUsed || 0} /{" "}
+                  {currentSubscription.directMessagesLimit || "∞"}
                 </span>
               </div>
               <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden mb-2">
@@ -272,8 +282,8 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
                             Math.round(
                               ((currentSubscription.directMessagesUsed || 0) /
                                 currentSubscription.directMessagesLimit) *
-                                100
-                            )
+                                100,
+                            ),
                           )
                         : 0
                     }%`,
@@ -286,7 +296,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
                   ? Math.max(
                       0,
                       currentSubscription.directMessagesLimit -
-                        (currentSubscription.directMessagesUsed || 0)
+                        (currentSubscription.directMessagesUsed || 0),
                     )
                   : "Unlimited"}
               </span>
@@ -297,7 +307,8 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
               <div className="flex items-center justify-between text-xs mb-1.5">
                 <span className="text-indigo-200 font-medium">Job Posts</span>
                 <span className="font-bold text-white">
-                  {currentSubscription.jobPostsUsed || 0} / {currentSubscription.jobPostsLimit || "∞"}
+                  {currentSubscription.jobPostsUsed || 0} /{" "}
+                  {currentSubscription.jobPostsLimit || "∞"}
                 </span>
               </div>
               <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden mb-2">
@@ -311,8 +322,8 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
                             Math.round(
                               ((currentSubscription.jobPostsUsed || 0) /
                                 currentSubscription.jobPostsLimit) *
-                                100
-                            )
+                                100,
+                            ),
                           )
                         : 0
                     }%`,
@@ -325,7 +336,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
                   ? Math.max(
                       0,
                       currentSubscription.jobPostsLimit -
-                        (currentSubscription.jobPostsUsed || 0)
+                        (currentSubscription.jobPostsUsed || 0),
                     )
                   : "Unlimited"}
               </span>
@@ -334,9 +345,12 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
             {/* Candidate Unlocks */}
             <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col justify-between">
               <div className="flex items-center justify-between text-xs mb-1.5">
-                <span className="text-indigo-200 font-medium">Candidate Unlocks</span>
+                <span className="text-indigo-200 font-medium">
+                  Candidate Unlocks
+                </span>
                 <span className="font-bold text-white">
-                  {currentSubscription.unlockContactsUsed || 0} / {currentSubscription.unlockContactsLimit || "∞"}
+                  {currentSubscription.unlockContactsUsed || 0} /{" "}
+                  {currentSubscription.unlockContactsLimit || "∞"}
                 </span>
               </div>
               <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden mb-2">
@@ -350,8 +364,8 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
                             Math.round(
                               ((currentSubscription.unlockContactsUsed || 0) /
                                 currentSubscription.unlockContactsLimit) *
-                                100
-                            )
+                                100,
+                            ),
                           )
                         : 0
                     }%`,
@@ -364,7 +378,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
                   ? Math.max(
                       0,
                       currentSubscription.unlockContactsLimit -
-                        (currentSubscription.unlockContactsUsed || 0)
+                        (currentSubscription.unlockContactsUsed || 0),
                     )
                   : "Unlimited"}
               </span>
@@ -381,7 +395,8 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
               </h3>
             </div>
             <p className="text-xs sm:text-sm text-slate-600">
-              Unlock verified candidate contact details and boost your job posts with a featured employer plan.
+              Unlock verified candidate contact details and boost your job posts
+              with a featured employer plan.
             </p>
           </div>
           <Link
@@ -421,7 +436,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
               </div>
             </div>
             <button
-              onClick={() => setActiveTab("profile")}
+              onClick={() => dispatch(setDashboardActiveTab("profile"))}
               className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold rounded-xl transition-all shadow-md cursor-pointer"
             >
               Complete Profile
@@ -434,7 +449,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Active Jobs */}
         <div
-          onClick={() => setActiveTab("jobs")}
+          onClick={() => dispatch(setDashboardActiveTab("jobs"))}
           className="group cursor-pointer bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:border-brand-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all"
         >
           <div className="flex items-center justify-between mb-4">
@@ -461,7 +476,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
 
         {/* Total Applications */}
         <div
-          onClick={() => setActiveTab("applicants")}
+          onClick={() => dispatch(setDashboardActiveTab("applicants"))}
           className="group cursor-pointer bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:border-indigo-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all"
         >
           <div className="flex items-center justify-between mb-4">
@@ -488,7 +503,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
 
         {/* Candidates in Pipeline */}
         <div
-          onClick={() => setActiveTab("applicants")}
+          onClick={() => dispatch(setDashboardActiveTab("applicants"))}
           className="group cursor-pointer bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:border-purple-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all"
         >
           <div className="flex items-center justify-between mb-4">
@@ -512,7 +527,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
 
         {/* Candidates Hired */}
         <div
-          onClick={() => setActiveTab("applicants")}
+          onClick={() => dispatch(setDashboardActiveTab("applicants"))}
           className="group cursor-pointer bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:border-emerald-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all"
         >
           <div className="flex items-center justify-between mb-4">
@@ -549,7 +564,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
             </p>
           </div>
           <button
-            onClick={() => setActiveTab("applicants")}
+            onClick={() => dispatch(setDashboardActiveTab("applicants"))}
             className="text-xs font-bold text-brand-600 hover:text-brand-700"
           >
             Manage Pipeline &rarr;
@@ -659,7 +674,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
                 </p>
               </div>
               <button
-                onClick={() => setActiveTab("applicants")}
+                onClick={() => dispatch(setDashboardActiveTab("applicants"))}
                 className="text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100/80 px-3 py-1.5 rounded-xl transition"
               >
                 View all ({stats.totalApplications || 0})
@@ -680,7 +695,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
                     will appear right here.
                   </p>
                   <button
-                    onClick={() => setActiveTab("post-job")}
+                    onClick={() => dispatch(setDashboardActiveTab("post-job"))}
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl hover:bg-brand-700 transition"
                   >
                     <PlusCircle className="w-3.5 h-3.5" /> Post a Job
@@ -759,7 +774,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
           {recentApplications.length > 0 && (
             <div className="pt-4 border-t border-slate-100 mt-4 text-center">
               <button
-                onClick={() => setActiveTab("applicants")}
+                onClick={() => dispatch(setDashboardActiveTab("applicants"))}
                 className="text-xs font-bold text-brand-600 hover:text-brand-700"
               >
                 Go to Applicant Management &rarr;
@@ -781,7 +796,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
                 </p>
               </div>
               <button
-                onClick={() => setActiveTab("jobs")}
+                onClick={() => dispatch(setDashboardActiveTab("jobs"))}
                 className="text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100/80 px-3 py-1.5 rounded-xl transition"
               >
                 Manage ({stats.totalJobs || 0})
@@ -802,7 +817,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
                     applications.
                   </p>
                   <button
-                    onClick={() => setActiveTab("post-job")}
+                    onClick={() => dispatch(setDashboardActiveTab("post-job"))}
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl hover:bg-brand-700 transition"
                   >
                     <PlusCircle className="w-3.5 h-3.5" /> Create Job
@@ -812,7 +827,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
                 recentJobs.map((job) => (
                   <div
                     key={job._id}
-                    onClick={() => setActiveTab("jobs")}
+                    onClick={() => dispatch(setDashboardActiveTab("jobs"))}
                     className="group p-4 rounded-2xl border border-slate-100 hover:border-brand-200 hover:bg-slate-50/50 transition-all cursor-pointer space-y-2.5"
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -857,13 +872,13 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
           {recentJobs.length > 0 && (
             <div className="pt-4 border-t border-slate-100 mt-4 flex items-center justify-between">
               <button
-                onClick={() => setActiveTab("post-job")}
+                onClick={() => dispatch(setDashboardActiveTab("post-job"))}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700"
               >
                 <PlusCircle className="w-3.5 h-3.5" /> Post Another Job
               </button>
               <button
-                onClick={() => setActiveTab("jobs")}
+                onClick={() => dispatch(setDashboardActiveTab("jobs"))}
                 className="text-xs font-bold text-slate-600 hover:text-slate-900"
               >
                 View All Jobs &rarr;
@@ -879,7 +894,7 @@ export default function EmployerOverview({ setActiveTab = () => {} }) {
         onClose={() => setSelectedApplicant(null)}
         onStatusChange={handleStatusChange}
         updatingStatus={updatingStatus}
-        onViewAll={() => setActiveTab("applicants")}
+        onViewAll={() => dispatch(setDashboardActiveTab("applicants"))}
         onCandidateUnlocked={() => {
           fetchSubscription();
         }}

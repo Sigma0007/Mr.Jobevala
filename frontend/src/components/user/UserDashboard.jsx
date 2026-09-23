@@ -14,9 +14,12 @@ import UserSaved from "./UserSaved";
 import UserProfile from "./UserProfile";
 import PaymentHistory from "../../pages/PaymentHistory";
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setDashboardActiveTab } from "../../Redux/Dashboard/DashboardAction";
 
 export function UserDashboard() {
-  const [activeTab, setActiveTab] = useState("overview");
+  const { dashboardActiveTab } = useSelector((state) => state.dashboard);
+  const dispatch = useDispatch();
 
   const menuItems = [
     { id: "overview", name: "Dashboard", icon: LayoutDashboard },
@@ -40,11 +43,11 @@ export function UserDashboard() {
               </div>
               {menuItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = activeTab === item.id;
+                const isActive = dashboardActiveTab === item.id;
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id)}
+                    onClick={() => dispatch(setDashboardActiveTab(item.id))}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all cursor-pointer ${
                       isActive
                         ? "bg-brand-600 text-white shadow-[0_4px_14px_0_rgb(37,99,235,0.39)]"
@@ -65,13 +68,11 @@ export function UserDashboard() {
 
           {/* Dynamic Main Content Area */}
           <div className="flex-1">
-            {activeTab === "overview" && (
-              <UserOverview setActiveTab={setActiveTab} />
-            )}
-            {activeTab === "applied" && <UserApplied />}
-            {activeTab === "saved" && <UserSaved />}
-            {activeTab === "profile" && <UserProfile />}
-            {activeTab === "payments" && <PaymentHistory />}
+            {dashboardActiveTab === "overview" && <UserOverview />}
+            {dashboardActiveTab === "applied" && <UserApplied />}
+            {dashboardActiveTab === "saved" && <UserSaved />}
+            {dashboardActiveTab === "profile" && <UserProfile />}
+            {dashboardActiveTab === "payments" && <PaymentHistory />}
           </div>
         </div>
       </div>
