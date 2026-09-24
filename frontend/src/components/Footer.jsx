@@ -30,7 +30,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative bg-slate-950 border-t border-slate-900 overflow-hidden pt-20 pb-10 sm:pt-24 sm:pb-12 mt-auto">
+    <footer className="relative bg-slate-950 border-t border-slate-900 overflow-hidden pt-20 pb-10 sm:pt-24 sm:pb-12 mt-auto no-print">
       {/* Background Glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-brand-600/10 rounded-full blur-[100px]" />

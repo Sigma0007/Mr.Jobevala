@@ -1,0 +1,450 @@
+/* ============================================================
+   RESUME A4 & PRINT STYLESHEET
+   Supports real A4 dimensions (210mm x 297mm) and print fidelity
+   ============================================================ */
+
+:root {
+  --primary-color: #2563eb;
+  --primary-light: rgba(37, 99, 235, 0.08);
+  --primary-border: rgba(37, 99, 235, 0.25);
+  --resume-font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --bg-page: #ffffff;
+}
+
+/* Base A4 Resume Page Container */
+.resume-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 1.5rem;
+  background-color: #e2e8f0;
+  min-height: 100%;
+  overflow-y: auto;
+}
+
+.resume-page {
+  width: 210mm;
+  min-height: 297mm;
+  background-color: var(--bg-page);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+  color: var(--text-main);
+  font-family: var(--resume-font);
+  font-size: 13px;
+  line-height: 1.5;
+  position: relative;
+  transition: all 0.2s ease;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+/* Page Break Protection */
+.resume-section-block,
+.resume-item,
+.resume-exp-item,
+.resume-edu-item,
+.resume-proj-item,
+.resume-cert-item {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Links inside resume */
+.resume-page a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.resume-page a:hover {
+  text-decoration: underline;
+}
+
+/* Contact icons & badges */
+.contact-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.contact-item svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--primary-color);
+}
+
+/* Skill tags */
+.resume-skill-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  background-color: #f1f5f9;
+  color: #334155;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+}
+
+/* ============================================================
+   TEMPLATE 1: MODERN
+   Features: Dual-column clean layout with colored accent header/sidebar
+   ============================================================ */
+.modern-template {
+  display: flex;
+  flex-direction: column;
+  min-height: 297mm;
+}
+
+.modern-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #0f172a 100%);
+  color: #ffffff;
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.modern-header .profile-photo {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.modern-header .header-info {
+  flex: 1;
+}
+
+.modern-header h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px 0;
+  color: #ffffff;
+}
+
+.modern-header .job-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 12px;
+}
+
+.modern-header .contacts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.modern-header .contacts-row .contact-item {
+  color: rgba(255, 255, 255, 0.9);
+}
+.modern-header .contacts-row .contact-item svg {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.modern-body {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  padding: 28px 32px;
+  flex: 1;
+}
+
+.modern-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.modern-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border-left: 1px solid #f1f5f9;
+  padding-left: 20px;
+}
+
+.modern-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary-color);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 2px solid var(--primary-light);
+  padding-bottom: 4px;
+}
+
+/* ============================================================
+   TEMPLATE 2: PROFESSIONAL
+   Features: Classic executive top header, structured horizontal rules
+   ============================================================ */
+.professional-template {
+  padding: 36px 40px;
+  min-height: 297mm;
+  box-sizing: border-box;
+}
+
+.prof-header {
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.prof-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px 0;
+}
+
+.prof-header .job-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 12px;
+}
+
+.prof-header .contacts-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 12px;
+}
+
+.prof-header .profile-photo {
+  width: 90px;
+  height: 90px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid #e2e8f0;
+}
+
+.prof-section {
+  margin-bottom: 20px;
+}
+
+.prof-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary-color);
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+}
+
+.prof-timeline-item {
+  margin-bottom: 14px;
+}
+
+.prof-timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 2px;
+}
+
+.prof-item-title {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #0f172a;
+}
+
+.prof-item-subtitle {
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 12.5px;
+}
+
+.prof-item-date {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.prof-desc {
+  font-size: 12px;
+  color: #334155;
+  white-space: pre-line;
+  margin-top: 4px;
+  line-height: 1.55;
+}
+
+/* ============================================================
+   TEMPLATE 3: MINIMAL
+   Features: Clean typography, maximum whitespace, minimal accents
+   ============================================================ */
+.minimal-template {
+  padding: 40px 48px;
+  min-height: 297mm;
+  box-sizing: border-box;
+}
+
+.minimal-header {
+  text-align: center;
+  margin-bottom: 28px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.minimal-header h1 {
+  font-size: 30px;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.minimal-header .job-title {
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary-color);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.minimal-header .contacts-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 12px;
+}
+
+.minimal-section {
+  margin-bottom: 22px;
+}
+
+.minimal-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.minimal-section-title::after {
+  content: "";
+  display: block;
+  width: 24px;
+  height: 2px;
+  background-color: var(--primary-color);
+  margin-top: 4px;
+}
+
+/* Print Specific Rules */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  /* Hide Navbar, Footer, Form Controls, Toolbars, Toasts & All non-printable chrome */
+  nav,
+  footer,
+  .no-print,
+  .builder-topbar,
+  .builder-form-pane,
+  .preview-toolbar,
+  .mobile-view-toggle,
+  .toaster,
+  [data-sonner-toaster],
+  div[role="status"] {
+    display: none !important;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    width: 100% !important;
+    min-height: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Reset layout containers for printing */
+  .builder-container {
+    min-height: auto !important;
+    height: auto !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  .builder-main-split {
+    display: block !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    grid-template-columns: 1fr !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+
+  .builder-preview-pane {
+    display: block !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+  }
+
+  .resume-page-wrapper {
+    padding: 0 !important;
+    margin: 0 auto !important;
+    background: #ffffff !important;
+    display: block !important;
+    overflow: visible !important;
+    min-height: auto !important;
+  }
+
+  #resume-printable-area {
+    display: block !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    width: 210mm !important;
+  }
+
+  .resume-page {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    transform: none !important;
+    page-break-after: auto;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
