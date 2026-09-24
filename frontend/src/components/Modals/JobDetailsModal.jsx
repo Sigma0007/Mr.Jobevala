@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,9 +10,11 @@ import {
   CheckCircle,
   Loader2,
   Bookmark,
+  Flag,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { workModeType } from "../../Utility/utilites";
+import ReportJobModal from "./ReportJobModal";
 
 const RequirementItem = ({ text }) => (
   <motion.li
@@ -35,6 +37,7 @@ export default function JobDetailsModal({
   isSavedJobMode,
 }) {
   const navigate = useNavigate();
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   return (
     <AnimatePresence>
@@ -60,12 +63,30 @@ export default function JobDetailsModal({
             <div className="shrink-0 p-5 sm:p-8 border-b border-slate-100 bg-slate-50/50 relative overflow-hidden">
               <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
-              <button
-                onClick={() => setSelectedJob(null)}
-                className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 bg-white border border-slate-200 text-slate-500 rounded-full hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm z-20"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 z-20">
+                <button
+                  onClick={() => {
+                    const token = localStorage.getItem("token");
+                    if (!token) {
+                      toast.error("Please login to report this job");
+                      navigate("/login");
+                      return;
+                    }
+                    setIsReportModalOpen(true);
+                  }}
+                  className="p-2 bg-white border border-rose-200 text-rose-600 rounded-full hover:bg-rose-50 hover:text-rose-700 transition-colors shadow-sm"
+                  title="Report Job to Admin"
+                >
+                  <Flag className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => setSelectedJob(null)}
+                  className="p-2 bg-white border border-slate-200 text-slate-500 rounded-full hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
               <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 relative z-10 pr-8 sm:pr-12">
                 <img
@@ -198,6 +219,13 @@ export default function JobDetailsModal({
           </motion.div>
         </div>
       )}
+
+      {/* Report Job Modal */}
+      <ReportJobModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        job={selectedJob}
+      />
     </AnimatePresence>
   );
 }

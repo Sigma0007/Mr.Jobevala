@@ -434,6 +434,47 @@ const clearAllNotificationsApi = () => {
   return Auth(endpoint, {}, "DELETE");
 };
 
+// Job Report APIs
+const reportJob = (data = {}) => {
+  const endpoint = `/api/reports/job`;
+  return Auth(endpoint, data, "POST");
+};
+
+const checkJobReported = (jobId) => {
+  const endpoint = `/api/reports/check/${jobId}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getMyReports = () => {
+  const endpoint = `/api/reports/my-reports`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getAdminReports = (params = "") => {
+  const endpoint = `/api/reports/admin${params}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getAdminReportById = (id) => {
+  const endpoint = `/api/reports/admin/${id}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const updateAdminReport = (id, data = {}) => {
+  const endpoint = `/api/reports/admin/${id}`;
+  return Auth(endpoint, data, "PUT");
+};
+
+const deleteAdminReport = (id) => {
+  const endpoint = `/api/reports/admin/${id}`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
+const deleteReportedJob = (id) => {
+  const endpoint = `/api/reports/admin/${id}/delete-job`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -520,4 +561,12 @@ export default {
   markAllNotificationsAsRead,
   deleteNotificationApi,
   clearAllNotificationsApi,
+  reportJob,
+  checkJobReported,
+  getMyReports,
+  getAdminReports,
+  getAdminReportById,
+  updateAdminReport,
+  deleteAdminReport,
+  deleteReportedJob,
 };

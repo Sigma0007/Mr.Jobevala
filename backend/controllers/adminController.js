@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Job from "../models/Job.js";
 import Application from "../models/Application.js";
 import CompanyProfile from "../models/CompanyProfile.js";
+import JobReport from "../models/JobReport.js";
 import AppError from "../utils/AppError.js";
 
 // @desc    Get platform statistics
@@ -13,6 +14,8 @@ export const getPlatformStats = async (req, res, next) => {
         const totalJobs = await Job.countDocuments();
         const totalApplications = await Application.countDocuments();
         const totalCompanies = await CompanyProfile.countDocuments();
+        const totalReports = await JobReport.countDocuments();
+        const pendingReports = await JobReport.countDocuments({ status: "pending" });
 
         res.status(200).json({
             success: true,
@@ -21,6 +24,8 @@ export const getPlatformStats = async (req, res, next) => {
                 totalJobs,
                 totalApplications,
                 totalCompanies,
+                totalReports,
+                pendingReports,
             },
         });
     } catch (error) {

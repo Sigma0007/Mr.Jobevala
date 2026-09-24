@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import api from "../../customer/customerservice";
-import { Users, Briefcase, FileText, Building } from "lucide-react";
+import { Users, Briefcase, FileText, Building, ShieldAlert } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { setDashboardActiveTab } from "../../Redux/Dashboard/DashboardAction";
 
 const AdminOverview = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -50,6 +53,7 @@ const AdminOverview = () => {
       icon: Users,
       color: "text-blue-600",
       bg: "bg-blue-100",
+      tab: "users",
     },
     {
       title: "Total Jobs",
@@ -57,6 +61,7 @@ const AdminOverview = () => {
       icon: Briefcase,
       color: "text-purple-600",
       bg: "bg-purple-100",
+      tab: "jobs",
     },
     {
       title: "Applications",
@@ -64,6 +69,7 @@ const AdminOverview = () => {
       icon: FileText,
       color: "text-emerald-600",
       bg: "bg-emerald-100",
+      tab: "overview",
     },
     {
       title: "Companies",
@@ -71,26 +77,47 @@ const AdminOverview = () => {
       icon: Building,
       color: "text-amber-600",
       bg: "bg-amber-100",
+      tab: "users",
+    },
+    {
+      title: "Job Complaints & Reports",
+      value: stats.totalReports || 0,
+      subValue:
+        stats.pendingReports > 0 ? `${stats.pendingReports} pending` : null,
+      icon: ShieldAlert,
+      color: "text-rose-600",
+      bg: "bg-rose-100",
+      tab: "reports",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
       {statCards.map((stat, index) => {
         const Icon = stat.icon;
         return (
           <div
             key={index}
-            className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4"
+            onClick={() => stat.tab && dispatch(setDashboardActiveTab(stat.tab))}
+            className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs flex items-center space-x-4 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer"
           >
-            <div className={`p-4 rounded-xl ${stat.bg} ${stat.color}`}>
-              <Icon size={28} />
+            <div className={`p-3.5 rounded-xl ${stat.bg} ${stat.color} shrink-0`}>
+              <Icon size={24} />
             </div>
-            <div>
-              <p className="text-sm font-medium text-slate-500">{stat.title}</p>
-              <h3 className="text-2xl font-bold text-slate-900">
-                {stat.value}
-              </h3>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-slate-500 truncate">
+                {stat.title}
+              </p>
+              <div className="flex items-baseline gap-2 mt-0.5">
+                <h3 className="text-2xl font-bold text-slate-900">
+                  {stat.value}
+                </h3>
+                {stat.subValue && (
+                  <span className="text-[11px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100 truncate">
+                    {stat.subValue}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         );

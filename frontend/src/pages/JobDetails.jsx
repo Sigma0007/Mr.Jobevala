@@ -27,10 +27,12 @@ import {
   Award,
   Layers,
   Check,
+  Flag,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import customerservice from "../customer/customerservice";
 import ApplyJobModal from "../components/Modals/ApplyJobModal";
+import ReportJobModal from "../components/Modals/ReportJobModal";
 import { IndustryType, workModeType, BENEFITS } from "../Utility/utilites";
 import { useSelector } from "react-redux";
 
@@ -61,8 +63,19 @@ export default function JobDetails() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [similarJobs, setSimilarJobs] = useState([]);
   const [copied, setCopied] = useState(false);
+
+  const handleReportClick = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login to report this job post");
+      navigate("/login");
+      return;
+    }
+    setIsReportModalOpen(true);
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -352,6 +365,14 @@ export default function JobDetails() {
                 ) : (
                   <Share2 className="w-5 h-5" />
                 )}
+              </button>
+
+              <button
+                onClick={handleReportClick}
+                className="p-3.5 rounded-2xl border border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 transition-all shadow-xs"
+                title="Report Job to Admin"
+              >
+                <Flag className="w-5 h-5" />
               </button>
 
               <button
@@ -673,18 +694,26 @@ export default function JobDetails() {
             )}
 
             {/* Candidate Safety Notice */}
-            <div className="p-5 rounded-2xl bg-amber-50/60 border border-amber-200/80 flex items-start gap-3.5 text-amber-900">
-              <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <div className="text-xs sm:text-sm space-y-1">
-                <span className="font-bold block">
-                  Job Seeker Safety Advisory
-                </span>
-                <p className="text-amber-800 leading-relaxed">
-                  Never pay any security deposit, registration fee, or interview
-                  charge. Verified employers will never request money for
-                  application processing.
-                </p>
+            <div className="p-5 rounded-2xl bg-amber-50/60 border border-amber-200/80 flex items-start justify-between gap-3.5 text-amber-900 flex-col sm:flex-row">
+              <div className="flex items-start gap-3.5">
+                <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="text-xs sm:text-sm space-y-1">
+                  <span className="font-bold block">
+                    Job Seeker Safety Advisory
+                  </span>
+                  <p className="text-amber-800 leading-relaxed">
+                    Never pay any security deposit, registration fee, or interview
+                    charge. Verified employers will never request money for
+                    application processing.
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={handleReportClick}
+                className="shrink-0 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-1.5 self-end sm:self-center bg-white px-3 py-1.5 rounded-xl border border-rose-200 shadow-xs cursor-pointer"
+              >
+                <Flag className="w-3.5 h-3.5" /> Report Job
+              </button>
             </div>
           </div>
 
@@ -751,7 +780,7 @@ export default function JobDetails() {
               <div className="pt-4 space-y-3">
                 <button
                   onClick={handleApplyClick}
-                  className="w-full py-3.5 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-[0_4px_20px_0_rgb(37,99,235,0.3)] hover:shadow-[0_6px_25px_0_rgb(37,99,235,0.4)] transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3.5 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-[0_4px_20px_0_rgb(37,99,235,0.3)] hover:shadow-[0_6px_25px_0_rgb(37,99,235,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Send className="w-4 h-4" /> Apply Now
                 </button>
@@ -759,10 +788,18 @@ export default function JobDetails() {
                 <button
                   onClick={handleSaveJob}
                   disabled={isSaving || isSaved}
-                  className="w-full py-3 px-6 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-2xl border border-slate-200 transition-all flex items-center justify-center gap-2 text-sm"
+                  className="w-full py-3 px-6 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-2xl border border-slate-200 transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
                 >
                   <Bookmark className="w-4 h-4 text-slate-400" />
                   {isSaved ? "Saved to Shortlist" : "Save For Later"}
+                </button>
+
+                <button
+                  onClick={handleReportClick}
+                  className="w-full py-2.5 px-4 bg-transparent hover:bg-rose-50 text-rose-600 font-semibold rounded-xl border border-dashed border-rose-200 hover:border-rose-300 transition-all flex items-center justify-center gap-2 text-xs cursor-pointer"
+                >
+                  <Flag className="w-3.5 h-3.5" />
+                  <span>Report Suspicious / Fake Job</span>
                 </button>
               </div>
             </motion.div>
@@ -841,6 +878,13 @@ export default function JobDetails() {
         onClose={() => setIsApplyModalOpen(false)}
         job={job}
         onSubmit={handleApplySubmit}
+      />
+
+      {/* Report Job Modal */}
+      <ReportJobModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        job={job}
       />
     </div>
   );

@@ -6,6 +6,7 @@ import AdminCategoriesList from "./AdminCategoriesList";
 import AdminLocationsList from "./AdminLocationsList";
 import AdminPlansList from "./AdminPlansList";
 import AdminSubscriptionsList from "./AdminSubscriptionsList";
+import AdminReportsList from "./AdminReportsList";
 import {
   LayoutDashboard,
   Users,
@@ -14,6 +15,7 @@ import {
   MapPin,
   CreditCard,
   Crown,
+  ShieldAlert,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { setDashboardActiveTab } from "../../Redux/Dashboard/DashboardAction";
@@ -24,6 +26,7 @@ const AdminDashboard = () => {
 
   const tabs = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
+    { id: "reports", label: "Job Reports & Fraud", icon: ShieldAlert },
     { id: "subscriptions", label: "Subscriptions & Billing", icon: Crown },
     { id: "plans", label: "Manage Plans", icon: CreditCard },
     { id: "users", label: "Manage Users", icon: Users },
@@ -39,8 +42,8 @@ const AdminDashboard = () => {
           Admin Control Center
         </h1>
         <p className="text-slate-600 mt-2">
-          Platform metrics, subscriptions & transactions, pricing plans,
-          categories, jobs, users, and location hierarchy.
+          Platform metrics, spam/fraud complaints & job reports, subscriptions,
+          pricing plans, categories, jobs, users, and locations.
         </p>
       </div>
 
@@ -67,6 +70,7 @@ const AdminDashboard = () => {
 
       <div className="min-h-[500px]">
         {dashboardActiveTab === "overview" && <AdminOverview />}
+        {dashboardActiveTab === "reports" && <AdminReportsList />}
         {dashboardActiveTab === "subscriptions" && <AdminSubscriptionsList />}
         {dashboardActiveTab === "plans" && <AdminPlansList />}
         {dashboardActiveTab === "users" && <AdminUsersList />}

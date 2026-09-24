@@ -27,9 +27,11 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
+  Flag,
 } from "lucide-react";
 import customerservice from "../customer/customerservice";
 import toast from "react-hot-toast";
+import ReportJobModal from "../components/Modals/ReportJobModal";
 import { useSelector } from "react-redux";
 import { BENEFITS, formatCTC, IndustryType } from "../Utility/utilites";
 
@@ -47,6 +49,7 @@ export default function UserAppliedJobDetail() {
   const [error, setError] = useState("");
   const [copiedCoverLetter, setCopiedCoverLetter] = useState(false);
   const [copiedShareLink, setCopiedShareLink] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   useEffect(() => {
     fetchApplicationDetails();
@@ -345,6 +348,13 @@ export default function UserAppliedJobDetail() {
               title="Print Application Summary"
             >
               <Printer className="w-3.5 h-3.5" /> Print
+            </button>
+            <button
+              onClick={() => setIsReportModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-xl border border-rose-200 transition shadow-sm cursor-pointer"
+              title="Report this job posting to Admin"
+            >
+              <Flag className="w-3.5 h-3.5" /> Report Job
             </button>
           </div>
         </div>
@@ -1034,9 +1044,34 @@ export default function UserAppliedJobDetail() {
                 Go to Candidate Dashboard
               </button>
             </div>
+
+            {/* --- Job Reporting & Safety Advisory Card --- */}
+            <div className="bg-amber-50/70 border border-amber-200/80 rounded-3xl p-5 text-amber-950 space-y-3">
+              <div className="flex items-center gap-2 text-amber-700 text-xs font-bold uppercase tracking-wider">
+                <AlertCircle className="w-4 h-4" />
+                <span>Candidate Safety Advisory</span>
+              </div>
+              <p className="text-xs text-amber-900 leading-relaxed">
+                Did the employer ask for money, provide fraudulent details, or send suspicious links? Let our admin know immediately.
+              </p>
+              <button
+                onClick={() => setIsReportModalOpen(true)}
+                className="w-full py-2.5 bg-white hover:bg-rose-50 text-rose-700 rounded-xl text-xs font-bold border border-rose-200 transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Flag className="w-3.5 h-3.5" />
+                <span>Report Job / Employer to Admin</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Report Job Modal */}
+      <ReportJobModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        job={job}
+      />
     </div>
   );
 }
