@@ -3,11 +3,14 @@ import api from "../../customer/customerservice";
 import { Trash2, ExternalLink, Eye, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { workModeType } from "../../Utility/utilites";
+import DeleteJobConfirmModal from "./DeleteJobConfirmModal";
 
 const AdminJobsList = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [deleteTargetJob, setDeleteTargetJob] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchJobs = async () => {
     try {
@@ -29,25 +32,37 @@ const AdminJobsList = () => {
     fetchJobs();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this job? All related applications will also be removed.",
-      )
-    )
-      return;
+  const handleOpenDeleteModal = (job) => {
+    setDeleteTargetJob(job);
+  };
 
+  const handleConfirmDelete = async (reason) => {
+    if (!deleteTargetJob) return;
+
+    setIsDeleting(true);
     try {
-      const response = await api.deleteAdminJob(id);
-      const data = response.data;
+      const response = await api.deleteAdminJob(deleteTargetJob._id, {
+        reason: reason.trim(),
+      });
+      const data = response;
 
       if (data.success) {
-        toast.success(data.message);
-        setJobs(jobs.filter((job) => job._id !== id));
+        toast.success(
+          data.message || "Job deleted and employer notified with reason"
+        );
+        setJobs(jobs.filter((job) => job._id !== deleteTargetJob._id));
+        setDeleteTargetJob(null);
+        if (selectedJob && selectedJob._id === deleteTargetJob._id) {
+          setSelectedJob(null);
+        }
+      } else {
+        toast.error(data.message || "Failed to delete job.");
       }
     } catch (error) {
       console.error("Error deleting job:", error);
       toast.error(error.response?.data?.message || "Failed to delete job.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -107,9 +122,9 @@ const AdminJobsList = () => {
                         <Eye size={18} />
                       </button>
                       <button
-                        onClick={() => handleDelete(job._id)}
-                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete Job"
+                        onClick={() => handleOpenDeleteModal(job)}
+                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        title="Delete Job Post & Notify Employer"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -261,6 +276,17 @@ const AdminJobsList = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation & Reason Modal */}
+      <DeleteJobConfirmModal
+        isOpen={!!deleteTargetJob}
+        onClose={() => setDeleteTargetJob(null)}
+        jobTitle={deleteTargetJob?.title}
+        companyName={deleteTargetJob?.companyProfile?.companyName}
+        providerEmail={deleteTargetJob?.provider?.email}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 };

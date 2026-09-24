@@ -113,13 +113,48 @@ export const deleteJob = async (req, res, next) => {
             return next(new AppError("Job not found", 404));
         }
 
+        const deletionReason =
+            req.body?.reason ||
+            req.query?.reason ||
+            "Job post removed by administrator due to platform compliance or content guidelines.";
+
+        // Send notification to the provider
+        if (job.provider) {
+            await createAndSendNotification({
+                recipient: job.provider,
+                sender: req.user._id,
+                title: "Job Post Removed by Admin",
+                message: `Your job posting "${job.title}" has been deleted by platform administrators. Reason: ${deletionReason}`,
+                type: "job",
+                link: "/provider/dashboard",
+                data: {
+                    jobId: job._id,
+                    jobTitle: job.title,
+                    reason: deletionReason,
+                    deletedAt: new Date(),
+                },
+            });
+        }
+
         await Job.findByIdAndDelete(req.params.id);
         
         await Application.deleteMany({ job: req.params.id });
 
+        // Also update any pending reports for this job as resolved
+        await JobReport.updateMany(
+            { job: req.params.id, status: { $in: ["pending", "investigating"] } },
+            {
+                status: "resolved",
+                actionTaken: "job_removed",
+                adminNotes: `Job deleted by Admin: ${deletionReason}`,
+                reviewedBy: req.user._id,
+                reviewedAt: new Date(),
+            }
+        );
+
         res.status(200).json({
             success: true,
-            message: "Job deleted successfully",
+            message: "Job deleted successfully and employer has been notified with the reason",
         });
     } catch (error) {
         next(new AppError("Error deleting job", 500));

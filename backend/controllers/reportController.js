@@ -2,6 +2,7 @@ import JobReport from "../models/JobReport.js";
 import Job from "../models/Job.js";
 import Application from "../models/Application.js";
 import AppError from "../utils/AppError.js";
+import { createAndSendNotification } from "../utils/notificationService.js";
 
 // @desc    Submit a report/complaint for a job post
 // @route   POST /api/reports/job
@@ -281,7 +282,29 @@ export const updateReportStatusAdmin = async (req, res, next) => {
             if (report.job) {
                 const job = await Job.findById(report.job);
                 if (job) {
-                    if (closeOrDeleteJob === "delete") {
+                    const deletionReason =
+                        adminNotes ||
+                        req.body.reason ||
+                        "Job post violated platform policies, standards, or was flagged as fraudulent/spam.";
+
+                    if (job.provider) {
+                        await createAndSendNotification({
+                            recipient: job.provider,
+                            sender: req.user._id,
+                            title: "Job Posting Removed by Admin",
+                            message: `Your job posting "${job.title}" has been deleted by platform administrators. Reason: ${deletionReason}`,
+                            type: "job",
+                            link: "/provider/dashboard",
+                            data: {
+                                jobId: job._id,
+                                jobTitle: job.title,
+                                reason: deletionReason,
+                                deletedAt: new Date(),
+                            },
+                        });
+                    }
+
+                    if (closeOrDeleteJob === "delete" || actionTaken === "job_removed") {
                         await Job.findByIdAndDelete(report.job);
                         await Application.deleteMany({ job: report.job });
                     } else {
@@ -358,26 +381,73 @@ export const deleteReportedJobAdmin = async (req, res, next) => {
             return next(new AppError("Report not found", 404));
         }
 
+        const deletionReason =
+            req.body?.reason ||
+            req.query?.reason ||
+            "Job post was reported and removed by admin for violating platform rules or fraudulent/spam activity.";
+
+        let deletedJobTitle = "Job Post";
+
         if (report.job) {
-            await Job.findByIdAndDelete(report.job);
-            await Application.deleteMany({ job: report.job });
+            const job = await Job.findById(report.job);
+            if (job) {
+                deletedJobTitle = job.title;
+
+                // Send notification to the provider with the specific reason
+                if (job.provider) {
+                    await createAndSendNotification({
+                        recipient: job.provider,
+                        sender: req.user._id,
+                        title: "Job Post Removed by Admin",
+                        message: `Your job post "${job.title}" has been deleted by platform administrators. Reason: ${deletionReason}`,
+                        type: "job",
+                        link: "/provider/dashboard",
+                        data: {
+                            jobId: job._id,
+                            jobTitle: job.title,
+                            reason: deletionReason,
+                            deletedAt: new Date(),
+                        },
+                    });
+                }
+
+                await Job.findByIdAndDelete(report.job);
+                await Application.deleteMany({ job: report.job });
+            }
+        }
+
+        // Send resolution notification to the reporter
+        if (report.reporter) {
+            await createAndSendNotification({
+                recipient: report.reporter,
+                sender: req.user._id,
+                title: "Report Status: Job Removed",
+                message: `Thank you for your report. The job post "${deletedJobTitle}" has been investigated and permanently removed from the platform.`,
+                type: "system",
+                link: "/user/dashboard",
+                data: {
+                    reportId: report._id,
+                    jobTitle: deletedJobTitle,
+                    status: "resolved",
+                },
+            });
         }
 
         report.status = "resolved";
         report.actionTaken = "job_removed";
         report.adminNotes = report.adminNotes
-            ? `${report.adminNotes} | Job removed by Admin on ${new Date().toLocaleDateString()}`
-            : `Job removed by Admin on ${new Date().toLocaleDateString()}`;
+            ? `${report.adminNotes} | Reason: ${deletionReason} (Removed by Admin on ${new Date().toLocaleDateString()})`
+            : `Reason: ${deletionReason} (Removed by Admin on ${new Date().toLocaleDateString()})`;
         report.reviewedBy = req.user._id;
         report.reviewedAt = new Date();
         await report.save();
 
         res.status(200).json({
             success: true,
-            message: "Reported job deleted and report marked as resolved",
+            message: `Reported job deleted and provider notified with reason: "${deletionReason}"`,
             report,
         });
     } catch (error) {
-        next(new AppError("Error deleting reported job", 500));
+        next(new AppError(error.message || "Error deleting reported job", 500));
     }
 };

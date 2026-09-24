@@ -203,9 +203,9 @@ const getAdminJobs = () => {
   return Auth(endpoint, {}, "GET");
 };
 
-const deleteAdminJob = (id) => {
+const deleteAdminJob = (id, data = {}) => {
   const endpoint = `/api/admin/jobs/${id}`;
-  return Auth(endpoint, {}, "DELETE");
+  return Auth(endpoint, data, "DELETE");
 };
 
 // --- Category APIs ---
@@ -470,9 +470,9 @@ const deleteAdminReport = (id) => {
   return Auth(endpoint, {}, "DELETE");
 };
 
-const deleteReportedJob = (id) => {
+const deleteReportedJob = (id, data = {}) => {
   const endpoint = `/api/reports/admin/${id}/delete-job`;
-  return Auth(endpoint, {}, "DELETE");
+  return Auth(endpoint, data, "DELETE");
 };
 
 export default {

@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { workModeType } from "../../Utility/utilites";
+import DeleteJobConfirmModal from "./DeleteJobConfirmModal";
 
 const REASON_LABELS = {
   fraud: {
@@ -104,6 +105,8 @@ export default function AdminReportsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReport, setSelectedReport] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [deleteTargetReport, setDeleteTargetReport] = useState(null);
+  const [isDeletingJob, setIsDeletingJob] = useState(false);
 
   // Modal editing state
   const [editStatus, setEditStatus] = useState("pending");
@@ -174,22 +177,26 @@ export default function AdminReportsList() {
     }
   };
 
-  const handleDeleteJob = async (reportId) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to permanently delete this reported job? All job applications will also be deleted, and the report will be marked as Resolved."
-      )
-    ) {
-      return;
-    }
+  const handleOpenDeleteModal = (report) => {
+    setDeleteTargetReport(report);
+  };
 
+  const handleConfirmDeleteJob = async (reason) => {
+    if (!deleteTargetReport) return;
+
+    setIsDeletingJob(true);
     try {
-      const res = await customerservice.deleteReportedJob(reportId);
+      const res = await customerservice.deleteReportedJob(deleteTargetReport._id, {
+        reason: reason.trim(),
+      });
       if (res?.success) {
-        toast.success("Job permanently removed and report marked as resolved");
-        if (selectedReport && selectedReport._id === reportId) {
+        toast.success(
+          "Job permanently removed and provider notified with reason!"
+        );
+        if (selectedReport && selectedReport._id === deleteTargetReport._id) {
           setSelectedReport(null);
         }
+        setDeleteTargetReport(null);
         fetchReports();
       } else {
         toast.error(res?.message || "Failed to remove reported job");
@@ -197,6 +204,8 @@ export default function AdminReportsList() {
     } catch (err) {
       console.error("Error deleting reported job:", err);
       toast.error(err?.message || "Failed to remove job");
+    } finally {
+      setIsDeletingJob(false);
     }
   };
 
@@ -519,9 +528,9 @@ export default function AdminReportsList() {
 
                           {!isJobDeleted && (
                             <button
-                              onClick={() => handleDeleteJob(report._id)}
+                              onClick={() => handleOpenDeleteModal(report)}
                               className="p-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold text-xs transition cursor-pointer"
-                              title="Delete Spam Job"
+                              title="Delete Job Post & Notify Employer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -871,7 +880,7 @@ export default function AdminReportsList() {
                     {selectedReport.job && (
                       <button
                         type="button"
-                        onClick={() => handleDeleteJob(selectedReport._id)}
+                        onClick={() => handleOpenDeleteModal(selectedReport)}
                         className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -911,6 +920,17 @@ export default function AdminReportsList() {
           </div>
         </div>
       )}
+
+      {/* Delete & Notify Confirmation Modal */}
+      <DeleteJobConfirmModal
+        isOpen={!!deleteTargetReport}
+        onClose={() => setDeleteTargetReport(null)}
+        jobTitle={deleteTargetReport?.job?.title}
+        companyName={deleteTargetReport?.job?.companyProfile?.companyName}
+        providerEmail={deleteTargetReport?.job?.provider?.email}
+        onConfirm={handleConfirmDeleteJob}
+        isDeleting={isDeletingJob}
+      />
     </div>
   );
 }
