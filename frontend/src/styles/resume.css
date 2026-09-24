@@ -356,10 +356,18 @@
   margin-top: 4px;
 }
 
-/* Print Specific Rules */
+/* Print Specific Rules & Multi-page Margin Handling */
 @page {
   size: A4 portrait;
-  margin: 0;
+  margin-top: 14mm;
+  margin-bottom: 14mm;
+  margin-left: 0mm;
+  margin-right: 0mm;
+}
+
+@page :first {
+  margin-top: 0mm;
+  margin-bottom: 14mm;
 }
 
 @media print {

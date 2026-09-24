@@ -100,10 +100,6 @@ export default function UserAppliedJobDetail() {
     setTimeout(() => setCopiedShareLink(false), 2500);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen pt-28 pb-16 bg-slate-50 flex flex-col items-center justify-center">
@@ -341,13 +337,6 @@ export default function UserAppliedJobDetail() {
                 <Share2 className="w-3.5 h-3.5" />
               )}
               Share
-            </button>
-            <button
-              onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition shadow-sm"
-              title="Print Application Summary"
-            >
-              <Printer className="w-3.5 h-3.5" /> Print
             </button>
             <button
               onClick={() => setIsReportModalOpen(true)}
@@ -1052,7 +1041,8 @@ export default function UserAppliedJobDetail() {
                 <span>Candidate Safety Advisory</span>
               </div>
               <p className="text-xs text-amber-900 leading-relaxed">
-                Did the employer ask for money, provide fraudulent details, or send suspicious links? Let our admin know immediately.
+                Did the employer ask for money, provide fraudulent details, or
+                send suspicious links? Let our admin know immediately.
               </p>
               <button
                 onClick={() => setIsReportModalOpen(true)}

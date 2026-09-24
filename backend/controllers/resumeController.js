@@ -60,7 +60,15 @@ export const generateResumePdf = async (req, res) => {
 
             @page {
               size: A4 portrait;
-              margin: 0;
+              margin-top: 14mm;
+              margin-bottom: 14mm;
+              margin-left: 0mm;
+              margin-right: 0mm;
+            }
+
+            @page :first {
+              margin-top: 0mm;
+              margin-bottom: 14mm;
             }
 
             * {
