@@ -17,6 +17,7 @@ import subscriptionRoutes from "./routes/subscriptionRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import resumeRoutes from "./routes/resumeRoutes.js";
+import postRoutes from "./routes/postRoutes.js";
 
 import { errorHandler } from "./middleware/errorMiddleware.js";
 
@@ -61,6 +62,7 @@ app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/resume", resumeRoutes);
+app.use("/api/posts", postRoutes);
 
 app.use(errorHandler);
 

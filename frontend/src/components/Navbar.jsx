@@ -17,6 +17,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", href: "/", protected: false },
     { name: "Find Jobs", href: "/jobs", protected: false },
+    { name: "Community Feed", href: "/feed", protected: false },
     { name: "Find Candidates", href: "/candidates", protected: true },
     { name: "Resume Builder", href: "/resume", protected: false },
     { name: "Pricing & Plans", href: "/pricing", protected: false },

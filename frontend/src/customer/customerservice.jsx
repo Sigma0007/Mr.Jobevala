@@ -475,6 +475,42 @@ const deleteReportedJob = (id, data = {}) => {
   return Auth(endpoint, data, "DELETE");
 };
 
+// Posts & Community Feed
+const getAllPosts = (params = "") => {
+  const endpoint = `/api/posts${params}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getMyPosts = () => {
+  const endpoint = "/api/posts/my-posts";
+  return Auth(endpoint, {}, "GET");
+};
+
+const getPostById = (id) => {
+  const endpoint = `/api/posts/${id}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const createPost = (data, isFormData = false) => {
+  const endpoint = "/api/posts";
+  return Auth(endpoint, data, "POST", isFormData);
+};
+
+const toggleLikePost = (id) => {
+  const endpoint = `/api/posts/${id}/like`;
+  return Auth(endpoint, {}, "POST");
+};
+
+const sharePost = (id) => {
+  const endpoint = `/api/posts/${id}/share`;
+  return Auth(endpoint, {}, "POST");
+};
+
+const deletePost = (id) => {
+  const endpoint = `/api/posts/${id}`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -569,4 +605,11 @@ export default {
   updateAdminReport,
   deleteAdminReport,
   deleteReportedJob,
+  getAllPosts,
+  getMyPosts,
+  getPostById,
+  createPost,
+  toggleLikePost,
+  sharePost,
+  deletePost,
 };

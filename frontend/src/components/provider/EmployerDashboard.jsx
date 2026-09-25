@@ -5,6 +5,7 @@ import {
   PlusCircle,
   Users,
   CreditCard,
+  Sparkles,
 } from "lucide-react";
 import React, { useState } from "react";
 import EmployerJobs from "./EmployerJobs";
@@ -12,6 +13,7 @@ import EmployerPostJob from "./EmployerPostJob";
 import EmployerProfile from "./EmployerProfile";
 import EmployerApplicants from "./EmployerApplicants";
 import EmployerOverview from "./EmployerOverview";
+import EmployerPosts from "./EmployerPosts";
 import PaymentHistory from "../../pages/PaymentHistory";
 import { useDispatch, useSelector } from "react-redux";
 import { setDashboardActiveTab } from "../../Redux/Dashboard/DashboardAction";
@@ -27,6 +29,7 @@ const EmployerDashboard = () => {
     { id: "jobs", name: "View All Jobs", icon: Briefcase },
     { id: "applicants", name: "Applicants", icon: Users },
     { id: "post-job", name: "Create Job", icon: PlusCircle },
+    { id: "posts", name: "Company Posts", icon: Sparkles },
     { id: "profile", name: "Company Profile", icon: Building2 },
     { id: "billing", name: "Billing & Receipts", icon: CreditCard },
   ];
@@ -75,6 +78,7 @@ const EmployerDashboard = () => {
             {dashboardActiveTab === "jobs" && <EmployerJobs />}
             {dashboardActiveTab === "applicants" && <EmployerApplicants />}
             {dashboardActiveTab === "post-job" && <EmployerPostJob />}
+            {dashboardActiveTab === "posts" && <EmployerPosts />}
             {dashboardActiveTab === "profile" && <EmployerProfile />}
             {dashboardActiveTab === "billing" && <PaymentHistory />}
           </div>
