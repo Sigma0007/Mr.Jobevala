@@ -427,6 +427,7 @@ const AdminPlansList = () => {
                       {/* Quota Limits Preview */}
                       {(Number(plan.directMessagesLimit) > 0 ||
                         Number(plan.jobPostsLimit) > 0 ||
+                        Number(plan.companyPostsLimit) > 0 ||
                         Number(plan.unlockContactsLimit) > 0) && (
                         <div className="flex flex-wrap gap-1.5 mt-3">
                           {Number(plan.directMessagesLimit) > 0 && (
@@ -438,7 +439,13 @@ const AdminPlansList = () => {
                           {Number(plan.jobPostsLimit) > 0 && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 text-[10px] font-semibold border border-blue-100">
                               <Briefcase className="w-2.5 h-2.5" />
-                              {plan.jobPostsLimit} Posts
+                              {plan.jobPostsLimit} Jobs
+                            </span>
+                          )}
+                          {Number(plan.companyPostsLimit) > 0 && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-purple-50 text-purple-700 text-[10px] font-semibold border border-purple-100">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              {plan.companyPostsLimit} Company Posts
                             </span>
                           )}
                           {Number(plan.unlockContactsLimit) > 0 && (

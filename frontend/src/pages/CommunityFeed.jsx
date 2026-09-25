@@ -8,14 +8,14 @@ import {
   Clock,
   ExternalLink,
   PlusCircle,
-  MessageSquare,
-  TrendingUp,
   Flame,
-  CheckCircle2,
   Trash2,
   X,
   Maximize2,
   Image as ImageIcon,
+  Send,
+  AlertCircle,
+  Eye,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -26,7 +26,6 @@ import { setDashboardActiveTab } from "../Redux/Dashboard/DashboardAction";
 
 export default function CommunityFeed() {
   const { user } = useSelector((state) => state.auth);
-  console.log("user", user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -39,9 +38,48 @@ export default function CommunityFeed() {
   const [sharingPostId, setSharingPostId] = useState(null);
   const [deleteModalPostId, setDeleteModalPostId] = useState(null);
 
+  // Provider Post Creation State (Modal & Composer)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [postDescription, setPostDescription] = useState("");
+  const [postImageFile, setPostImageFile] = useState(null);
+  const [postImagePreview, setPostImagePreview] = useState("");
+  const [submittingPost, setSubmittingPost] = useState(false);
+  const [companyProfile, setCompanyProfile] = useState(null);
+  const [subscription, setSubscription] = useState(null);
+  const [subLoading, setSubLoading] = useState(false);
+
   useEffect(() => {
     fetchPosts();
-  }, []);
+    if (user?.role === "provider") {
+      fetchCompanyProfileData();
+      fetchSubscriptionData();
+    }
+  }, [user]);
+
+  const fetchSubscriptionData = async () => {
+    try {
+      setSubLoading(true);
+      const res = await customerservice.getCurrentSubscription();
+      if (res?.success) {
+        setSubscription(res.activeSubscription || res.data || null);
+      }
+    } catch (err) {
+      console.warn("Could not fetch employer subscription:", err);
+    } finally {
+      setSubLoading(false);
+    }
+  };
+
+  const fetchCompanyProfileData = async () => {
+    try {
+      const res = await customerservice.getCompanyProfile();
+      if (res?.success && res?.data) {
+        setCompanyProfile(res.data);
+      }
+    } catch (e) {
+      console.warn("Could not fetch company profile details:", e);
+    }
+  };
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -58,7 +96,94 @@ export default function CommunityFeed() {
     }
   };
 
-  // Toggle Like Handler
+  // Handle Post Creation File Change
+  const handlePostImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (JPG, PNG, WEBP, GIF)");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image file size cannot exceed 10MB");
+      return;
+    }
+
+    setPostImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPostImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePostImage = () => {
+    setPostImageFile(null);
+    setPostImagePreview("");
+  };
+
+  // Submit New Employer Post
+  const handleSubmitPost = async (e) => {
+    e.preventDefault();
+
+    if (user?.role !== "provider" && user?.role !== "admin") {
+      toast.error("Only registered employers can publish company posts.");
+      return;
+    }
+
+    const descTrimmed = postDescription.trim();
+    if (!descTrimmed && !postImageFile) {
+      toast.error("Please add either a description or an image to share your company post.");
+      return;
+    }
+
+    if (descTrimmed.length > 3000) {
+      toast.error("Post description cannot exceed 3000 characters.");
+      return;
+    }
+
+    setSubmittingPost(true);
+    try {
+      let res;
+      if (postImageFile) {
+        const formData = new FormData();
+        formData.append("description", descTrimmed);
+        formData.append("image", postImageFile);
+        res = await customerservice.createPost(formData, true);
+      } else {
+        res = await customerservice.createPost({
+          description: descTrimmed,
+        });
+      }
+
+      if (res?.success) {
+        toast.success("Company post published to community! 🎉");
+        setPostDescription("");
+        setPostImageFile(null);
+        setPostImagePreview("");
+        setIsCreateModalOpen(false);
+        fetchPosts();
+        if (user?.role === "provider") {
+          fetchSubscriptionData();
+        }
+      } else {
+        toast.error(res?.message || "Failed to publish company post");
+      }
+    } catch (error) {
+      console.error("Error creating post:", error);
+      const errMsg =
+        error?.response?.data?.message ||
+        error.message ||
+        "Something went wrong while publishing the post.";
+      toast.error(errMsg);
+    } finally {
+      setSubmittingPost(false);
+    }
+  };
+
+  // Toggle Like Handler (Available to both Users and Providers)
   const handleToggleLike = async (postId) => {
     if (!user) {
       toast.error("Please sign in to like this post");
@@ -86,7 +211,6 @@ export default function CommunityFeed() {
     try {
       const res = await customerservice.toggleLikePost(postId);
       if (!res?.success) {
-        // Revert if error
         fetchPosts();
       }
     } catch (error) {
@@ -100,7 +224,6 @@ export default function CommunityFeed() {
     const postUrl = `${window.location.origin}/feed#post-${post._id}`;
     setSharingPostId(post._id);
 
-    // Call API to increment sharesCount
     try {
       await customerservice.sharePost(post._id);
       setPosts((prev) =>
@@ -114,11 +237,14 @@ export default function CommunityFeed() {
       console.error("Error incrementing share:", e);
     }
 
-    // Trigger Web Share API if supported, or copy link
+    const shareTitle =
+      post?.companyProfile?.companyName ||
+      "JobPortal Company Post";
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${post?.companyProfile?.companyName} on JobPortal`,
+          title: shareTitle,
           text: post.description
             ? post.description.slice(0, 100) + "..."
             : "Check out this update on JobPortal!",
@@ -142,7 +268,7 @@ export default function CommunityFeed() {
     toast.success("Post link copied to clipboard!");
   };
 
-  // Delete Handler
+  // Delete Handler (Employer Owner or Admin)
   const handleDeletePost = async (postId) => {
     try {
       const res = await customerservice.deletePost(postId);
@@ -195,9 +321,23 @@ export default function CommunityFeed() {
       if (activeFilter === "popular") {
         return (b.likesCount || 0) - (a.likesCount || 0);
       }
-      // 'all' and 'latest' sort by date
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
+
+  const getMediaUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
+      return url;
+    }
+    return (import.meta.env.VITE_API_URL || "") + url;
+  };
+
+  const isEmployer = user?.role === "provider" || user?.role === "admin";
+  const employerCompanyName = companyProfile?.companyName || user?.name || "Company";
+  const employerCompanyLogo = companyProfile?.logo || "";
+  const employerHeadline = companyProfile?.industry
+    ? `${companyProfile.industry}${companyProfile.location ? ` • ${companyProfile.location}` : ""}`
+    : "Verified Employer";
 
   return (
     <div className="min-h-screen pt-24 pb-16 bg-slate-50">
@@ -212,20 +352,17 @@ export default function CommunityFeed() {
                 <span>JobPortal Community</span>
               </div>
               <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-                Company & Recruiter Feed
+                Company & Employer Feed
               </h1>
               <p className="text-blue-100 text-sm sm:text-base mt-2 max-w-xl">
-                Discover news, team updates, work culture, and hiring
-                announcements directly from verified employers.
+                Discover updates, hiring announcements, company culture, and project
+                milestones directly from verified employers & recruiters.
               </p>
             </div>
 
-            {user?.role === "provider" && (
+            {isEmployer && (
               <button
-                onClick={() => {
-                  dispatch(setDashboardActiveTab("posts"));
-                  navigate("/provider/dashboard");
-                }}
+                onClick={() => setIsCreateModalOpen(true)}
                 className="inline-flex items-center gap-2 bg-white text-brand-600 hover:bg-brand-50 px-5 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-black/10 hover:-translate-y-0.5 transition-all shrink-0 cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4 text-brand-600" />
@@ -237,22 +374,63 @@ export default function CommunityFeed() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        {/* Quick Post Prompt for Providers */}
-        {user?.role === "provider" && (
-          <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] mb-6 flex items-center gap-4">
-            <div className="w-11 h-11 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 font-bold shrink-0">
-              <Building2 className="w-6 h-6" />
+        {/* Quick Post Prompt Bar ONLY for Employers / Providers */}
+        {isEmployer && (
+          <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] mb-6 space-y-3">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center overflow-hidden shrink-0">
+                {employerCompanyLogo ? (
+                  <img
+                    src={getMediaUrl(employerCompanyLogo)}
+                    alt={employerCompanyName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Building2 className="w-6 h-6 text-brand-600" />
+                )}
+              </div>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex-1 text-left px-5 py-3 rounded-2xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200/60 text-slate-500 text-sm font-medium transition-colors flex items-center justify-between cursor-pointer"
+              >
+                <span>Share an announcement, hiring news, or team photo...</span>
+                <ImageIcon className="w-4 h-4 text-slate-400" />
+              </button>
             </div>
-            <button
-              onClick={() => {
-                dispatch(setDashboardActiveTab("posts"));
-                navigate("/provider/dashboard");
-              }}
-              className="flex-1 text-left px-5 py-3 rounded-2xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200/60 text-slate-500 text-sm font-medium transition-colors flex items-center justify-between"
-            >
-              <span>Share an update, hiring news, or photo...</span>
-              <ImageIcon className="w-4 h-4 text-slate-400" />
-            </button>
+
+            {/* Quota Indicator Bar for Employer */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 text-xs">
+              <div className="flex items-center gap-2">
+                {user?.role === "admin" ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    <Sparkles className="w-3 h-3 text-indigo-600" />
+                    Admin Unlimited Access
+                  </span>
+                ) : subscription && subscription.status === "active" ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    <Sparkles className="w-3 h-3 text-emerald-600" />
+                    {subscription.companyPostsLimit > 0
+                      ? `${Math.max(0, subscription.companyPostsLimit - (subscription.companyPostsUsed || 0))} of ${subscription.companyPostsLimit} Company Posts Remaining`
+                      : "Company Posts: Unlimited"}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-amber-50 text-amber-700 border border-amber-100">
+                    <AlertCircle className="w-3 h-3 text-amber-600" />
+                    Subscription Required to Post
+                  </span>
+                )}
+              </div>
+
+              {user?.role === "provider" && (!subscription || subscription.status !== "active" || (subscription.companyPostsLimit > 0 && subscription.companyPostsUsed >= subscription.companyPostsLimit)) && (
+                <Link
+                  to="/pricing"
+                  className="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline flex items-center gap-1"
+                >
+                  <span>Choose Plan / Upgrade</span>
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              )}
+            </div>
           </div>
         )}
 
@@ -262,7 +440,7 @@ export default function CommunityFeed() {
           <div className="flex items-center bg-white p-1 rounded-2xl border border-slate-200/80 shadow-sm self-start">
             <button
               onClick={() => setActiveFilter("all")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer ${
                 activeFilter === "all"
                   ? "bg-brand-600 text-white shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
@@ -273,7 +451,7 @@ export default function CommunityFeed() {
             </button>
             <button
               onClick={() => setActiveFilter("latest")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer ${
                 activeFilter === "latest"
                   ? "bg-brand-600 text-white shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
@@ -284,7 +462,7 @@ export default function CommunityFeed() {
             </button>
             <button
               onClick={() => setActiveFilter("popular")}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer ${
                 activeFilter === "popular"
                   ? "bg-brand-600 text-white shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
@@ -302,13 +480,13 @@ export default function CommunityFeed() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search posts by keyword or company..."
+              placeholder="Search posts or companies..."
               className="w-full pl-9 pr-4 py-2.5 rounded-2xl border border-slate-200/80 bg-white text-slate-800 placeholder:text-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 shadow-sm transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -350,15 +528,12 @@ export default function CommunityFeed() {
             <p className="text-sm text-slate-500 max-w-sm mx-auto mb-6">
               {searchQuery
                 ? `No posts matched "${searchQuery}". Try different keywords.`
-                : "Be the first employer to share an announcement with the community!"}
+                : "No company announcements published yet."}
             </p>
-            {user?.role === "provider" && (
+            {isEmployer && (
               <button
-                onClick={() => {
-                  dispatch(setDashboardActiveTab("posts"));
-                  navigate("/provider/dashboard");
-                }}
-                className="inline-flex items-center gap-2 bg-brand-600 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold hover:bg-brand-700 transition-colors shadow-sm"
+                onClick={() => setIsCreateModalOpen(true)}
+                className="inline-flex items-center gap-2 bg-brand-600 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold hover:bg-brand-700 transition-colors shadow-sm cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4" />
                 Create Company Post
@@ -368,16 +543,23 @@ export default function CommunityFeed() {
         ) : (
           <div className="space-y-6">
             {filteredPosts.map((post) => {
+              const currentUserId = (user?._id || user?.id)?.toString();
               const isAuthorOrAdmin =
                 user &&
                 (user.role === "admin" ||
                   (post.provider &&
-                    (post.provider._id === user._id ||
-                      post.provider === user._id ||
-                      post.provider === user.id)));
+                    (post.provider._id?.toString() === currentUserId ||
+                      post.provider?.toString() === currentUserId)));
 
               const isDescriptionLong = (post.description || "").length > 280;
               const isExpanded = expandedDescriptions[post._id];
+
+              const companyName =
+                post.companyProfile?.companyName ||
+                post.provider?.name ||
+                "Verified Employer";
+
+              const companyLogo = post.companyProfile?.logo || "";
 
               return (
                 <article
@@ -389,13 +571,10 @@ export default function CommunityFeed() {
                   <div className="p-5 sm:p-6 pb-3 flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3.5 min-w-0">
                       <div className="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
-                        {post?.companyProfile?.logo ? (
+                        {companyLogo ? (
                           <img
-                            src={
-                              import.meta.env.VITE_API_URL +
-                              post?.companyProfile?.logo
-                            }
-                            alt={post?.companyProfile?.companyName}
+                            src={getMediaUrl(companyLogo)}
+                            alt={companyName}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -406,14 +585,14 @@ export default function CommunityFeed() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <h3 className="text-base font-bold text-slate-900 truncate">
-                            {post?.companyProfile?.companyName}
+                            {companyName}
                           </h3>
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
                             Employer
                           </span>
                         </div>
                         <p className="text-xs text-slate-500 truncate">
-                          {post.authorHeadline}
+                          {post.authorHeadline || "Verified Employer & Recruiter"}
                         </p>
                         <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
                           <Clock className="w-3 h-3" />
@@ -422,11 +601,11 @@ export default function CommunityFeed() {
                       </div>
                     </div>
 
-                    {/* Author delete action */}
+                    {/* Author delete action (Employer owner or Admin) */}
                     {isAuthorOrAdmin && (
                       <button
                         onClick={() => setDeleteModalPostId(post._id)}
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
                         title="Delete Post"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -462,19 +641,18 @@ export default function CommunityFeed() {
                   {post.image && (
                     <div className="relative group cursor-pointer overflow-hidden bg-slate-950/5">
                       <div
-                        onClick={() => setSelectedLightboxImage(post.image)}
+                        onClick={() => setSelectedLightboxImage(getMediaUrl(post.image))}
                         className="relative max-h-[500px] w-full flex items-center justify-center overflow-hidden"
                       >
                         <img
-                          src={import.meta.env.VITE_API_URL + post.image}
+                          src={getMediaUrl(post.image)}
                           alt="Post attachment"
                           className="w-full max-h-[500px] object-contain hover:scale-[1.01] transition-transform duration-300"
                           loading="lazy"
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                           <span className="opacity-0 group-hover:opacity-100 bg-slate-900/75 text-white px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm transition-opacity flex items-center gap-1.5">
-                            <Maximize2 className="w-3.5 h-3.5" /> Click to
-                            expand
+                            <Maximize2 className="w-3.5 h-3.5" /> Click to expand
                           </span>
                         </div>
                       </div>
@@ -501,7 +679,7 @@ export default function CommunityFeed() {
                     </div>
                   </div>
 
-                  {/* Interaction Action Bar (ONLY Like and Share as requested) */}
+                  {/* Interaction Action Bar (Available to all logged-in users) */}
                   <div className="px-4 sm:px-6 py-2 border-t border-slate-100 grid grid-cols-2 gap-2 bg-slate-50/50">
                     {/* 1. Like Button */}
                     <button
@@ -552,6 +730,187 @@ export default function CommunityFeed() {
           </div>
         )}
       </div>
+
+      {/* Employer Post Creator Modal (Provider / Admin Only) */}
+      <AnimatePresence>
+        {isCreateModalOpen && isEmployer && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full border border-slate-100 shadow-2xl space-y-5"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center overflow-hidden shrink-0">
+                    {employerCompanyLogo ? (
+                      <img
+                        src={getMediaUrl(employerCompanyLogo)}
+                        alt={employerCompanyName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Building2 className="w-6 h-6 text-brand-600" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">
+                      {employerCompanyName}
+                    </h3>
+                    <p className="text-xs text-slate-500">{employerHeadline}</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Quota Notice Banner inside Modal for Providers */}
+              {user?.role === "provider" && (
+                <div>
+                  {!subscription || subscription.status !== "active" ? (
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span>
+                          An active employer subscription is required to publish company posts.
+                        </span>
+                      </div>
+                      <Link
+                        to="/pricing"
+                        className="shrink-0 font-bold text-brand-600 hover:underline px-2.5 py-1 bg-white rounded-lg border border-amber-200 shadow-sm"
+                      >
+                        Choose Plan
+                      </Link>
+                    </div>
+                  ) : subscription.companyPostsLimit > 0 &&
+                    (subscription.companyPostsUsed || 0) >= subscription.companyPostsLimit ? (
+                    <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 text-xs text-rose-900 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                        <span>
+                          Quota reached ({subscription.companyPostsUsed}/{subscription.companyPostsLimit} posts used). Upgrade your plan to post more.
+                        </span>
+                      </div>
+                      <Link
+                        to="/pricing"
+                        className="shrink-0 font-bold text-rose-700 hover:underline px-2.5 py-1 bg-white rounded-lg border border-rose-200 shadow-sm"
+                      >
+                        Upgrade Plan
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 py-2 text-xs text-indigo-800 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>
+                          {subscription.companyPostsLimit > 0
+                            ? `${Math.max(0, subscription.companyPostsLimit - (subscription.companyPostsUsed || 0))} of ${subscription.companyPostsLimit} Company Posts remaining`
+                            : "Unlimited Company Posts"}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-indigo-600 font-semibold">
+                        {subscription.planDetails?.name || "Active Plan"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleSubmitPost} className="space-y-4">
+                <div className="relative">
+                  <textarea
+                    rows={4}
+                    value={postDescription}
+                    onChange={(e) => setPostDescription(e.target.value)}
+                    maxLength={3000}
+                    placeholder="What's happening at your company? Share updates, hiring news, culture, or project achievements..."
+                    className="w-full p-4 rounded-2xl border border-slate-200 bg-slate-50/50 text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm resize-none"
+                  />
+                  <div className="text-right text-[11px] text-slate-400 mt-1">
+                    {postDescription.length} / 3000 characters
+                  </div>
+                </div>
+
+                {/* Uploaded Image Preview */}
+                {postImagePreview && (
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 max-h-60 bg-black/5 flex items-center justify-center">
+                    <img
+                      src={postImagePreview}
+                      alt="Upload Preview"
+                      className="w-full max-h-60 object-contain rounded-2xl"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemovePostImage}
+                      className="absolute top-2 right-2 p-2 bg-slate-900/80 hover:bg-red-600 text-white rounded-xl backdrop-blur-sm transition-colors cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex items-center justify-between pt-2">
+                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-brand-300 hover:bg-brand-50/50 text-slate-700 text-sm font-medium transition-all">
+                    <ImageIcon className="w-4 h-4 text-brand-600" />
+                    <span>{postImagePreview ? "Change Image" : "Add Image"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePostImageChange}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsCreateModalOpen(false)}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={
+                        (!postDescription.trim() && !postImageFile) ||
+                        submittingPost
+                      }
+                      className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                        (postDescription.trim() || postImageFile) &&
+                        !submittingPost
+                          ? "bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-500/20 cursor-pointer"
+                          : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      }`}
+                    >
+                      {submittingPost ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Publishing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          <span>Publish Post</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Lightbox Image Modal */}
       <AnimatePresence>

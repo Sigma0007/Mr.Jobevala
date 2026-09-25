@@ -20,6 +20,7 @@ const postSchema = new mongoose.Schema(
             type: String,
             trim: true,
             default: "",
+            maxLength: [3000, "Post description cannot exceed 3000 characters"],
         },
         image: {
             type: String,
@@ -61,3 +62,5 @@ postSchema.pre("validate", function () {
 });
 
 export default mongoose.model("Post", postSchema);
+
+

@@ -285,7 +285,31 @@ export const uploadProfileImage = catchAsync(async (req, res, next) => {
 // @access  Private (User)
 export const uploadResume = catchAsync(async (req, res, next) => {
     if (!req.file) {
-        return next(new AppError("Please provide a resume document (PDF/DOC/DOCX) to upload.", 400));
+        return next(new AppError("Please select a resume file (PDF, DOC, DOCX) to upload.", 400));
+    }
+
+    // Validate MIME types and extensions
+    const allowedMimeTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/octet-stream",
+    ];
+    const allowedExtensions = ["pdf", "doc", "docx"];
+    const ext = (req.file.originalname.split(".").pop() || "").toLowerCase();
+
+    if (!allowedExtensions.includes(ext) && !allowedMimeTypes.includes(req.file.mimetype)) {
+        return next(
+            new AppError("Invalid file type. Please upload a valid PDF or Word document (.pdf, .doc, .docx).", 400)
+        );
+    }
+
+    // Validate file size (max 10MB)
+    const MAX_SIZE = 10 * 1024 * 1024;
+    if (req.file.size > MAX_SIZE) {
+        return next(
+            new AppError("Resume file size is too large. Maximum allowed size is 10MB.", 400)
+        );
     }
 
     const userId = req.user.id || req.user._id;
@@ -296,10 +320,13 @@ export const uploadResume = catchAsync(async (req, res, next) => {
 
     // Delete old resume if exists on R2
     if (profile.resume) {
-        await deleteFromR2(profile.resume);
+        try {
+            await deleteFromR2(profile.resume);
+        } catch (delErr) {
+            console.warn("Notice: Old resume could not be deleted from R2:", delErr.message);
+        }
     }
 
-    const ext = req.file.originalname.split(".").pop() || "pdf";
     const safeOriginalName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
     const key = `resumes/${userId}-${Date.now()}-${safeOriginalName}`;
 
@@ -314,11 +341,12 @@ export const uploadResume = catchAsync(async (req, res, next) => {
 
     res.status(200).json({
         success: true,
-        message: "Resume uploaded to Cloudflare R2 successfully",
+        message: "Resume uploaded successfully",
         resume: url,
         data: profile,
     });
 });
+
 
 // @desc    Delete resume from Cloudflare R2
 // @route   DELETE /api/userprofile/resume

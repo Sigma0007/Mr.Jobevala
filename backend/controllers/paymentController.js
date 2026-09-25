@@ -61,6 +61,8 @@ const createOrActivateSubscription = async (payment, userId) => {
         directMessagesUsed: 0,
         jobPostsLimit: planDoc?.jobPostsLimit || 0,
         jobPostsUsed: 0,
+        companyPostsLimit: planDoc?.companyPostsLimit || 0,
+        companyPostsUsed: 0,
         unlockContactsLimit: planDoc?.unlockContactsLimit || 0,
         unlockContactsUsed: 0,
     });

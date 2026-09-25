@@ -264,13 +264,14 @@ export default function SubscriptionModal({
             {/* Quota & Feature Usage Meters (if limits exist) */}
             {(Number(subscription.directMessagesLimit) > 0 ||
               Number(subscription.jobPostsLimit) > 0 ||
+              Number(subscription.companyPostsLimit) > 0 ||
               Number(subscription.unlockContactsLimit) > 0) && (
               <div>
                 <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                   <TrendingUp className="w-4 h-4 text-indigo-600" />
                   Usage Quotas & Limits
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {Number(subscription.directMessagesLimit) > 0 && (
                     <div className="bg-indigo-50/60 rounded-xl p-3 border border-indigo-100">
                       <div className="flex items-center gap-2 text-indigo-700 text-xs font-semibold mb-1">
@@ -312,6 +313,27 @@ export default function SubscriptionModal({
                           0,
                           subscription.jobPostsLimit -
                             (subscription.jobPostsUsed || 0),
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {Number(subscription.companyPostsLimit) > 0 && (
+                    <div className="bg-purple-50/60 rounded-xl p-3 border border-purple-100">
+                      <div className="flex items-center gap-2 text-purple-700 text-xs font-semibold mb-1">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Company Posts</span>
+                      </div>
+                      <div className="text-base font-extrabold text-slate-900">
+                        {subscription.companyPostsUsed || 0} /{" "}
+                        {subscription.companyPostsLimit}
+                      </div>
+                      <div className="text-[10px] text-slate-500">
+                        Remaining:{" "}
+                        {Math.max(
+                          0,
+                          subscription.companyPostsLimit -
+                            (subscription.companyPostsUsed || 0),
                         )}
                       </div>
                     </div>

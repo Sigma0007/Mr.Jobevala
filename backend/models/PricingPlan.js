@@ -66,6 +66,11 @@ const pricingPlanSchema = new mongoose.Schema(
             default: 0,
             min: [0, "Job posts limit cannot be negative"],
         },
+        companyPostsLimit: {
+            type: Number,
+            default: 0,
+            min: [0, "Company posts limit cannot be negative"],
+        },
         unlockContactsLimit: {
             type: Number,
             default: 0,

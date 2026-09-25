@@ -211,8 +211,15 @@ export default function UserProfile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 15 * 1024 * 1024) {
-      toast.error("Resume file size should be less than 15MB");
+    const allowedExtensions = ["pdf", "doc", "docx"];
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    if (!allowedExtensions.includes(ext)) {
+      toast.error("Invalid file format. Please upload a PDF or Word document (.pdf, .doc, .docx)");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Resume file size must be less than 10MB");
       return;
     }
 
@@ -228,10 +235,11 @@ export default function UserProfile() {
           ...prev,
           resume: newResumeUrl || prev.resume,
         }));
-        toast.success("Resume uploaded successfully!");
+        toast.success("Resume uploaded successfully! 🎉");
       } else {
         toast.error(res?.message || "Failed to upload resume");
       }
+
     } catch (err) {
       console.error(err);
       toast.error("Failed to upload resume");

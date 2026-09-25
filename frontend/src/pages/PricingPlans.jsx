@@ -161,10 +161,43 @@ export default function PricingPlans() {
     return base;
   }, [plans]);
 
+  const handleActivateFreePlan = async (plan) => {
+    if (!user) {
+      toast.error("Please sign in to get started with the Free Plan");
+      navigate("/login");
+      return;
+    }
+
+    const planKey = plan.planId || plan._id || plan.id;
+    setLoadingPlan(planKey);
+    try {
+      const res = await customerservice.activateFreePlan({ planId: planKey });
+      if (res?.success) {
+        toast.success("Free Plan activated successfully! 🎉");
+        await fetchCurrentSubscription();
+        if (res?.data) {
+          setSelectedSubForModal(res.data);
+          setIsSubModalOpen(true);
+        }
+      } else {
+        toast.error(res?.message || "Failed to activate Free Plan");
+      }
+    } catch (err) {
+      console.error("Free plan activation error:", err);
+      toast.error(err?.response?.data?.message || "Failed to activate free plan.");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
   const handlePayment = async (plan) => {
+    if (Number(plan.price) === 0) {
+      return handleActivateFreePlan(plan);
+    }
     const amount = plan.price;
     const planId = plan.planId || plan._id || plan.id;
     const purpose = plan.name;
+
 
     if (!amount || amount <= 0) {
       toast.error("Please enter a valid amount");
@@ -695,6 +728,7 @@ export default function PricingPlans() {
                     {/* Quota Highlights */}
                     {(Number(plan.directMessagesLimit) > 0 ||
                       Number(plan.jobPostsLimit) > 0 ||
+                      Number(plan.companyPostsLimit) > 0 ||
                       Number(plan.unlockContactsLimit) > 0) && (
                       <div className="flex flex-wrap gap-2 mt-4">
                         {Number(plan.directMessagesLimit) > 0 && (
@@ -712,6 +746,12 @@ export default function PricingPlans() {
                           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-blue-50/80 text-blue-700 text-xs font-semibold border border-blue-100">
                             <Briefcase className="w-3.5 h-3.5 text-blue-600" />
                             <span>{plan.jobPostsLimit} Job Posts</span>
+                          </div>
+                        )}
+                        {Number(plan.companyPostsLimit) > 0 && (
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-purple-50/80 text-purple-700 text-xs font-semibold border border-purple-100">
+                            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                            <span>{plan.companyPostsLimit} Company Posts</span>
                           </div>
                         )}
                         {Number(plan.unlockContactsLimit) > 0 && (
@@ -751,18 +791,12 @@ export default function PricingPlans() {
                         if (isCurrentActive) {
                           setSelectedSubForModal(currentSubscription);
                           setIsSubModalOpen(true);
+                        } else if (Number(plan.price) === 0) {
+                          handleActivateFreePlan(plan);
                         } else if (user) {
-                          if (plan.planId === "free_plan") {
-                            if (user) {
-                              navigate(`/${user.role}/dashboard`);
-                            } else {
-                              navigate("/login");
-                            }
-                          } else {
-                            handlePayment(plan);
-                          }
+                          handlePayment(plan);
                         } else {
-                          toast.error("Please login to purchase a plan");
+                          toast.error("Please login to choose a plan");
                           navigate("/login");
                         }
                       }}
@@ -770,34 +804,37 @@ export default function PricingPlans() {
                       className={`w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl font-semibold text-sm transition-all cursor-pointer shadow-lg disabled:opacity-70 ${
                         isCurrentActive
                           ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/25"
-                          : plan.highlighted
-                            ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/25"
-                            : "bg-slate-900 hover:bg-slate-800 text-white shadow-slate-900/20"
+                          : Number(plan.price) === 0
+                            ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-blue-500/20"
+                            : plan.highlighted
+                              ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/25"
+                              : "bg-slate-900 hover:bg-slate-800 text-white shadow-slate-900/20"
                       }`}
                     >
                       {loadingPlan === planKey ? (
                         <>
                           <RefreshCw className="w-4 h-4 animate-spin" />
-                          Connecting Razorpay...
+                          {Number(plan.price) === 0 ? "Activating Free Tier..." : "Connecting Razorpay..."}
                         </>
                       ) : isCurrentActive ? (
                         <>
                           <CheckCircle2 className="w-4 h-4" />
-                          Active Plan (View Modal)
+                          Current Plan (Active)
                         </>
-                      ) : plan.planId === "free_plan" ? (
+                      ) : Number(plan.price) === 0 ? (
                         <>
-                          <CreditCard className="w-4 h-4" />
-                          Get Started with Free Plan
+                          <Sparkles className="w-4 h-4 text-amber-300" />
+                          Get Started Free
                         </>
                       ) : (
                         <>
                           <CreditCard className="w-4 h-4" />
-                          Pay ₹{plan.price} with Razorpay
+                          Upgrade to ₹{plan.price}
                         </>
                       )}
                     </button>
                     <p className="text-center text-[11px] text-slate-400 mt-2">
+
                       {isCurrentActive
                         ? "Currently active on your account"
                         : plan.planId === "free_plan"

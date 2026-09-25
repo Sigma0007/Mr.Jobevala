@@ -157,12 +157,20 @@ export default function JobDetails() {
         setIsApplyModalOpen(false);
       } else {
         toast.error(response?.message || "Failed to apply");
+        if (response?.requiresResume) {
+          setTimeout(() => {
+            if (window.confirm("Would you like to build or upload your resume now?")) {
+              navigate("/resume-builder");
+            }
+          }, 500);
+        }
       }
     } catch (error) {
       console.error("Error applying for job:", error);
       toast.error("An error occurred while applying for job");
     }
   };
+
 
   const handleShare = () => {
     const url = window.location.href;

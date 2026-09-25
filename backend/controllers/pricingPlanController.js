@@ -4,7 +4,34 @@ import catchAsync from "../utils/catchAsync.js";
 
 // Initial default seed plans (clean, without accentColor or buttonClass)
 export const DEFAULT_PLANS = [
-    // Job Seekers Plans
+    // Job Seekers Free Plan
+    {
+        planId: "seeker_free_0",
+        categoryId: "seekers",
+        category: "For Job Seekers",
+        name: "Basic Free Starter",
+        price: 0,
+        originalPrice: 0,
+        badge: "Free Forever",
+        highlighted: false,
+        description: "Everything you need to create your profile, build your CV, and apply for jobs.",
+        features: [
+            "Apply to all public job postings with verified resume",
+            "Build & download professional resume PDF",
+            "Company & community feed access & networking",
+            "1 Direct recruiter outreach message per month",
+            "Standard job alerts & notifications",
+            "100% Free Forever",
+        ],
+        directMessagesLimit: 1,
+        jobPostsLimit: 0,
+        companyPostsLimit: 0,
+        unlockContactsLimit: 0,
+        validityDays: 365,
+        sortOrder: 0,
+        isActive: true,
+    },
+    // Job Seekers Paid Plans
     {
         planId: "seeker_basic_99",
         categoryId: "seekers",
@@ -25,6 +52,7 @@ export const DEFAULT_PLANS = [
         ],
         directMessagesLimit: 3,
         jobPostsLimit: 0,
+        companyPostsLimit: 0,
         unlockContactsLimit: 0,
         validityDays: 30,
         sortOrder: 1,
@@ -51,6 +79,7 @@ export const DEFAULT_PLANS = [
         ],
         directMessagesLimit: 15,
         jobPostsLimit: 0,
+        companyPostsLimit: 0,
         unlockContactsLimit: 0,
         validityDays: 30,
         sortOrder: 2,
@@ -77,6 +106,7 @@ export const DEFAULT_PLANS = [
         ],
         directMessagesLimit: 100,
         jobPostsLimit: 0,
+        companyPostsLimit: 0,
         unlockContactsLimit: 0,
         validityDays: 30,
         sortOrder: 3,
@@ -96,6 +126,7 @@ export const DEFAULT_PLANS = [
         description: "Ideal for startups and small businesses hiring for single or urgent positions.",
         features: [
             "Post 2 Featured Jobs (Active for 30 days)",
+            "Publish 5 Company Posts on Community Feed",
             "Unlock 25 verified candidate profiles",
             "Standard applicant filtering & shortlisting",
             "Direct WhatsApp & Email candidate connect",
@@ -104,6 +135,7 @@ export const DEFAULT_PLANS = [
         ],
         directMessagesLimit: 25,
         jobPostsLimit: 2,
+        companyPostsLimit: 5,
         unlockContactsLimit: 25,
         validityDays: 30,
         sortOrder: 4,
@@ -121,6 +153,7 @@ export const DEFAULT_PLANS = [
         description: "Accelerate your hiring pipeline with premium candidate match & visibility.",
         features: [
             "Post 5 Featured Jobs with high visibility (60 days)",
+            "Publish 15 Company Posts on Community Feed",
             "Unlock 100 verified candidate contacts",
             "Highlight tag on job search & homepage feed",
             "Advanced applicant tracking (ATS) dashboard",
@@ -129,6 +162,7 @@ export const DEFAULT_PLANS = [
         ],
         directMessagesLimit: 100,
         jobPostsLimit: 5,
+        companyPostsLimit: 15,
         unlockContactsLimit: 100,
         validityDays: 30,
         sortOrder: 5,
@@ -146,6 +180,7 @@ export const DEFAULT_PLANS = [
         description: "Complete recruitment package for rapidly growing companies with multiple openings.",
         features: [
             "Post 10 Featured Jobs (Active for 90 days)",
+            "Publish 50 Company Posts on Community Feed",
             "Unlock 250 verified candidate profiles",
             "Top-priority placement across search feeds",
             "Custom company branding banner on job posts",
@@ -154,12 +189,14 @@ export const DEFAULT_PLANS = [
         ],
         directMessagesLimit: 250,
         jobPostsLimit: 10,
+        companyPostsLimit: 50,
         unlockContactsLimit: 250,
         validityDays: 30,
         sortOrder: 6,
         isActive: true,
     },
 ];
+
 
 /**
  * @desc Get all pricing plans
@@ -242,6 +279,7 @@ export const createPlan = catchAsync(async (req, res, next) => {
         features,
         directMessagesLimit,
         jobPostsLimit,
+        companyPostsLimit,
         unlockContactsLimit,
         validityDays,
         sortOrder,
@@ -284,6 +322,7 @@ export const createPlan = catchAsync(async (req, res, next) => {
         features: Array.isArray(features) ? features.filter(Boolean) : [],
         directMessagesLimit: Number(directMessagesLimit) || 0,
         jobPostsLimit: Number(jobPostsLimit) || 0,
+        companyPostsLimit: Number(companyPostsLimit) || 0,
         unlockContactsLimit: Number(unlockContactsLimit) || 0,
         validityDays: Number(validityDays) || 30,
         sortOrder: Number(sortOrder) || 0,
@@ -328,6 +367,7 @@ export const updatePlan = catchAsync(async (req, res, next) => {
         features,
         directMessagesLimit,
         jobPostsLimit,
+        companyPostsLimit,
         unlockContactsLimit,
         validityDays,
         sortOrder,
@@ -354,6 +394,7 @@ export const updatePlan = catchAsync(async (req, res, next) => {
     if (features !== undefined) plan.features = Array.isArray(features) ? features.filter(Boolean) : [];
     if (directMessagesLimit !== undefined) plan.directMessagesLimit = Number(directMessagesLimit) || 0;
     if (jobPostsLimit !== undefined) plan.jobPostsLimit = Number(jobPostsLimit) || 0;
+    if (companyPostsLimit !== undefined) plan.companyPostsLimit = Number(companyPostsLimit) || 0;
     if (unlockContactsLimit !== undefined) plan.unlockContactsLimit = Number(unlockContactsLimit) || 0;
     if (validityDays !== undefined) plan.validityDays = Number(validityDays);
     if (sortOrder !== undefined) plan.sortOrder = Number(sortOrder);

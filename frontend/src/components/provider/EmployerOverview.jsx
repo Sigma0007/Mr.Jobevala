@@ -383,6 +383,48 @@ export default function EmployerOverview() {
                   : "Unlimited"}
               </span>
             </div>
+
+            {/* Company Posts */}
+            <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col justify-between">
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="text-indigo-200 font-medium">
+                  Company Posts
+                </span>
+                <span className="font-bold text-white">
+                  {currentSubscription.companyPostsUsed || 0} /{" "}
+                  {currentSubscription.companyPostsLimit || "∞"}
+                </span>
+              </div>
+              <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden mb-2">
+                <div
+                  className="bg-gradient-to-r from-purple-400 to-pink-400 h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${
+                      currentSubscription.companyPostsLimit > 0
+                        ? Math.min(
+                            100,
+                            Math.round(
+                              ((currentSubscription.companyPostsUsed || 0) /
+                                currentSubscription.companyPostsLimit) *
+                                100,
+                            ),
+                          )
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
+              <span className="text-[11px] text-emerald-400 font-semibold">
+                Remaining:{" "}
+                {currentSubscription.companyPostsLimit > 0
+                  ? Math.max(
+                      0,
+                      currentSubscription.companyPostsLimit -
+                        (currentSubscription.companyPostsUsed || 0),
+                    )
+                  : "Unlimited"}
+              </span>
+            </div>
           </div>
         </div>
       ) : (

@@ -403,7 +403,13 @@ const unlockCandidateContact = (data = {}) => {
   return Auth(endpoint, data, "POST");
 };
 
+const activateFreePlan = (data = {}) => {
+  const endpoint = `/api/subscription/activate-free`;
+  return Auth(endpoint, data, "POST");
+};
+
 // Notification APIs
+
 const getNotifications = (params = "") => {
   const endpoint = `/api/notifications${params}`;
   return Auth(endpoint, {}, "GET");
@@ -591,7 +597,9 @@ export default {
   cancelSubscription,
   validateSubscriptionAction,
   unlockCandidateContact,
+  activateFreePlan,
   getNotifications,
+
   getUnreadNotificationsCount,
   markNotificationAsRead,
   markAllNotificationsAsRead,

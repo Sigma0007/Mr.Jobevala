@@ -14,13 +14,14 @@ import { uploadImage } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
-// Public / viewer routes
+// Public / viewer routes (all users/visitors can view, share, and like)
 router.get("/", optionalAuth, getAllPosts);
 router.get("/my-posts", protect, authorize("provider", "admin"), getMyPosts);
 router.get("/:id", optionalAuth, getPostById);
 router.post("/:id/share", sharePost);
+router.post("/:id/like", protect, toggleLikePost);
 
-// Provider / Admin routes
+// Provider & Admin only routes for creating and deleting company posts
 router.post(
     "/",
     protect,
@@ -28,7 +29,8 @@ router.post(
     uploadImage.single("image"),
     createPost
 );
-router.post("/:id/like", protect, toggleLikePost);
 router.delete("/:id", protect, authorize("provider", "admin"), deletePost);
 
 export default router;
+
+

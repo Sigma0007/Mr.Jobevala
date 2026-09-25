@@ -3,6 +3,8 @@ import PricingPlan from "../models/PricingPlan.js";
 import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
+import { createAndSendNotification } from "../utils/notificationService.js";
+
 
 /**
  * @desc Get Current Active Subscription of Logged-in User/Provider
@@ -258,8 +260,17 @@ export const validateSubscriptionAction = catchAsync(async (req, res, next) => {
     const { actionType, consume = false } = req.body;
     const userId = req.user._id;
 
-    if (!["job_post", "unlock_contact", "direct_message"].includes(actionType)) {
+    if (!["job_post", "company_post", "unlock_contact", "direct_message"].includes(actionType)) {
         return next(new AppError("Invalid action type provided.", 400));
+    }
+
+    // Role check for provider specific actions
+    if (["job_post", "company_post", "unlock_contact"].includes(actionType) && req.user.role !== "provider" && req.user.role !== "admin") {
+        return res.status(403).json({
+            success: false,
+            allowed: false,
+            message: "This action is restricted to employers and recruiters only.",
+        });
     }
 
     // Admin bypasses all checks
@@ -300,6 +311,10 @@ export const validateSubscriptionAction = catchAsync(async (req, res, next) => {
         limit = sub.jobPostsLimit || 0;
         used = sub.jobPostsUsed || 0;
         fieldUsed = "jobPostsUsed";
+    } else if (actionType === "company_post") {
+        limit = sub.companyPostsLimit || 0;
+        used = sub.companyPostsUsed || 0;
+        fieldUsed = "companyPostsUsed";
     } else if (actionType === "unlock_contact") {
         limit = sub.unlockContactsLimit || 0;
         used = sub.unlockContactsUsed || 0;
@@ -436,4 +451,100 @@ export const unlockCandidateContact = catchAsync(async (req, res, next) => {
         remaining: limit > 0 ? Math.max(0, remaining - 1) : "unlimited",
     });
 });
+
+/**
+ * @desc Activate Free Tier Plan (Price = 0) for Candidate or Employer
+ * @route POST /api/subscription/activate-free
+ * @access Private
+ */
+export const activateFreePlan = catchAsync(async (req, res, next) => {
+    const userId = req.user._id;
+    const { planId } = req.body;
+
+    // Find requested free plan or default free plan
+    let planDoc = null;
+    if (planId) {
+        if (planId.match(/^[0-9a-fA-F]{24}$/)) {
+            planDoc = await PricingPlan.findById(planId);
+        }
+        if (!planDoc) {
+            planDoc = await PricingPlan.findOne({ planId });
+        }
+    }
+
+    if (!planDoc) {
+        const categoryId = req.user.role === "provider" ? "employers" : "seekers";
+        planDoc = await PricingPlan.findOne({ price: 0, categoryId, isActive: true });
+    }
+
+    // If still no free plan doc in db, use fallback defaults
+    const validityDays = planDoc?.validityDays || 365;
+    const startDate = new Date();
+    const endDate = new Date(startDate.getTime() + validityDays * 24 * 60 * 60 * 1000);
+
+    // Deactivate previous active subscriptions for this user
+    await Subscription.updateMany(
+        { user: userId, status: "active" },
+        { $set: { status: "inactive" } }
+    );
+
+    const planName = planDoc?.name || "Basic Free Starter";
+    const categoryName = planDoc?.category || (req.user.role === "provider" ? "For Employers" : "For Job Seekers");
+
+    // Create free subscription
+    const newSubscription = await Subscription.create({
+        user: userId,
+        plan: planDoc?._id || null,
+        planId: planDoc?.planId || "seeker_free_0",
+        planDetails: {
+            name: planName,
+            category: categoryName,
+            categoryId: planDoc?.categoryId || (req.user.role === "provider" ? "employers" : "seekers"),
+            price: 0,
+            originalPrice: 0,
+            badge: planDoc?.badge || "Free Forever",
+            description: planDoc?.description || "Basic Free tier access to platform tools.",
+            features: planDoc?.features || [
+                "Apply to public job listings with verified resume",
+                "Build & download professional resume PDF",
+                "Community Feed access & networking",
+            ],
+            validityDays,
+        },
+        payment: null,
+        paymentId: "free_tier_granted",
+        orderId: `free_${Date.now()}`,
+        startDate,
+        endDate,
+        status: "active",
+        directMessagesLimit: planDoc?.directMessagesLimit || 1,
+        directMessagesUsed: 0,
+        jobPostsLimit: planDoc?.jobPostsLimit || (req.user.role === "provider" ? 1 : 0),
+        jobPostsUsed: 0,
+        companyPostsLimit: planDoc?.companyPostsLimit || (req.user.role === "provider" ? 2 : 0),
+        companyPostsUsed: 0,
+        unlockContactsLimit: planDoc?.unlockContactsLimit || 0,
+        unlockContactsUsed: 0,
+    });
+
+    const populatedSub = await Subscription.findById(newSubscription._id)
+        .populate("user", "name email phone role")
+        .populate("plan");
+
+    createAndSendNotification({
+        recipient: userId,
+        title: "Free Plan Activated! 🚀",
+        message: `Your "${planName}" is now active. Enjoy access to platform features!`,
+        type: "subscription",
+        link: req.user.role === "provider" ? "/provider/dashboard" : "/user/dashboard",
+        data: { tab: "billing" },
+    });
+
+    res.status(200).json({
+        success: true,
+        message: "Free plan activated successfully!",
+        data: populatedSub,
+    });
+});
+
 

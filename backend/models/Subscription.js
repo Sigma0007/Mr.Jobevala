@@ -79,6 +79,14 @@ const subscriptionSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        companyPostsLimit: {
+            type: Number,
+            default: 0,
+        },
+        companyPostsUsed: {
+            type: Number,
+            default: 0,
+        },
         unlockContactsLimit: {
             type: Number,
             default: 0,

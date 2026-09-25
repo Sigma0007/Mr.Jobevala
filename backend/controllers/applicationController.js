@@ -19,7 +19,16 @@ export const createApplication = async (req, res, next) => {
         // Check if user has a profile
         const userProfile = await UserProfile.findOne({ user: req.user._id });
         if (!userProfile) {
-            return res.status(200).json({ success: false, message: "Please create a user profile first" });
+            return res.status(200).json({ success: false, message: "Please create your candidate profile first", requiresProfile: true });
+        }
+
+        // Validate Candidate Resume requirement
+        if (!userProfile.resume || !userProfile.resume.trim()) {
+            return res.status(200).json({
+                success: false,
+                message: "A verified resume/CV is required to apply. Please upload your resume or build one in the Resume Builder first.",
+                requiresResume: true,
+            });
         }
 
         // Check if user has already applied
@@ -27,6 +36,7 @@ export const createApplication = async (req, res, next) => {
         if (existingApplication) {
             return res.status(200).json({ success: false, message: "You have already applied for this job" });
         }
+
 
         // Create application
         const application = await Application.create({

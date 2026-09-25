@@ -9,11 +9,19 @@ const ACTION_FIELDS = {
         limitField: "jobPostsLimit",
         usedField: "jobPostsUsed",
         label: "Job Posts",
+        requiredRole: "provider",
+    },
+    company_post: {
+        limitField: "companyPostsLimit",
+        usedField: "companyPostsUsed",
+        label: "Company Posts",
+        requiredRole: "provider",
     },
     unlock_contact: {
         limitField: "unlockContactsLimit",
         usedField: "unlockContactsUsed",
         label: "Candidate Unlocks",
+        requiredRole: "provider",
     },
     direct_message: {
         limitField: "directMessagesLimit",
@@ -45,6 +53,14 @@ export const validateSubscriptionQuota = async (user, actionType, autoConsume = 
     const config = ACTION_FIELDS[actionType];
     if (!config) {
         throw new AppError(`Invalid subscription action type: ${actionType}`, 400);
+    }
+
+    // Role check if action requires a specific role (e.g. provider)
+    if (config.requiredRole && user.role !== config.requiredRole && user.role !== "admin") {
+        throw new AppError(
+            `This action (${config.label}) is restricted to ${config.requiredRole === "provider" ? "employers/recruiters" : config.requiredRole}.`,
+            403
+        );
     }
 
     // 2. Fetch active subscription

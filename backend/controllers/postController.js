@@ -3,17 +3,52 @@ import CompanyProfile from "../models/CompanyProfile.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
 import { uploadToR2, deleteFromR2 } from "../utils/r2Storage.js";
+import { validateSubscriptionQuota } from "../utils/subscriptionValidator.js";
 
-// @desc    Create a new community post
+// @desc    Create a new company / provider community post
 // @route   POST /api/posts
 // @access  Private (Provider, Admin)
 export const createPost = catchAsync(async (req, res, next) => {
+    const role = req.user.role || "user";
     const providerId = req.user.id || req.user._id;
+
+    // Role Validation: Strictly only providers and admins can create company posts
+    if (role !== "provider" && role !== "admin") {
+        return next(
+            new AppError("Job seekers / candidates cannot create company posts. Only employers and recruiters are authorized.", 403)
+        );
+    }
+
+    // Subscription & Quota Validation for Company Post
+    await validateSubscriptionQuota(req.user, "company_post", true);
+
     const description = (req.body.description || "").trim();
     let imageUrl = (req.body.image || "").trim();
 
+    // Validation: Description length limit
+    if (description.length > 3000) {
+        return next(
+            new AppError("Post description cannot exceed 3000 characters.", 400)
+        );
+    }
+
     // Handle image file upload if multipart form-data is sent
     if (req.file) {
+        // Validate MIME type
+        const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+        if (!allowedMimeTypes.includes(req.file.mimetype)) {
+            return next(
+                new AppError("Please upload a valid image file (JPG, PNG, WEBP, or GIF).", 400)
+            );
+        }
+
+        // Validate File Size (max 10MB)
+        if (req.file.size > 10 * 1024 * 1024) {
+            return next(
+                new AppError("Image size cannot exceed 10MB.", 400)
+            );
+        }
+
         const ext = req.file.originalname.split(".").pop() || "jpg";
         const key = `posts/${providerId}-${Date.now()}.${ext}`;
         const { url } = await uploadToR2({
@@ -36,7 +71,9 @@ export const createPost = catchAsync(async (req, res, next) => {
 
     const authorHeadline =
         companyProfile?.industry ||
-        (companyProfile?.location ? `Company in ${companyProfile.location}` : "Employer & Recruiter");
+        (companyProfile?.location
+            ? `Company in ${companyProfile.location}`
+            : "Employer & Recruiter");
 
     const post = await Post.create({
         provider: providerId,
@@ -49,10 +86,16 @@ export const createPost = catchAsync(async (req, res, next) => {
         sharesCount: 0,
     });
 
+    // Populate references for return
+    const populatedPost = await Post.findById(post._id)
+        .populate("provider", "name email role")
+        .populate("companyProfile", "companyName logo industry location website")
+        .lean();
+
     res.status(201).json({
         success: true,
-        message: "Post published successfully!",
-        data: post,
+        message: "Company post published successfully!",
+        data: populatedPost,
     });
 });
 
@@ -164,7 +207,7 @@ export const getPostById = catchAsync(async (req, res, next) => {
 
 // @desc    Toggle like / unlike on a post
 // @route   POST /api/posts/:id/like
-// @access  Private
+// @access  Private (All authenticated users can like)
 export const toggleLikePost = catchAsync(async (req, res, next) => {
     const userId = req.user.id || req.user._id;
     const post = await Post.findById(req.params.id);
@@ -230,7 +273,7 @@ export const deletePost = catchAsync(async (req, res, next) => {
         return next(new AppError("Post not found", 404));
     }
 
-    // Only owner or admin can delete
+    // Only provider owner or admin can delete
     if (post.provider.toString() !== userId && req.user.role !== "admin") {
         return next(new AppError("You are not authorized to delete this post", 403));
     }
