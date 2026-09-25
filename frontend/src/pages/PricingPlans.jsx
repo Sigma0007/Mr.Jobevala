@@ -393,21 +393,26 @@ export default function PricingPlans() {
                   Active Plan
                 </span>
                 <span className="text-xs text-indigo-300 font-medium">
-                  {currentSubscription.planDetails?.category || "Subscription Plan"}
+                  {currentSubscription.planDetails?.category ||
+                    "Subscription Plan"}
                 </span>
               </div>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-white">
                 <Crown className="w-6 h-6 text-amber-400" />
-                {currentSubscription.planDetails?.name || currentSubscription.planId}
+                {currentSubscription.planDetails?.name ||
+                  currentSubscription.planId}
               </h3>
               <p className="text-xs sm:text-sm text-slate-300">
                 Valid until{" "}
                 <span className="font-semibold text-white">
-                  {new Date(currentSubscription.endDate).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
+                  {new Date(currentSubscription.endDate).toLocaleDateString(
+                    "en-IN",
+                    {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    },
+                  )}
                 </span>{" "}
                 • Instant privileges & quota limits activated
               </p>
@@ -591,7 +596,7 @@ export default function PricingPlans() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.25 }}
-            className={`max-w-7xl mx-auto grid grid-cols-1 ${
+            className={`max-w-7xl mx-auto ${activeTab == "seekers" ? "flex justify-center" : "grid grid-cols-1"} ${
               filteredPlans.length > 3
                 ? "md:grid-cols-2 lg:grid-cols-3"
                 : "md:grid-cols-3"
@@ -626,8 +631,8 @@ export default function PricingPlans() {
                     isCurrentActive
                       ? "border-2 border-emerald-500 shadow-emerald-100 ring-4 ring-emerald-50/80"
                       : plan.highlighted
-                      ? "border-2 border-indigo-500 shadow-indigo-100 ring-4 ring-indigo-50/70"
-                      : "border border-slate-200/90 hover:border-slate-300"
+                        ? "border-2 border-indigo-500 shadow-indigo-100 ring-4 ring-indigo-50/70"
+                        : "border border-slate-200/90 hover:border-slate-300"
                   }`}
                 >
                   {/* Highlight / Category Badges */}
@@ -747,7 +752,15 @@ export default function PricingPlans() {
                           setSelectedSubForModal(currentSubscription);
                           setIsSubModalOpen(true);
                         } else if (user) {
-                          handlePayment(plan);
+                          if (plan.planId === "free_plan") {
+                            if (user) {
+                              navigate(`/${user.role}/dashboard`);
+                            } else {
+                              navigate("/login");
+                            }
+                          } else {
+                            handlePayment(plan);
+                          }
                         } else {
                           toast.error("Please login to purchase a plan");
                           navigate("/login");
@@ -758,8 +771,8 @@ export default function PricingPlans() {
                         isCurrentActive
                           ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/25"
                           : plan.highlighted
-                          ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/25"
-                          : "bg-slate-900 hover:bg-slate-800 text-white shadow-slate-900/20"
+                            ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/25"
+                            : "bg-slate-900 hover:bg-slate-800 text-white shadow-slate-900/20"
                       }`}
                     >
                       {loadingPlan === planKey ? (
@@ -772,6 +785,11 @@ export default function PricingPlans() {
                           <CheckCircle2 className="w-4 h-4" />
                           Active Plan (View Modal)
                         </>
+                      ) : plan.planId === "free_plan" ? (
+                        <>
+                          <CreditCard className="w-4 h-4" />
+                          Get Started with Free Plan
+                        </>
                       ) : (
                         <>
                           <CreditCard className="w-4 h-4" />
@@ -782,7 +800,9 @@ export default function PricingPlans() {
                     <p className="text-center text-[11px] text-slate-400 mt-2">
                       {isCurrentActive
                         ? "Currently active on your account"
-                        : "Instant automated activation after payment"}
+                        : plan.planId === "free_plan"
+                          ? "Let's start your journey with our Free plan"
+                          : "Instant automated activation after payment"}
                     </p>
                   </div>
                 </motion.div>
@@ -826,4 +846,3 @@ export default function PricingPlans() {
     </div>
   );
 }
-
