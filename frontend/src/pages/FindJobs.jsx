@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Search,
   MapPin,
@@ -199,10 +199,11 @@ const getInitials = (name) => {
 
 export default function FindJobs() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const { categoriesType = [] } = useSelector((state) => state.dashboard);
   const { user } = useSelector((state) => state.auth);
-  console.log("user", user);
+
   // Extract popular roles from categoriesType
   const popularRoles = React.useMemo(() => {
     if (!Array.isArray(categoriesType)) return [];
@@ -226,13 +227,25 @@ export default function FindJobs() {
 
   // State Management
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [locationQuery, setLocationQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedSubCategories, setSelectedSubCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("search") || searchParams.get("searchQuery") || ""
+  );
+  const [locationQuery, setLocationQuery] = useState(
+    searchParams.get("location") || searchParams.get("locationQuery") || ""
+  );
+  const [selectedCategories, setSelectedCategories] = useState(
+    searchParams.get("category") ? [searchParams.get("category")] : []
+  );
+  const [selectedSubCategories, setSelectedSubCategories] = useState(
+    searchParams.get("subCategory") ? [searchParams.get("subCategory")] : []
+  );
   const [selectedExperience, setSelectedExperience] = useState([]);
-  const [selectedTypes, setSelectedTypes] = useState([]);
-  const [selectedModes, setSelectedModes] = useState([]);
+  const [selectedTypes, setSelectedTypes] = useState(
+    searchParams.get("jobType") ? [searchParams.get("jobType")] : []
+  );
+  const [selectedModes, setSelectedModes] = useState(
+    searchParams.get("workMode") ? [searchParams.get("workMode")] : []
+  );
   const [selectedSalaryRanges, setSelectedSalaryRanges] = useState([]);
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
 

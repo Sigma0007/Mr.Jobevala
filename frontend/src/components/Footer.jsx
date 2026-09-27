@@ -45,17 +45,21 @@ export default function Footer() {
               to="/"
               className="flex items-center gap-2.5 mb-6 group inline-flex"
             >
-              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)] group-hover:bg-brand-500 transition-colors">
-                <Briefcase className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(50,168,153,0.4)] group-hover:bg-brand-400 transition-colors text-white font-black text-base">
+                JW
               </div>
-              <span className="text-2xl font-black text-white tracking-tight">
-                JobPortal
-              </span>
+              <div className="flex flex-col">
+                <span className="text-xl font-black text-white tracking-tight">
+                  MR. <span className="text-brand-400">JOB WALA</span>
+                </span>
+                <span className="text-[10px] font-semibold text-brand-300 uppercase tracking-wider">
+                  Your Career Guardian Angel
+                </span>
+              </div>
             </Link>
 
             <p className="text-slate-400 text-[15px] leading-relaxed mb-8 max-w-sm">
-              Connecting elite talent with the world's most innovative
-              companies. Your next career breakthrough starts here.
+              Connecting high-caliber talent with verified innovative companies. Your next career breakthrough starts with Angel Precision.
             </p>
 
             {/* Newsletter CTA */}

@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 
-// Using reliable, high-quality SVG logos of top companies
 const COMPANIES = [
   {
     name: "Google",
@@ -11,8 +10,16 @@ const COMPANIES = [
     logo: "https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg",
   },
   {
+    name: "Amazon",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
+  },
+  {
     name: "Spotify",
     logo: "https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg",
+  },
+  {
+    name: "Netflix",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg",
   },
   {
     name: "Airbnb",
@@ -23,64 +30,57 @@ const COMPANIES = [
     logo: "https://upload.wikimedia.org/wikipedia/commons/b/b9/Slack_Technologies_Logo.svg",
   },
   {
-    name: "Netflix",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg",
-  },
-  {
-    name: "Amazon",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
+    name: "Uber",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png",
   },
 ];
 
 export default function CompanyMarquee() {
-  // We duplicate the array to create a seamless, infinite loop
   const duplicatedCompanies = [...COMPANIES, ...COMPANIES];
 
   return (
-    <section className="py-12 bg-white border-b border-slate-100 overflow-hidden">
+    <section className="py-10 bg-white border-y border-brand-100/70 overflow-hidden relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Eyebrow Heading */}
-        <div className="text-center mb-8">
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-            Trusted by teams at top companies worldwide
+        <div className="text-center mb-7">
+          <p className="text-xs sm:text-sm font-bold text-navy-800/70 uppercase tracking-widest flex items-center justify-center gap-2">
+            <span className="w-8 h-px bg-brand-300"></span>
+            Trusted by top hiring teams &amp; fortune 500 tech leaders
+            <span className="w-8 h-px bg-brand-300"></span>
           </p>
         </div>
 
-        {/* 
-          Marquee Container 
-          The mask-image creates that premium fade-in/fade-out effect on the left and right edges.
-        */}
+        {/* Marquee Container with Gradient Mask */}
         <div
-          className="relative flex items-center max-w-5xl mx-auto w-full"
+          className="relative flex items-center max-w-6xl mx-auto w-full overflow-hidden"
           style={{
             maskImage:
-              "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+              "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
             WebkitMaskImage:
-              "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+              "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
           }}
         >
-          {/* Framer Motion Infinite Scroll */}
           <motion.div
-            className="flex items-center gap-16 md:gap-24 w-max"
+            className="flex items-center gap-14 md:gap-20 w-max py-2"
             animate={{
               x: ["0%", "-50%"],
             }}
             transition={{
               repeat: Infinity,
               ease: "linear",
-              duration: 30, // Adjust speed here (higher = slower)
+              duration: 25,
             }}
           >
             {duplicatedCompanies.map((company, index) => (
               <div
                 key={index}
-                className="flex items-center justify-center w-32 md:w-40"
+                className="flex items-center justify-center w-28 sm:w-36 h-10 grayscale hover:grayscale-0 opacity-60 hover:opacity-100 transition-all duration-300 cursor-pointer transform hover:scale-110"
               >
                 <img
-                  src={import.meta.env.VITE_API_URL + company.logo}
+                  src={company.logo}
                   alt={`${company.name} logo`}
-                  // Removed grayscale and adjusted base opacity to 70%
-                  className="w-full h-auto object-contain opacity-70 hover:opacity-100 transition-all duration-300 cursor-pointer"
+                  className="max-h-8 max-w-full object-contain"
+                  loading="lazy"
                 />
               </div>
             ))}

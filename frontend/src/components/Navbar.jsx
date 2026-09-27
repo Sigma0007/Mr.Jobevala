@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { logoutUser } from "../Redux/Auth/AuthAction";
 import NotificationCenter from "./NotificationCenter";
+import Logo from "../../public/Image/logo.jpeg";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,14 +57,19 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             to="/"
-            className="flex-shrink-0 flex items-center gap-2 cursor-pointer"
+            className="flex-shrink-0 flex items-center gap-2.5 cursor-pointer group"
           >
-            <div className="bg-brand-600 p-2 rounded-xl text-white">
-              <Briefcase className="w-6 h-6" strokeWidth={2} />
+            <div className="w-11 h-11 rounded-xl overflow-hidden shadow-sm border border-brand-200/60 bg-white flex items-center justify-center group-hover:scale-105 transition-transform">
+              <img src={Logo} alt="MR. JOB WALA" className="w-full h-full object-contain" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900">
-              Job<span className="text-brand-600">Portal</span>
-            </span>
+            <div className="flex flex-col">
+              <span className="text-lg font-extrabold tracking-tight text-navy-900 leading-tight">
+                MR. <span className="text-brand-600">JOB WALA</span>
+              </span>
+              <span className="text-[10px] font-semibold text-brand-600 tracking-wider uppercase -mt-0.5">
+                Career Guardian
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Navigation Links */}
