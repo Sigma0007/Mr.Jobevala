@@ -16,16 +16,16 @@ export default function Footer() {
     employers: [
       { name: "Post a Job", href: "/provider/dashboard" },
       { name: "Employer Dashboard", href: "/provider/dashboard" },
-      { name: "Browse Candidates", href: "#" },
-      { name: "Pricing Plans", href: "#" },
-      { name: "Hiring Resources", href: "#" },
+      { name: "Browse Candidates", href: "/candidates" },
+      { name: "Pricing Plans", href: "/pricing" },
+      { name: "Help Center", href: "/help-center" },
     ],
     company: [
-      { name: "About Us", href: "#" },
-      { name: "Contact", href: "#" },
-      { name: "Privacy Policy", href: "#" },
-      { name: "Terms of Service", href: "#" },
-      { name: "Help Center", href: "#" },
+      { name: "About Us", href: "/about" },
+      { name: "Contact", href: "/contact" },
+      { name: "Privacy Policy", href: "/privacy-policy" },
+      { name: "Terms of Service", href: "/terms-of-service" },
+      { name: "Help Center", href: "/help-center" },
     ],
   };
 
@@ -184,9 +184,13 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-800/60 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
           <p className="text-slate-500 text-sm font-medium">
-            © {currentYear} JobPortal Inc. All rights reserved.
+            © {currentYear} MR. JOB WALA. All rights reserved.
           </p>
-          <div className="flex items-center gap-6 text-sm font-medium text-slate-500"></div>
+          <div className="flex items-center gap-6 text-sm font-medium text-slate-500">
+            <Link to="/privacy-policy" className="hover:text-brand-400 transition-colors">Privacy Policy</Link>
+            <Link to="/terms-of-service" className="hover:text-brand-400 transition-colors">Terms of Service</Link>
+            <Link to="/contact" className="hover:text-brand-400 transition-colors">Contact Support</Link>
+          </div>
         </div>
       </div>
     </footer>

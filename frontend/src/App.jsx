@@ -23,12 +23,18 @@ import PricingPlans from "./pages/PricingPlans";
 import PaymentHistory from "./pages/PaymentHistory";
 import ResumeBuilder from "./pages/ResumeBuilder";
 import CommunityFeed from "./pages/CommunityFeed";
+import AboutUs from "./pages/AboutUs";
+import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import HelpCenter from "./pages/HelpCenter";
 import { useEffect } from "react";
 import { setAllCategoriesType } from "./Redux/Dashboard/DashboardAction";
 import { useDispatch } from "react-redux";
 import customerservice from "./customer/customerservice";
 import MSGLogin from "./components/MSG/MSGLogin";
 import { SocketProvider } from "./context/SocketContext";
+import ScrollToTop from "./components/ScrollToTop";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -50,6 +56,7 @@ export default function App() {
 
   return (
     <SocketProvider>
+      <ScrollToTop />
       <div className="min-h-screen bg-slate-50 font-sans relative">
         {/* 
             The InitialLoader sits here. It blocks the UI visually 
@@ -90,7 +97,6 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/msglogin" element={<MSGLogin />} />
           <Route path="/register" element={<Register />} />
-
           <Route path="/jobs" element={<FindJobs />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/feed" element={<CommunityFeed />} />
@@ -100,9 +106,16 @@ export default function App() {
           <Route path="/payments/history" element={<PaymentHistory />} />
           <Route path="/resume" element={<ResumeBuilder />} />
           <Route path="/resume-builder" element={<ResumeBuilder />} />
-
+          {/* Company & Support Pages */}
+          <Route path="/about" element={<AboutUs />} />\
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/help" element={<HelpCenter />} />
+          <Route path="/help-center" element={<HelpCenter />} />
           {/* ADMIN */}
-
           <Route
             path="/admin/dashboard"
             element={
@@ -111,9 +124,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
           {/* PROVIDER */}
-
           <Route
             path="/provider/dashboard"
             element={
@@ -122,7 +133,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/provider/jobs/:id/edit"
             element={
@@ -131,7 +141,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/provider/jobs/:id/applications"
             element={
@@ -140,9 +149,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
           {/* USER */}
-
           <Route
             path="/user/dashboard"
             element={
@@ -151,7 +158,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/user/applied/:id"
             element={
