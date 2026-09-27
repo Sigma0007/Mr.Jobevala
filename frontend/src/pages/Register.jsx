@@ -316,32 +316,36 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-50 to-slate-100/50">
+    <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center pt-28 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background Ambient Glows */}
+      <div className="absolute top-10 left-10 w-96 h-96 bg-brand-200/40 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-navy-200/30 rounded-full blur-[100px] pointer-events-none" />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="max-w-md w-full space-y-8 bg-white p-8 sm:p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-100 relative"
+        className="max-w-md w-full bg-white p-8 sm:p-10 rounded-3xl shadow-[0_15px_40px_-10px_rgba(14,39,56,0.12)] border border-brand-100 relative z-10"
       >
-        <div>
-          <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center mx-auto mb-4 border border-brand-100">
+        <div className="text-center">
+          <div className="w-13 h-13 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center mx-auto mb-3 border border-brand-200 shadow-xs">
             <User className="w-6 h-6" />
           </div>
-          <h2 className="text-center text-3xl font-extrabold text-slate-900 tracking-tight">
-            Create your account
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-navy-950 tracking-tight">
+            Create Free Account
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-500">
+          <p className="mt-1.5 text-sm text-slate-500 font-medium">
             Already have an account?{" "}
             <Link
               to="/login"
-              className="font-semibold text-brand-600 hover:text-brand-500 transition-colors"
+              className="font-bold text-brand-600 hover:text-brand-700 transition-colors"
             >
               Sign in
             </Link>
           </p>
         </div>
 
-        <form className="mt-8 space-y-5" onSubmit={handleInitiateRegister}>
+        <form className="mt-7 space-y-4" onSubmit={handleInitiateRegister}>
           <div className="space-y-4">
             {/* FULL NAME */}
             <div>
@@ -474,7 +478,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={sendingOtp || loading}
-            className="w-full py-3.5 px-4 mt-6 border border-transparent text-sm font-semibold rounded-xl text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-brand-500/20 transition-all flex items-center justify-center gap-2"
+            className="w-full py-3.5 px-4 mt-6 rounded-xl text-white font-bold text-sm bg-gradient-to-r from-navy-900 via-brand-700 to-brand-600 hover:from-navy-950 hover:to-brand-700 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-brand-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             {sendingOtp ? (
               <>
@@ -483,7 +487,7 @@ export default function Register() {
               </>
             ) : (
               <>
-                <span>Continue & Verify Phone</span>
+                <span>Continue &amp; Verify Phone</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

@@ -265,7 +265,7 @@ export default function PricingPlans() {
           category: plan.category,
         },
         theme: {
-          color: "#4f46e5", // Indigo theme
+          color: "#26897D", // MR. JOB WALA Teal theme
         },
         handler: async function (response) {
           try {
@@ -362,32 +362,35 @@ export default function PricingPlans() {
     categories.find((cat) => cat.id === activeTab) || categories[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FAF8F5] pt-28 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background Ambient Glows */}
+      <div className="absolute top-10 left-10 w-96 h-96 bg-brand-200/40 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-navy-200/30 rounded-full blur-[100px] pointer-events-none" />
+
       {/* Header Banner */}
-      <div className="max-w-4xl mx-auto text-center mb-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold uppercase tracking-wider mb-4 shadow-sm">
-          <Sparkles className="w-4 h-4 text-indigo-600" />
-          <span>Transparent Pricing & Instant Activation</span>
+      <div className="max-w-4xl mx-auto text-center mb-12 relative z-10">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-bold uppercase tracking-widest mb-4 shadow-2xs">
+          <Sparkles className="w-4 h-4 text-brand-600" />
+          <span>Transparent Pricing &amp; Instant Activation</span>
         </div>
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-navy-950 tracking-tight leading-tight">
           Choose the Perfect Plan for{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-brand-500 to-navy-800">
             Your Growth
           </span>
         </h1>
-        <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed font-medium">
           Tailored solutions for{" "}
-          <span className="font-semibold text-slate-800">Job Seekers</span>,{" "}
-          <span className="font-semibold text-slate-800">Employers</span>, and{" "}
-          <span className="font-semibold text-slate-800">Agencies</span>. Enjoy
-          safe, instant payments via UPI, Cards, NetBanking, and Wallets.
+          <strong className="text-navy-900">Job Seekers</strong>,{" "}
+          <strong className="text-navy-900">Employers</strong>, and{" "}
+          <strong className="text-navy-900">Agencies</strong> with safe, instant payments.
         </p>
 
         {user && (
           <div className="mt-6 flex items-center justify-center gap-4 flex-wrap">
             <Link
               to="/payments/history"
-              className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-all border border-indigo-100"
+              className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-brand-700 hover:text-brand-800 bg-brand-50/80 hover:bg-brand-100 px-4 py-2 rounded-xl transition-all border border-brand-200"
             >
               <CreditCard className="w-4 h-4" />
               View My Transaction History
@@ -399,7 +402,7 @@ export default function PricingPlans() {
                   setSelectedSubForModal(currentSubscription);
                   setIsSubModalOpen(true);
                 }}
-                className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-4 py-2 rounded-xl transition-all border border-emerald-200 cursor-pointer"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-800 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-4 py-2 rounded-xl transition-all border border-emerald-200 cursor-pointer"
               >
                 <Crown className="w-4 h-4 text-amber-500" />
                 <span>My Active Subscription Details</span>
@@ -468,7 +471,7 @@ export default function PricingPlans() {
       )}
 
       {/* Category Tab Selector */}
-      <div className="max-w-4xl mx-auto mb-12">
+      <div className="max-w-4xl mx-auto mb-12 relative z-10">
         <div className="bg-slate-100/80 p-1.5 rounded-2xl sm:rounded-full flex flex-wrap sm:flex-nowrap items-center justify-center gap-2 shadow-inner border border-slate-200">
           {categories.map((cat) => {
             const Icon = cat.icon;
@@ -477,14 +480,14 @@ export default function PricingPlans() {
               <button
                 key={cat.id}
                 onClick={() => setActiveTab(cat.id)}
-                className={`flex-1 min-w-[140px] sm:min-w-0 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl sm:rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 relative ${
+                className={`flex-1 min-w-[140px] sm:min-w-0 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl sm:rounded-full text-xs sm:text-sm font-bold transition-all duration-200 relative cursor-pointer ${
                   isActive
-                    ? "text-white shadow-md bg-gradient-to-r from-indigo-600 to-blue-600"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                    ? "text-white shadow-md bg-gradient-to-r from-navy-950 via-navy-900 to-brand-700"
+                    : "text-slate-600 hover:text-navy-900 hover:bg-white/70"
                 }`}
               >
                 <Icon
-                  className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-500"}`}
+                  className={`w-4 h-4 ${isActive ? "text-brand-300" : "text-slate-500"}`}
                 />
                 <span>{cat.name}</span>
               </button>

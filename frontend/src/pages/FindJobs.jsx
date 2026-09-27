@@ -448,23 +448,26 @@ export default function FindJobs() {
     selectedSalaryRanges.length;
 
   return (
-    <div className="min-h-screen pt-24 md:pt-28 pb-20 bg-slate-50/60 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-28 pb-20 bg-[#FAF8F5] font-sans text-navy-950 relative overflow-hidden">
+      {/* Background Ambient Glows */}
+      <div className="absolute top-10 left-10 w-96 h-96 bg-brand-200/40 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-40 right-10 w-96 h-96 bg-navy-200/25 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Page Hero Header */}
         <div className="mb-8 md:mb-10 text-center sm:text-left">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50/80 border border-blue-200/60 text-blue-700 text-xs font-bold uppercase tracking-wider mb-3 shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs font-bold uppercase tracking-wider mb-3 shadow-2xs">
+            <Sparkles className="w-3.5 h-3.5 text-brand-600 animate-pulse" />
             <span>Discover Verified Career Opportunities</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.15]">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-navy-950 tracking-tight leading-[1.15]">
             Find Your Next{" "}
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-brand-600 via-brand-500 to-navy-800 bg-clip-text text-transparent">
               Dream Job
             </span>
           </h1>
-          <p className="mt-2 text-slate-500 text-sm sm:text-base md:text-lg max-w-2xl font-normal">
-            Browse through hundreds of high-growth roles, competitive salaries,
-            and top-tier verified employers.
+          <p className="mt-2 text-slate-600 text-sm sm:text-base md:text-lg max-w-2xl font-medium">
+            Browse through verified high-growth roles, competitive salaries, and direct recruiter openings.
           </p>
         </div>
 
