@@ -116,6 +116,32 @@ const userProfileSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        travelDetails: {
+            passportNumber: {
+                type: String,
+                default: "",
+            },
+            drivingLicense: {
+                type: String,
+                default: "",
+            },
+            passportExpiry: {
+                type: String,
+                default: "",
+            },
+            aadhaarStatus: {
+                type: String,
+                default: "",
+            },
+            overseasDeployment: {
+                type: String,
+                default: "",
+            },
+            visaStatus: {
+                type: String,
+                default: "",
+            },
+        },
     },
     {
         timestamps: true,

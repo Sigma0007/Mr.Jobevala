@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, Globe, ExternalLink } from "lucide-react";
 import { FaLinkedin, FaGithub } from "react-icons/fa";
+import TravelDetailsSection from "../TravelDetailsSection";
 
 export default function MinimalTemplate({ resume, color, font }) {
   const {
@@ -11,7 +12,8 @@ export default function MinimalTemplate({ resume, color, font }) {
     projects = [],
     certifications = [],
     languages = [],
-    interests = []
+    interests = [],
+    travelDetails = {}
   } = resume;
 
   return (
@@ -239,6 +241,9 @@ export default function MinimalTemplate({ resume, color, font }) {
           </p>
         </section>
       )}
+
+      {/* Passport, License & Travel Details */}
+      <TravelDetailsSection travelDetails={travelDetails} variant="minimal" />
     </div>
   );
 }

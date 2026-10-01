@@ -391,6 +391,9 @@ export const updateUserProfile = catchAsync(async (req, res, next) => {
             updateData.skills = updateData.skills.split(",").map(s => s.trim()).filter(Boolean);
         }
     }
+    if (typeof updateData.travelDetails === "string") {
+        try { updateData.travelDetails = JSON.parse(updateData.travelDetails); } catch (e) {}
+    }
 
     let profile = await UserProfile.findOne({ user: userId });
     if (!profile) {

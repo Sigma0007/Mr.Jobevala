@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, Globe, ExternalLink, Sparkles, Feather, Bookmark } from "lucide-react";
 import { FaLinkedin, FaGithub } from "react-icons/fa";
+import TravelDetailsSection from "../TravelDetailsSection";
 
 export default function ChicTemplate({ resume, color, font }) {
   const {
@@ -11,7 +12,8 @@ export default function ChicTemplate({ resume, color, font }) {
     projects = [],
     certifications = [],
     languages = [],
-    interests = []
+    interests = [],
+    travelDetails = {}
   } = resume;
 
   return (
@@ -161,6 +163,9 @@ export default function ChicTemplate({ resume, color, font }) {
               </div>
             </section>
           )}
+
+          {/* Passport, License & Travel Details */}
+          <TravelDetailsSection travelDetails={travelDetails} variant="chic" />
         </div>
 
         {/* Right Column (Sidebar, 35%) */}

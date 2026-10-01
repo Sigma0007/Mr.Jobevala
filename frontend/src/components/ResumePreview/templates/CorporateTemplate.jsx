@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, Globe, ExternalLink, Briefcase, GraduationCap, Award, ShieldCheck } from "lucide-react";
 import { FaLinkedin, FaGithub } from "react-icons/fa";
+import TravelDetailsSection from "../TravelDetailsSection";
 
 export default function CorporateTemplate({ resume, color, font }) {
   const {
@@ -11,7 +12,8 @@ export default function CorporateTemplate({ resume, color, font }) {
     projects = [],
     certifications = [],
     languages = [],
-    interests = []
+    interests = [],
+    travelDetails = {}
   } = resume;
 
   return (
@@ -170,6 +172,9 @@ export default function CorporateTemplate({ resume, color, font }) {
               </div>
             </section>
           )}
+
+          {/* Passport, License & Travel Details */}
+          <TravelDetailsSection travelDetails={travelDetails} variant="corporate" />
         </div>
 
         {/* Right sidebar pane (35%) */}

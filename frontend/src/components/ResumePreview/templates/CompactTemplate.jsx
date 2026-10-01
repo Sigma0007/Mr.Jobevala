@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, Globe, ExternalLink } from "lucide-react";
 import { FaLinkedin, FaGithub } from "react-icons/fa";
+import TravelDetailsSection from "../TravelDetailsSection";
 
 export default function CompactTemplate({ resume, color, font }) {
   const {
@@ -11,7 +12,8 @@ export default function CompactTemplate({ resume, color, font }) {
     projects = [],
     certifications = [],
     languages = [],
-    interests = []
+    interests = [],
+    travelDetails = {}
   } = resume;
 
   return (
@@ -246,6 +248,9 @@ export default function CompactTemplate({ resume, color, font }) {
             </div>
           </section>
         )}
+
+        {/* Passport, License & Travel Details */}
+        <TravelDetailsSection travelDetails={travelDetails} variant="compact" />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, Globe, ExternalLink, Calendar } from "lucide-react";
 import { FaLinkedin, FaGithub } from "react-icons/fa";
+import TravelDetailsSection from "../TravelDetailsSection";
 
 export default function ModernTemplate({ resume, color, font }) {
   const {
@@ -11,7 +12,8 @@ export default function ModernTemplate({ resume, color, font }) {
     projects = [],
     certifications = [],
     languages = [],
-    interests = []
+    interests = [],
+    travelDetails = {}
   } = resume;
 
   return (
@@ -189,6 +191,9 @@ export default function ModernTemplate({ resume, color, font }) {
               </div>
             </section>
           )}
+
+          {/* Passport, License & Travel Details */}
+          <TravelDetailsSection travelDetails={travelDetails} variant="modern" />
         </div>
 
         {/* Sidebar Column */}

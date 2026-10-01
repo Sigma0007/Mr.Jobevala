@@ -114,7 +114,15 @@ export const initialResume = {
     "Cloud Architecture",
     "Marathon Running",
     "Chess"
-  ]
+  ],
+  travelDetails: {
+    passportNumber: "X9546559",
+    drivingLicense: "Valid Indian DL Available",
+    passportExpiry: "11/05/2033",
+    aadhaarStatus: "[Aadhaar Redacted]",
+    overseasDeployment: "Ready (Original Passport)",
+    visaStatus: "Clear (Eligible for Employment Visa)"
+  }
 };
 
 export const emptyResume = {
@@ -136,5 +144,13 @@ export const emptyResume = {
   projects: [],
   certifications: [],
   languages: [],
-  interests: []
+  interests: [],
+  travelDetails: {
+    passportNumber: "",
+    drivingLicense: "",
+    passportExpiry: "",
+    aadhaarStatus: "",
+    overseasDeployment: "",
+    visaStatus: ""
+  }
 };

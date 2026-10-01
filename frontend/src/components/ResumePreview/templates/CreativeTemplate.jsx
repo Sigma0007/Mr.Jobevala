@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, Globe, ExternalLink, Sparkles, Folder, GraduationCap, Award, Heart } from "lucide-react";
 import { FaLinkedin, FaGithub } from "react-icons/fa";
+import TravelDetailsSection from "../TravelDetailsSection";
 
 export default function CreativeTemplate({ resume, color, font }) {
   const {
@@ -11,7 +12,8 @@ export default function CreativeTemplate({ resume, color, font }) {
     projects = [],
     certifications = [],
     languages = [],
-    interests = []
+    interests = [],
+    travelDetails = {}
   } = resume;
 
   return (
@@ -274,6 +276,9 @@ export default function CreativeTemplate({ resume, color, font }) {
             )}
           </div>
         )}
+
+        {/* Passport, License & Travel Details */}
+        <TravelDetailsSection travelDetails={travelDetails} variant="creative" />
       </main>
     </div>
   );

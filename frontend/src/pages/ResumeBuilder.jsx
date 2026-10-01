@@ -28,7 +28,8 @@ import {
   Lock,
   ArrowRight,
   X,
-  ShieldCheck
+  ShieldCheck,
+  Plane
 } from "lucide-react";
 
 import { initialResume, emptyResume } from "../data/initialResume";
@@ -41,6 +42,7 @@ import ProjectsForm from "../components/ResumeForm/ProjectsForm";
 import CertificationsForm from "../components/ResumeForm/CertificationsForm";
 import LanguagesForm from "../components/ResumeForm/LanguagesForm";
 import InterestsForm from "../components/ResumeForm/InterestsForm";
+import TravelDetailsForm from "../components/ResumeForm/TravelDetailsForm";
 
 import ResumePreview from "../components/ResumePreview/ResumePreview";
 import TemplateSelector, { TEMPLATES_LIST } from "../components/TemplateSelector";
@@ -164,7 +166,8 @@ export default function ResumeBuilder() {
     projects: false,
     certifications: false,
     languages: false,
-    interests: false
+    interests: false,
+    travelDetails: true
   });
 
   // Form validation errors
@@ -475,6 +478,34 @@ export default function ResumeBuilder() {
                   errors={errors}
                   onChange={(personal) =>
                     setResumeData((prev) => ({ ...prev, personal }))
+                  }
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Form Section: Passport, License & Travel Details */}
+          <div className="form-section-card">
+            <div
+              className="form-section-header"
+              onClick={() => toggleSection("travelDetails")}
+            >
+              <div className="form-section-title">
+                <Plane className="w-4 h-4 text-brand-600" />
+                Passport, License & Travel Details
+              </div>
+              {openSections.travelDetails ? (
+                <ChevronUp className="w-4 h-4 text-slate-400" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              )}
+            </div>
+            {openSections.travelDetails && (
+              <div className="form-section-content">
+                <TravelDetailsForm
+                  data={resumeData.travelDetails}
+                  onChange={(travelDetails) =>
+                    setResumeData((prev) => ({ ...prev, travelDetails }))
                   }
                 />
               </div>

@@ -1,5 +1,6 @@
 import { Mail, Phone, MapPin, Globe, ExternalLink, User, Briefcase, GraduationCap, Award, Wrench, FolderGit2, Languages, Heart } from "lucide-react";
 import { FaLinkedin, FaGithub } from "react-icons/fa";
+import TravelDetailsSection from "../TravelDetailsSection";
 
 export default function InfographicTemplate({ resume, color, font }) {
   const {
@@ -11,7 +12,8 @@ export default function InfographicTemplate({ resume, color, font }) {
     projects = [],
     certifications = [],
     languages = [],
-    interests = []
+    interests = [],
+    travelDetails = {}
   } = resume;
 
   return (
@@ -257,6 +259,9 @@ export default function InfographicTemplate({ resume, color, font }) {
           )}
         </div>
       )}
+
+      {/* Passport, License & Travel Details */}
+      <TravelDetailsSection travelDetails={travelDetails} variant="infographic" />
     </div>
   );
 }

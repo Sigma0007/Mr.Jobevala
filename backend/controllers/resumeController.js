@@ -3314,6 +3314,215 @@ export const generateResumePdf = async (req, res) => {
   flex-direction: column;
   gap: 8px;
 }
+
+/* ============================================================
+   PASSPORT, LICENSE & TRAVEL DETAILS STYLES
+   ============================================================ */
+.resume-travel-section {
+  margin-top: 14px;
+  margin-bottom: 16px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.resume-travel-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary-color, #1e293b);
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.resume-travel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.resume-travel-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
+}
+
+.resume-travel-card-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.resume-travel-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--primary-color, #2563eb);
+  flex-shrink: 0;
+}
+
+.resume-travel-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.resume-travel-value {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #0f172a;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+/* Sidebar mode */
+.resume-travel-sidebar-block {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.resume-travel-side-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: inherit;
+  opacity: 0.9;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 3px;
+  margin: 0;
+}
+
+.resume-travel-sidebar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.resume-travel-side-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 5px 8px;
+  border-radius: 4px;
+}
+
+.resume-travel-side-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+.resume-travel-side-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: inherit;
+}
+
+/* Tech variant */
+.tech-travel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 12px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: monospace, monospace;
+}
+
+.tech-travel-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.tech-travel-label {
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tech-travel-value {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* Executive variant */
+.variant-executive .resume-travel-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid var(--primary-color, #1e3a8a);
+}
+
+/* Minimal variant */
+.variant-minimal .resume-travel-card {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #f1f5f9;
+  border-radius: 0;
+  padding: 4px 0;
+}
+
+/* Academic variant */
+.variant-academic .resume-travel-section-title {
+  font-family: Georgia, serif;
+  font-weight: normal;
+  border-bottom: 1px solid #cbd5e1;
+}
+.variant-academic .resume-travel-card {
+  background: #fafaf9;
+  border: 1px solid #e7e5e4;
+}
+
+/* Startup variant */
+.variant-startup .resume-travel-card {
+  background: #fff;
+  border: 1px solid #fecdd3;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Chic variant */
+.variant-chic .resume-travel-section-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  color: var(--primary-color, #be185d);
+}
+.variant-chic .resume-travel-card {
+  background: #fdf2f8;
+  border: 1px solid #fbcfe8;
+}
+
+/* Corporate variant */
+.variant-corporate .resume-travel-card {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}
+
+/* Infographic variant */
+.variant-infographic .resume-travel-card {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
           </style>
         </head>
         <body>

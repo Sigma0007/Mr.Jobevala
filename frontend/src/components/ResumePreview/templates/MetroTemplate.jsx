@@ -1,5 +1,6 @@
 import { LayoutGrid, Mail, Phone, MapPin, Globe, ExternalLink, Briefcase, GraduationCap, Award, Cpu, Code } from "lucide-react";
 import { FaLinkedin, FaGithub } from "react-icons/fa";
+import TravelDetailsSection from "../TravelDetailsSection";
 
 export default function MetroTemplate({ resume, color, font }) {
   const {
@@ -11,7 +12,8 @@ export default function MetroTemplate({ resume, color, font }) {
     projects = [],
     certifications = [],
     languages = [],
-    interests = []
+    interests = [],
+    travelDetails = {}
   } = resume;
 
   return (
@@ -226,6 +228,9 @@ export default function MetroTemplate({ resume, color, font }) {
           )}
         </div>
       )}
+
+      {/* Passport, License & Travel Details */}
+      <TravelDetailsSection travelDetails={travelDetails} variant="metro" />
     </div>
   );
 }
