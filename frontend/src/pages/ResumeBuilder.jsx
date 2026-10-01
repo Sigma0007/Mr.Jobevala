@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   FileText,
@@ -21,7 +23,12 @@ import {
   Sliders,
   Eye,
   Edit3,
-  Sparkles
+  Sparkles,
+  Crown,
+  Lock,
+  ArrowRight,
+  X,
+  ShieldCheck
 } from "lucide-react";
 
 import { initialResume, emptyResume } from "../data/initialResume";
@@ -36,8 +43,9 @@ import LanguagesForm from "../components/ResumeForm/LanguagesForm";
 import InterestsForm from "../components/ResumeForm/InterestsForm";
 
 import ResumePreview from "../components/ResumePreview/ResumePreview";
-import TemplateSelector from "../components/TemplateSelector";
+import TemplateSelector, { TEMPLATES_LIST } from "../components/TemplateSelector";
 import ColorSelector from "../components/ColorSelector";
+import customerservice from "../customer/customerservice";
 
 import "../styles/resume.css";
 import "../styles/builder.css";
@@ -46,6 +54,15 @@ const STORAGE_KEY = "resume_builder_data_v1";
 const SETTINGS_KEY = "resume_builder_settings_v1";
 
 export default function ResumeBuilder() {
+  const { user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+
+  // Subscription state
+  const [hasSubscriptionAccess, setHasSubscriptionAccess] = useState(false);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [lockedTemplateAttempted, setLockedTemplateAttempted] = useState(null);
+
   // Resume data state with localStorage persistence
   const [resumeData, setResumeData] = useState(() => {
     try {
@@ -84,6 +101,55 @@ export default function ResumeBuilder() {
       return "Inter, sans-serif";
     }
   });
+
+  // Check user subscription for resumeAccess
+  useEffect(() => {
+    const checkAccess = async () => {
+      setCheckingSubscription(true);
+      if (user?.role === "admin") {
+        setHasSubscriptionAccess(true);
+        setCheckingSubscription(false);
+        return;
+      }
+
+      if (!user) {
+        setHasSubscriptionAccess(false);
+        setCheckingSubscription(false);
+        return;
+      }
+
+      try {
+        const res = await customerservice.getCurrentSubscription();
+        if (
+          res?.success &&
+          res?.data &&
+          res.data.status === "active" &&
+          (res.data.resumeAccess || res.data.planDetails?.resumeAccess)
+        ) {
+          setHasSubscriptionAccess(true);
+        } else {
+          setHasSubscriptionAccess(false);
+        }
+      } catch (err) {
+        console.warn("Could not check subscription access:", err);
+        setHasSubscriptionAccess(false);
+      } finally {
+        setCheckingSubscription(false);
+      }
+    };
+
+    checkAccess();
+  }, [user]);
+
+  // If user does not have subscription and currently selected template is premium, fallback to modern (free simple template)
+  useEffect(() => {
+    if (!checkingSubscription && !hasSubscriptionAccess) {
+      const currentTmpl = TEMPLATES_LIST.find((t) => t.id === template);
+      if (currentTmpl?.isPremium) {
+        setTemplate("modern");
+      }
+    }
+  }, [hasSubscriptionAccess, checkingSubscription, template]);
 
   // Mobile tab state ('form' or 'preview')
   const [mobileTab, setMobileTab] = useState("form");
@@ -192,11 +258,26 @@ export default function ResumeBuilder() {
 
   // Browser-based Print fallback
   const handlePrint = () => {
+    const currentTmpl = TEMPLATES_LIST.find((t) => t.id === template);
+    if (currentTmpl?.isPremium && !hasSubscriptionAccess) {
+      setLockedTemplateAttempted(currentTmpl);
+      setUpgradeModalOpen(true);
+      toast.error("This premium template requires a Pro Subscription.");
+      return;
+    }
     window.print();
   };
 
   // Real PDF Export using Node.js Puppeteer backend
   const handleDownloadPdf = async () => {
+    const currentTmpl = TEMPLATES_LIST.find((t) => t.id === template);
+    if (currentTmpl?.isPremium && !hasSubscriptionAccess) {
+      setLockedTemplateAttempted(currentTmpl);
+      setUpgradeModalOpen(true);
+      toast.error("This premium template requires a Pro Subscription to download.");
+      return;
+    }
+
     const isValid = validateForm();
     if (!isValid) {
       toast.error("Please fill in the required personal information fields");
@@ -268,6 +349,32 @@ export default function ResumeBuilder() {
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
             Auto-saved
           </span>
+
+          {/* Subscription Status Pill */}
+          {hasSubscriptionAccess ? (
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <Crown className="w-3.5 h-3.5 text-amber-500" />
+              Pro All-Access (16 Templates)
+            </span>
+          ) : (
+            <div className="hidden sm:inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                <Sparkles className="w-3 h-3 text-amber-600" />
+                Free Tier: Simple Templates Only
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setLockedTemplateAttempted(null);
+                  setUpgradeModalOpen(true);
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white shadow-2xs transition-all cursor-pointer"
+              >
+                <Crown className="w-3 h-3 text-amber-300" />
+                Upgrade Plan
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="builder-topbar-actions">
@@ -331,6 +438,11 @@ export default function ResumeBuilder() {
             <TemplateSelector
               selectedTemplate={template}
               onSelectTemplate={setTemplate}
+              hasSubscriptionAccess={hasSubscriptionAccess}
+              onLockedTemplateClick={(tmpl) => {
+                setLockedTemplateAttempted(tmpl);
+                setUpgradeModalOpen(true);
+              }}
             />
             <ColorSelector
               selectedColor={color}
@@ -636,6 +748,117 @@ export default function ResumeBuilder() {
           <Eye className="w-3.5 h-3.5 inline mr-1" /> Preview
         </button>
       </div>
+
+      {/* Subscription Required / Upgrade Modal */}
+      {upgradeModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 no-print">
+          <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Header with gradient and glow */}
+            <div className="relative bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 text-white p-6 sm:p-7 overflow-hidden">
+              <div className="absolute -right-10 -top-10 w-36 h-36 bg-amber-500/20 rounded-full blur-2xl pointer-events-none"></div>
+
+              <button
+                type="button"
+                onClick={() => setUpgradeModalOpen(false)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-2.5">
+                <Crown className="w-3.5 h-3.5 text-amber-400" />
+                <span>Subscription Required</span>
+              </div>
+
+              <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                Unlock 16 Premium Templates
+              </h3>
+              <p className="text-xs sm:text-sm text-indigo-200 mt-1">
+                {lockedTemplateAttempted
+                  ? `The "${lockedTemplateAttempted.name}" template is an exclusive Pro plan feature.`
+                  : "Upgrade to any Pro plan to unlock all 16 premium resume designs & unlimited PDF exports."}
+              </p>
+            </div>
+
+            {/* Body Perks List */}
+            <div className="p-6 space-y-4">
+              <div className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                What you get with Pro Resume Access:
+              </div>
+
+              <div className="space-y-2.5 text-xs text-slate-700">
+                <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold">
+                    ✓
+                  </div>
+                  <div>
+                    <strong className="text-slate-900 block font-semibold">
+                      All 16 Executive, Tech & Creative Layouts
+                    </strong>
+                    <span className="text-slate-500 text-[11px]">
+                      Stand out with Wall Street, Leadership, Vogue, Infographic & Terminal formats.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold">
+                    ✓
+                  </div>
+                  <div>
+                    <strong className="text-slate-900 block font-semibold">
+                      High-Fidelity A4 Puppeteer PDF Generation
+                    </strong>
+                    <span className="text-slate-500 text-[11px]">
+                      Pixel-perfect multi-page export optimized for ATS scanners and recruiters.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold">
+                    ✓
+                  </div>
+                  <div>
+                    <strong className="text-slate-900 block font-semibold">
+                      Candidate Spotlight & Recruiter Direct Messaging
+                    </strong>
+                    <span className="text-slate-500 text-[11px]">
+                      Get top placement in recruiter searches & direct message quotas.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="p-6 pt-2 bg-slate-50/70 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setTemplate("modern");
+                  setUpgradeModalOpen(false);
+                }}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Use Free Simple Template
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setUpgradeModalOpen(false);
+                  navigate("/pricing");
+                }}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
+              >
+                <span>View Plans & Upgrade</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

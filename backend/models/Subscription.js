@@ -28,6 +28,7 @@ const subscriptionSchema = new mongoose.Schema(
             badge: { type: String, default: "" },
             description: { type: String, default: "" },
             features: { type: [String], default: [] },
+            resumeAccess: { type: Boolean, default: false },
             validityDays: { type: Number, default: 30 },
         },
         payment: {
@@ -62,6 +63,10 @@ const subscriptionSchema = new mongoose.Schema(
             enum: ["active", "inactive", "expired", "cancelled"],
             default: "active",
             index: true,
+        },
+        resumeAccess: {
+            type: Boolean,
+            default: false,
         },
         directMessagesLimit: {
             type: Number,

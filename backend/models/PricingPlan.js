@@ -76,6 +76,11 @@ const pricingPlanSchema = new mongoose.Schema(
             default: 0,
             min: [0, "Unlock contacts limit cannot be negative"],
         },
+        resumeAccess: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
         validityDays: {
             type: Number,
             default: 30,

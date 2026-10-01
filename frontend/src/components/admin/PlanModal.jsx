@@ -30,6 +30,7 @@ const PlanModal = ({ isOpen, onClose, planToEdit, onPlanSaved }) => {
     highlighted: false,
     description: "",
     features: [],
+    resumeAccess: false,
     directMessagesLimit: 0,
     jobPostsLimit: 0,
     companyPostsLimit: 0,
@@ -62,6 +63,7 @@ const PlanModal = ({ isOpen, onClose, planToEdit, onPlanSaved }) => {
         features: Array.isArray(planToEdit.features)
           ? [...planToEdit.features]
           : [],
+        resumeAccess: Boolean(planToEdit.resumeAccess),
         directMessagesLimit:
           planToEdit.directMessagesLimit !== undefined
             ? planToEdit.directMessagesLimit
@@ -95,6 +97,7 @@ const PlanModal = ({ isOpen, onClose, planToEdit, onPlanSaved }) => {
         highlighted: false,
         description: "",
         features: [],
+        resumeAccess: false,
         directMessagesLimit: 0,
         jobPostsLimit: 0,
         companyPostsLimit: 0,
@@ -361,6 +364,16 @@ const PlanModal = ({ isOpen, onClose, planToEdit, onPlanSaved }) => {
                             {formData.unlockContactsLimit} Contacts
                           </span>
                         )}
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold border ${
+                            formData.resumeAccess
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : "bg-slate-100 text-slate-600 border-slate-200"
+                          }`}
+                        >
+                          <Sparkles className="w-2.5 h-2.5" />
+                          {formData.resumeAccess ? "16 Premium Resumes" : "Simple Resumes Only"}
+                        </span>
                       </div>
                     )}
 
@@ -679,32 +692,74 @@ const PlanModal = ({ isOpen, onClose, planToEdit, onPlanSaved }) => {
           </div>
 
           {/* Toggles */}
-          <div className="flex flex-wrap gap-6 pt-2">
-            <label className="inline-flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.highlighted}
-                onChange={(e) => handleChange("highlighted", e.target.checked)}
-                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-slate-300"
-              />
-              <span className="text-sm font-medium text-slate-800 flex items-center gap-1.5">
-                <Flame className="w-4 h-4 text-amber-500" />
-                Featured Plan (Glow border & primary focus)
-              </span>
-            </label>
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/90 space-y-4">
+            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              Plan Privileges & Visibility Settings
+            </h4>
 
-            <label className="inline-flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.isActive}
-                onChange={(e) => handleChange("isActive", e.target.checked)}
-                className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 border-slate-300"
-              />
-              <span className="text-sm font-medium text-slate-800 flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                Active & Live on Pricing Page
-              </span>
-            </label>
+            {/* Resume Builder Access Toggle (True / False) */}
+            <div className="p-3.5 rounded-xl border border-indigo-100 bg-indigo-50/40 flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-900">
+                    Premium Resume Templates Access (Job Seekers)
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      formData.resumeAccess
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-slate-200 text-slate-600"
+                    }`}
+                  >
+                    {formData.resumeAccess ? "TRUE (Unlocked)" : "FALSE (Simple Only)"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  {formData.resumeAccess
+                    ? "Subscribers gain full access to all 16 premium resume builder templates & studio styles."
+                    : "Subscribers / free users are restricted to standard simple templates only (Minimal, Compact ATS, Modern)."}
+                </p>
+              </div>
+
+              <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
+                <input
+                  type="checkbox"
+                  checked={formData.resumeAccess}
+                  onChange={(e) => handleChange("resumeAccess", e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+
+            <div className="flex flex-wrap gap-6 pt-1">
+              <label className="inline-flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.highlighted}
+                  onChange={(e) => handleChange("highlighted", e.target.checked)}
+                  className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-slate-300"
+                />
+                <span className="text-sm font-medium text-slate-800 flex items-center gap-1.5">
+                  <Flame className="w-4 h-4 text-amber-500" />
+                  Featured Plan (Glow border & primary focus)
+                </span>
+              </label>
+
+              <label className="inline-flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => handleChange("isActive", e.target.checked)}
+                  className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 border-slate-300"
+                />
+                <span className="text-sm font-medium text-slate-800 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  Active & Live on Pricing Page
+                </span>
+              </label>
+            </div>
           </div>
 
           {/* Description */}

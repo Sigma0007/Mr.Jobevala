@@ -260,7 +260,7 @@ export const validateSubscriptionAction = catchAsync(async (req, res, next) => {
     const { actionType, consume = false } = req.body;
     const userId = req.user._id;
 
-    if (!["job_post", "company_post", "unlock_contact", "direct_message"].includes(actionType)) {
+    if (!["job_post", "company_post", "unlock_contact", "direct_message", "resume_builder", "resume_access"].includes(actionType)) {
         return next(new AppError("Invalid action type provided.", 400));
     }
 
@@ -300,6 +300,19 @@ export const validateSubscriptionAction = catchAsync(async (req, res, next) => {
             allowed: false,
             message: "No active subscription found. Please choose a plan to continue.",
             subscriptionRequired: true,
+        });
+    }
+
+    if (actionType === "resume_builder" || actionType === "resume_access") {
+        const hasResumeAccess = Boolean(sub.resumeAccess || sub.planDetails?.resumeAccess);
+        return res.status(200).json({
+            success: true,
+            allowed: hasResumeAccess,
+            hasResumeAccess,
+            message: hasResumeAccess
+                ? "Premium resume templates authorized under active subscription."
+                : "Active subscription does not include premium resume templates. Please upgrade.",
+            subscriptionRequired: !hasResumeAccess,
         });
     }
 
@@ -506,9 +519,10 @@ export const activateFreePlan = catchAsync(async (req, res, next) => {
             description: planDoc?.description || "Basic Free tier access to platform tools.",
             features: planDoc?.features || [
                 "Apply to public job listings with verified resume",
-                "Build & download professional resume PDF",
+                "Build & download simple resume templates (Minimal & Compact)",
                 "Community Feed access & networking",
             ],
+            resumeAccess: Boolean(planDoc?.resumeAccess),
             validityDays,
         },
         payment: null,
@@ -517,6 +531,7 @@ export const activateFreePlan = catchAsync(async (req, res, next) => {
         startDate,
         endDate,
         status: "active",
+        resumeAccess: Boolean(planDoc?.resumeAccess),
         directMessagesLimit: planDoc?.directMessagesLimit || 1,
         directMessagesUsed: 0,
         jobPostsLimit: planDoc?.jobPostsLimit || (req.user.role === "provider" ? 1 : 0),

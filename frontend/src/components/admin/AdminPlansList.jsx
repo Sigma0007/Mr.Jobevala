@@ -454,6 +454,16 @@ const AdminPlansList = () => {
                               {plan.unlockContactsLimit} Unlocks
                             </span>
                           )}
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold border ${
+                              plan.resumeAccess
+                                ? "bg-amber-50 text-amber-800 border-amber-200"
+                                : "bg-slate-100 text-slate-600 border-slate-200"
+                            }`}
+                          >
+                            <Sparkles className="w-2.5 h-2.5" />
+                            {plan.resumeAccess ? "Premium Resumes (True)" : "Simple Resumes (False)"}
+                          </span>
                         </div>
                       )}
 
