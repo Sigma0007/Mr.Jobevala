@@ -7,6 +7,7 @@ import AdminLocationsList from "./AdminLocationsList";
 import AdminPlansList from "./AdminPlansList";
 import AdminSubscriptionsList from "./AdminSubscriptionsList";
 import AdminReportsList from "./AdminReportsList";
+import AdminMarqueeList from "./AdminMarqueeList";
 import {
   LayoutDashboard,
   Users,
@@ -16,6 +17,7 @@ import {
   CreditCard,
   Crown,
   ShieldAlert,
+  Building2,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { setDashboardActiveTab } from "../../Redux/Dashboard/DashboardAction";
@@ -33,6 +35,7 @@ const AdminDashboard = () => {
     { id: "jobs", label: "Manage Jobs", icon: Briefcase },
     { id: "categories", label: "Manage Categories", icon: Layers },
     { id: "locations", label: "Manage Locations", icon: MapPin },
+    { id: "marquee", label: "Partner Logos", icon: Building2 },
   ];
 
   return (
@@ -43,7 +46,7 @@ const AdminDashboard = () => {
         </h1>
         <p className="text-slate-600 mt-2">
           Platform metrics, spam/fraud complaints & job reports, subscriptions,
-          pricing plans, categories, jobs, users, and locations.
+          pricing plans, categories, partner logos, jobs, users, and locations.
         </p>
       </div>
 
@@ -77,6 +80,7 @@ const AdminDashboard = () => {
         {dashboardActiveTab === "jobs" && <AdminJobsList />}
         {dashboardActiveTab === "categories" && <AdminCategoriesList />}
         {dashboardActiveTab === "locations" && <AdminLocationsList />}
+        {dashboardActiveTab === "marquee" && <AdminMarqueeList />}
       </div>
     </div>
   );

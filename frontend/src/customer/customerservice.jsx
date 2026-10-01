@@ -517,6 +517,47 @@ const deletePost = (id) => {
   return Auth(endpoint, {}, "DELETE");
 };
 
+// --- Marquee & Partner Company APIs ---
+const getMarqueeCompanies = () => {
+  const endpoint = `/api/marquee-companies`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getAdminMarqueeCompanies = () => {
+  const endpoint = `/api/marquee-companies/admin`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getMarqueeCompanyById = (id) => {
+  const endpoint = `/api/marquee-companies/detail/${id}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const createMarqueeCompany = (data, isFormData = false) => {
+  const endpoint = `/api/marquee-companies`;
+  return Auth(endpoint, data, "POST", isFormData);
+};
+
+const updateMarqueeCompany = (id, data, isFormData = false) => {
+  const endpoint = `/api/marquee-companies/${id}`;
+  return Auth(endpoint, data, "PUT", isFormData);
+};
+
+const deleteMarqueeCompany = (id) => {
+  const endpoint = `/api/marquee-companies/${id}`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
+const toggleMarqueeCompanyStatus = (id, data = {}) => {
+  const endpoint = `/api/marquee-companies/${id}/status`;
+  return Auth(endpoint, data, "PATCH");
+};
+
+const seedMarqueeCompanies = (data = {}) => {
+  const endpoint = `/api/marquee-companies/seed`;
+  return Auth(endpoint, data, "POST");
+};
+
 export default {
   registerUser,
   loginUser,
@@ -620,4 +661,13 @@ export default {
   toggleLikePost,
   sharePost,
   deletePost,
+  getMarqueeCompanies,
+  getAdminMarqueeCompanies,
+  getMarqueeCompanyById,
+  createMarqueeCompany,
+  updateMarqueeCompany,
+  deleteMarqueeCompany,
+  toggleMarqueeCompanyStatus,
+  seedMarqueeCompanies,
 };
+

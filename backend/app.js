@@ -18,6 +18,7 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import resumeRoutes from "./routes/resumeRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
+import marqueeCompanyRoutes from "./routes/marqueeCompanyRoutes.js";
 
 import { errorHandler } from "./middleware/errorMiddleware.js";
 
@@ -63,6 +64,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/marquee-companies", marqueeCompanyRoutes);
 
 app.use(errorHandler);
 
