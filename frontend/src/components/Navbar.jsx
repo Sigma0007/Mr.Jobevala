@@ -18,9 +18,9 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", href: "/", protected: false },
     { name: "Find Jobs", href: "/jobs", protected: false },
-    { name: "Community Feed", href: "/feed", protected: false },
+    { name: "Abroad Post", href: "/feed", protected: false },
     { name: "Find Candidates", href: "/candidates", protected: true },
-    { name: "Resume Builder", href: "/resume", protected: false },
+    { name: "Resume Maker", href: "/resume", protected: false },
     { name: "Pricing & Plans", href: "/pricing", protected: false },
   ];
 
@@ -60,7 +60,11 @@ export default function Navbar() {
             className="flex-shrink-0 flex items-center gap-2.5 cursor-pointer group"
           >
             <div className="w-11 h-11 rounded-xl overflow-hidden shadow-sm border border-brand-200/60 bg-white flex items-center justify-center group-hover:scale-105 transition-transform">
-              <img src={Logo} alt="MR. JOB WALA" className="w-full h-full object-contain" />
+              <img
+                src={Logo}
+                alt="MR. JOB WALA"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-extrabold tracking-tight text-navy-900 leading-tight">
