@@ -50,7 +50,7 @@ const AdminDashboard = () => {
         </p>
       </div>
 
-      <div className="flex space-x-2 mb-8 bg-slate-100 p-1.5 rounded-xl w-fit overflow-x-auto">
+      <div className="flex space-x-2 mb-8 bg-slate-100 p-1.5 rounded-xl  overflow-x-auto w-full ">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = dashboardActiveTab === tab.id;
