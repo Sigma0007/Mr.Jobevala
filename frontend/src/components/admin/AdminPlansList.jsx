@@ -19,6 +19,7 @@ import {
   MessageSquare,
   Briefcase,
   UserCheck,
+  Users,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import PlanModal from "./PlanModal";
@@ -78,7 +79,9 @@ const AdminPlansList = () => {
       const response = await api.deletePricingPlan(targetId);
       if (response.success) {
         toast.success(response.message || "Pricing plan deleted successfully!");
-        setPlans((prev) => prev.filter((p) => (p._id || p.planId) !== targetId));
+        setPlans((prev) =>
+          prev.filter((p) => (p._id || p.planId) !== targetId),
+        );
       } else {
         toast.error(response.message || "Failed to delete pricing plan.");
       }
@@ -102,7 +105,9 @@ const AdminPlansList = () => {
         );
         setPlans((prev) =>
           prev.map((p) =>
-            (p._id || p.planId) === targetId ? { ...p, isActive: newStatus } : p,
+            (p._id || p.planId) === targetId
+              ? { ...p, isActive: newStatus }
+              : p,
           ),
         );
       } else {
@@ -158,19 +163,26 @@ const AdminPlansList = () => {
 
     return (
       matchesCategory &&
-      (matchesName || matchesId || matchesCategoryName || matchesDesc || matchesFeature)
+      (matchesName ||
+        matchesId ||
+        matchesCategoryName ||
+        matchesDesc ||
+        matchesFeature)
     );
   });
 
   const activeCount = plans.filter((p) => p.isActive).length;
   const featuredCount = plans.filter((p) => p.highlighted).length;
   const seekersCount = plans.filter((p) => p.categoryId === "seekers").length;
-  const employersCount = plans.filter((p) => p.categoryId === "employers").length;
+  const employersCount = plans.filter(
+    (p) => p.categoryId === "employers",
+  ).length;
+  const customCount = plans.filter((p) => p.categoryId === "custom").length;
 
   return (
     <div className="space-y-6">
       {/* Metric Cards Banner */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-3.5">
           <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
             <CreditCard className="w-5 h-5" />
@@ -207,7 +219,21 @@ const AdminPlansList = () => {
           </div>
           <div>
             <p className="text-xs text-slate-500 font-medium">Employers</p>
-            <p className="text-xl font-bold text-violet-600">{employersCount}</p>
+            <p className="text-xl font-bold text-violet-600">
+              {employersCount}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 font-medium">
+              Special Audience
+            </p>
+            <p className="text-xl font-bold text-purple-600">{customCount}</p>
           </div>
         </div>
       </div>
@@ -221,7 +247,8 @@ const AdminPlansList = () => {
               Dynamic Pricing Plans Management
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Create, edit, toggle active status, and manage pricing & perks for Job Seekers and Employers.
+              Create, edit, toggle active status, and manage pricing & perks for
+              Job Seekers and Employers.
             </p>
           </div>
 
@@ -267,7 +294,7 @@ const AdminPlansList = () => {
               { id: "all", label: "All Plans" },
               { id: "seekers", label: "Job Seekers" },
               { id: "employers", label: "Employers" },
-              { id: "custom", label: "Custom" },
+              { id: "custom", label: "Special Audience" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -335,9 +362,12 @@ const AdminPlansList = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPlans.map((plan) => {
                 const discount =
-                  plan.originalPrice && plan.price && plan.originalPrice > plan.price
+                  plan.originalPrice &&
+                  plan.price &&
+                  plan.originalPrice > plan.price
                     ? Math.round(
-                        ((plan.originalPrice - plan.price) / plan.originalPrice) *
+                        ((plan.originalPrice - plan.price) /
+                          plan.originalPrice) *
                           100,
                       )
                     : 0;
@@ -399,6 +429,42 @@ const AdminPlansList = () => {
                       <p className="text-[11px] font-mono text-slate-400 mt-0.5">
                         Key: {plan.planId}
                       </p>
+
+                      {plan.categoryId === "custom" && (
+                        <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-lg bg-purple-50 text-purple-700 border border-purple-200">
+                            <Users className="w-3 h-3 text-purple-600" />
+                            {Array.isArray(plan.targetProviders) &&
+                            plan.targetProviders.length > 0
+                              ? `Targeted: ${plan.targetProviders.length} Provider(s)`
+                              : "Special Audience (Open)"}
+                          </span>
+                          {Array.isArray(plan.targetProviders) &&
+                            plan.targetProviders.length > 0 && (
+                              <span
+                                className="text-[10px] text-slate-500 truncate max-w-[200px]"
+                                title={plan.targetProviders
+                                  .map((p) =>
+                                    typeof p === "object"
+                                      ? p.name || p.email
+                                      : p,
+                                  )
+                                  .join(", ")}
+                              >
+                                (
+                                {plan.targetProviders
+                                  .map((p) =>
+                                    typeof p === "object"
+                                      ? p.name || p.email
+                                      : p,
+                                  )
+                                  .slice(0, 2)
+                                  .join(", ")}
+                                {plan.targetProviders.length > 2 ? "..." : ""})
+                              </span>
+                            )}
+                        </div>
+                      )}
 
                       <p className="mt-2 text-xs text-slate-600 line-clamp-2 min-h-[32px] leading-relaxed">
                         {plan.description || "No description provided."}
@@ -462,7 +528,9 @@ const AdminPlansList = () => {
                             }`}
                           >
                             <Sparkles className="w-2.5 h-2.5" />
-                            {plan.resumeAccess ? "Premium Resumes (True)" : "Simple Resumes (False)"}
+                            {plan.resumeAccess
+                              ? "Premium Resumes (True)"
+                              : "Simple Resumes (False)"}
                           </span>
                         </div>
                       )}

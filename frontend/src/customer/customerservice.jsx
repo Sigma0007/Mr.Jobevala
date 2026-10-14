@@ -366,6 +366,11 @@ const seedPricingPlans = (data = {}) => {
   return Auth(endpoint, data, "POST");
 };
 
+const getPricingPlanProviders = () => {
+  const endpoint = `/api/plans/providers/list`;
+  return Auth(endpoint, {}, "GET");
+};
+
 // --- Subscription APIs ---
 
 const getCurrentSubscription = () => {
@@ -631,6 +636,7 @@ export default {
   updatePricingPlan,
   deletePricingPlan,
   seedPricingPlans,
+  getPricingPlanProviders,
   getCurrentSubscription,
   getMySubscriptionHistory,
   getAllSubscriptionsAdmin,

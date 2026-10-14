@@ -6,15 +6,17 @@ import {
     updatePlan,
     deletePlan,
     seedPlans,
+    getEligibleProviders,
 } from "../controllers/pricingPlanController.js";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, optionalAuth } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
-// Public routes
-router.get("/", getAllPlans);
-router.get("/:id", getPlanById);
+// Public / Authenticated routes
+router.get("/", optionalAuth, getAllPlans);
+router.get("/providers/list", protect, authorize("admin"), getEligibleProviders);
+router.get("/:id", optionalAuth, getPlanById);
 
 // Admin-protected routes
 router.post("/seed", protect, authorize("admin"), seedPlans);

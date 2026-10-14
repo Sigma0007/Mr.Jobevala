@@ -1,4 +1,6 @@
 import PricingPlan from "../models/PricingPlan.js";
+import User from "../models/User.js";
+import CompanyProfile from "../models/CompanyProfile.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
 
@@ -204,9 +206,54 @@ export const DEFAULT_PLANS = [
 
 
 /**
+ * @desc Get all eligible service providers for custom audience targeting
+ * @route GET /api/plans/providers/list
+ * @access Admin only
+ */
+export const getEligibleProviders = catchAsync(async (req, res, next) => {
+    // Find all users with role 'provider'
+    const providers = await User.find({ role: "provider" })
+        .select("_id name email phone isActive createdAt")
+        .sort({ name: 1 })
+        .lean();
+
+    const providerIds = providers.map((p) => p._id);
+    const profiles = await CompanyProfile.find({ user: { $in: providerIds } })
+        .select("user companyName logo industry location")
+        .lean();
+
+    const profileMap = new Map();
+    profiles.forEach((prof) => {
+        if (prof?.user) {
+            profileMap.set(prof.user.toString(), prof);
+        }
+    });
+
+    const enrichedProviders = providers.map((p) => {
+        const prof = profileMap.get(p._id.toString());
+        return {
+            _id: p._id,
+            name: p.name,
+            email: p.email,
+            phone: p.phone || "",
+            isActive: p.isActive,
+            companyName: prof?.companyName || "",
+            companyLogo: prof?.logo || "",
+            location: prof?.location || "",
+        };
+    });
+
+    res.status(200).json({
+        success: true,
+        count: enrichedProviders.length,
+        data: enrichedProviders,
+    });
+});
+
+/**
  * @desc Get all pricing plans
  * @route GET /api/plans
- * @access Public (all active plans) / Admin (can view all including inactive with ?all=true)
+ * @access Public / Authenticated / Admin
  */
 export const getAllPlans = catchAsync(async (req, res, next) => {
     const { categoryId, all } = req.query;
@@ -222,15 +269,80 @@ export const getAllPlans = catchAsync(async (req, res, next) => {
     }
 
     const filter = {};
-    if (categoryId) {
-        filter.categoryId = categoryId;
-    }
-    // Only return active plans for regular users unless explicitly requested by admin
-    if (all !== "true") {
-        filter.isActive = true;
+
+    // Admin view with ?all=true
+    if (all === "true" && req.user && req.user.role === "admin") {
+        if (categoryId && categoryId !== "all") {
+            filter.categoryId = categoryId;
+        }
+        const plans = await PricingPlan.find(filter)
+            .populate("targetProviders", "name email phone")
+            .sort({ sortOrder: 1, createdAt: 1 });
+
+        return res.status(200).json({
+            success: true,
+            count: plans.length,
+            data: plans,
+        });
     }
 
-    const plans = await PricingPlan.find(filter).sort({ sortOrder: 1, createdAt: 1 });
+    // Only return active plans for non-admin all queries
+    filter.isActive = true;
+
+    if (req.user && req.user.role === "admin") {
+        // Admin sees all active plans
+        if (categoryId && categoryId !== "all") {
+            filter.categoryId = categoryId;
+        }
+    } else if (req.user) {
+        // Logged-in user / provider
+        if (categoryId === "custom") {
+            filter.categoryId = "custom";
+            filter.targetProviders = req.user._id;
+        } else if (categoryId && categoryId !== "all") {
+            filter.categoryId = categoryId;
+            filter.$or = [
+                { targetProviders: { $exists: false } },
+                { targetProviders: { $size: 0 } },
+                { targetProviders: req.user._id },
+            ];
+        } else {
+            filter.$or = [
+                {
+                    categoryId: { $ne: "custom" },
+                    $or: [
+                        { targetProviders: { $exists: false } },
+                        { targetProviders: { $size: 0 } },
+                    ],
+                },
+                {
+                    targetProviders: req.user._id,
+                },
+            ];
+        }
+    } else {
+        // Unauthenticated guest
+        if (categoryId === "custom") {
+            return res.status(200).json({
+                success: true,
+                count: 0,
+                data: [],
+            });
+        }
+        if (categoryId && categoryId !== "all") {
+            filter.categoryId = categoryId;
+        } else {
+            filter.categoryId = { $ne: "custom" };
+        }
+        filter.$or = [
+            { targetProviders: { $exists: false } },
+            { targetProviders: { $size: 0 } },
+        ];
+    }
+
+    const plans = await PricingPlan.find(filter)
+        .populate("targetProviders", "name email phone")
+        .sort({ sortOrder: 1, createdAt: 1 });
 
     res.status(200).json({
         success: true,
@@ -242,21 +354,36 @@ export const getAllPlans = catchAsync(async (req, res, next) => {
 /**
  * @desc Get single plan by ID or planId slug
  * @route GET /api/plans/:id
- * @access Public
+ * @access Public / Authenticated
  */
 export const getPlanById = catchAsync(async (req, res, next) => {
     const { id } = req.params;
 
     let plan = null;
     if (id.match(/^[0-9a-fA-F]{24}$/)) {
-        plan = await PricingPlan.findById(id);
+        plan = await PricingPlan.findById(id).populate("targetProviders", "name email phone");
     }
     if (!plan) {
-        plan = await PricingPlan.findOne({ planId: id });
+        plan = await PricingPlan.findOne({ planId: id }).populate("targetProviders", "name email phone");
     }
 
     if (!plan) {
         return next(new AppError("Pricing plan not found", 404));
+    }
+
+    // Check custom audience access
+    if (plan.categoryId === "custom" || (plan.targetProviders && plan.targetProviders.length > 0)) {
+        const isAdmin = req.user && req.user.role === "admin";
+        const isTargeted =
+            req.user &&
+            plan.targetProviders &&
+            plan.targetProviders.some(
+                (tp) => (tp._id || tp).toString() === req.user._id.toString()
+            );
+
+        if (!isAdmin && !isTargeted) {
+            return next(new AppError("This pricing plan is only available for selected providers.", 403));
+        }
     }
 
     res.status(200).json({
@@ -290,6 +417,7 @@ export const createPlan = catchAsync(async (req, res, next) => {
         validityDays,
         sortOrder,
         isActive,
+        targetProviders,
     } = req.body;
 
     if (!name || price === undefined || originalPrice === undefined) {
@@ -334,8 +462,14 @@ export const createPlan = catchAsync(async (req, res, next) => {
         validityDays: Number(validityDays) || 30,
         sortOrder: Number(sortOrder) || 0,
         isActive: isActive !== undefined ? Boolean(isActive) : true,
+        targetProviders:
+            categoryId === "custom" && Array.isArray(targetProviders)
+                ? targetProviders.filter(Boolean)
+                : [],
         createdBy: req.user?._id || null,
     });
+
+    await newPlan.populate("targetProviders", "name email phone");
 
     res.status(201).json({
         success: true,
@@ -380,6 +514,7 @@ export const updatePlan = catchAsync(async (req, res, next) => {
         validityDays,
         sortOrder,
         isActive,
+        targetProviders,
     } = req.body;
 
     // Check if planId is being changed to another existing planId
@@ -391,7 +526,12 @@ export const updatePlan = catchAsync(async (req, res, next) => {
         plan.planId = planId.trim().toLowerCase();
     }
 
-    if (categoryId !== undefined) plan.categoryId = categoryId;
+    if (categoryId !== undefined) {
+        plan.categoryId = categoryId;
+        if (categoryId !== "custom") {
+            plan.targetProviders = [];
+        }
+    }
     if (category !== undefined) plan.category = category;
     if (name !== undefined) plan.name = name;
     if (price !== undefined) plan.price = Number(price);
@@ -409,7 +549,12 @@ export const updatePlan = catchAsync(async (req, res, next) => {
     if (sortOrder !== undefined) plan.sortOrder = Number(sortOrder);
     if (isActive !== undefined) plan.isActive = Boolean(isActive);
 
+    if (targetProviders !== undefined && (plan.categoryId === "custom" || categoryId === "custom")) {
+        plan.targetProviders = Array.isArray(targetProviders) ? targetProviders.filter(Boolean) : [];
+    }
+
     await plan.save();
+    await plan.populate("targetProviders", "name email phone");
 
     res.status(200).json({
         success: true,

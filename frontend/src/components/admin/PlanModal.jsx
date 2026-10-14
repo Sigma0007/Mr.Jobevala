@@ -14,6 +14,10 @@ import {
   MessageSquare,
   Briefcase,
   UserCheck,
+  Users,
+  Building2,
+  Search,
+  AlertCircle,
 } from "lucide-react";
 import api from "../../customer/customerservice";
 import { toast } from "react-hot-toast";
@@ -38,12 +42,43 @@ const PlanModal = ({ isOpen, onClose, planToEdit, onPlanSaved }) => {
     validityDays: 30,
     sortOrder: 0,
     isActive: true,
+    targetProviders: [],
   });
 
   const [newFeatureText, setNewFeatureText] = useState("");
   const [autoSlug, setAutoSlug] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showLivePreview, setShowLivePreview] = useState(false);
+
+  // Special Audience Provider Selector States
+  const [availableProviders, setAvailableProviders] = useState([]);
+  const [providersLoading, setProvidersLoading] = useState(false);
+  const [providerSearch, setProviderSearch] = useState("");
+
+  const fetchProviders = async () => {
+    setProvidersLoading(true);
+    try {
+      const res = await api.getPricingPlanProviders();
+      if (res?.success && Array.isArray(res.data)) {
+        setAvailableProviders(res.data);
+      } else {
+        const fallback = await api.getAdminUsers();
+        if (fallback?.success && Array.isArray(fallback.users)) {
+          setAvailableProviders(fallback.users.filter((u) => u.role === "provider"));
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching providers:", err);
+    } finally {
+      setProvidersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && formData.categoryId === "custom") {
+      fetchProviders();
+    }
+  }, [isOpen, formData.categoryId]);
 
   useEffect(() => {
     if (planToEdit) {
@@ -83,6 +118,11 @@ const PlanModal = ({ isOpen, onClose, planToEdit, onPlanSaved }) => {
         validityDays: planToEdit.validityDays || 30,
         sortOrder: planToEdit.sortOrder || 0,
         isActive: planToEdit.isActive !== undefined ? planToEdit.isActive : true,
+        targetProviders: Array.isArray(planToEdit.targetProviders)
+          ? planToEdit.targetProviders.map((p) =>
+              typeof p === "object" && p !== null ? p._id : p,
+            )
+          : [],
       });
       setAutoSlug(false);
     } else {
@@ -105,11 +145,42 @@ const PlanModal = ({ isOpen, onClose, planToEdit, onPlanSaved }) => {
         validityDays: 30,
         sortOrder: 0,
         isActive: true,
+        targetProviders: [],
       });
       setAutoSlug(true);
     }
     setNewFeatureText("");
+    setProviderSearch("");
   }, [planToEdit, isOpen]);
+
+  const handleToggleProvider = (providerId) => {
+    setFormData((prev) => {
+      const current = prev.targetProviders || [];
+      const exists = current.includes(providerId);
+      const updated = exists
+        ? current.filter((id) => id !== providerId)
+        : [...current, providerId];
+      return { ...prev, targetProviders: updated };
+    });
+  };
+
+  const handleSelectAllProviders = () => {
+    const allIds = availableProviders.map((p) => p._id);
+    setFormData((prev) => ({ ...prev, targetProviders: allIds }));
+  };
+
+  const handleClearProviders = () => {
+    setFormData((prev) => ({ ...prev, targetProviders: [] }));
+  };
+
+  const filteredProviders = availableProviders.filter((prov) => {
+    if (!providerSearch.trim()) return true;
+    const term = providerSearch.toLowerCase().trim();
+    const nameMatch = prov.name?.toLowerCase().includes(term);
+    const emailMatch = prov.email?.toLowerCase().includes(term);
+    const companyMatch = prov.companyName?.toLowerCase().includes(term);
+    return nameMatch || emailMatch || companyMatch;
+  });
 
   if (!isOpen) return null;
 
@@ -130,9 +201,15 @@ const PlanModal = ({ isOpen, onClose, planToEdit, onPlanSaved }) => {
       const updated = { ...prev, [field]: value };
 
       if (field === "categoryId") {
-        if (value === "seekers") updated.category = "For Job Seekers";
-        else if (value === "employers") updated.category = "For Employers";
-        else updated.category = "Custom Plan";
+        if (value === "seekers") {
+          updated.category = "For Job Seekers";
+          updated.targetProviders = [];
+        } else if (value === "employers") {
+          updated.category = "For Employers";
+          updated.targetProviders = [];
+        } else {
+          updated.category = "Special Audience / Custom Plan";
+        }
       }
 
       if (autoSlug && !planToEdit && (field === "name" || field === "categoryId" || field === "price")) {
@@ -195,6 +272,15 @@ const PlanModal = ({ isOpen, onClose, planToEdit, onPlanSaved }) => {
     if (!formData.features.length) {
       toast.error("Please add at least one feature item.");
       return;
+    }
+
+    if (formData.categoryId === "custom") {
+      if (!formData.targetProviders || formData.targetProviders.length === 0) {
+        toast.error(
+          "Please select at least one provider for this Custom / Special Audience plan.",
+        );
+        return;
+      }
     }
 
     setLoading(true);
@@ -377,6 +463,17 @@ const PlanModal = ({ isOpen, onClose, planToEdit, onPlanSaved }) => {
                       </div>
                     )}
 
+                    {formData.categoryId === "custom" && (
+                      <div className="my-2.5">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                          <Users className="w-3 h-3 text-purple-600" />
+                          {formData.targetProviders?.length > 0
+                            ? `Targeted to ${formData.targetProviders.length} Provider(s)`
+                            : "Special Audience (No providers selected)"}
+                        </span>
+                      </div>
+                    )}
+
                     <div className="w-full border-t border-slate-100 my-4"></div>
 
                     <div className="text-[11px] font-semibold text-slate-900 uppercase tracking-wider mb-2">
@@ -505,6 +602,199 @@ const PlanModal = ({ isOpen, onClose, planToEdit, onPlanSaved }) => {
               />
             </div>
           </div>
+
+          {/* Special Audience: Specific Provider Selection (Only shown when Target Category is Custom / Special Audience) */}
+          {formData.categoryId === "custom" && (
+            <div className="bg-gradient-to-br from-indigo-50/80 via-purple-50/50 to-slate-50 border-2 border-indigo-200/90 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm animate-in fade-in duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-100/80 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-slate-900">
+                        Target Specific Service Providers *
+                      </h4>
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">
+                        {formData.targetProviders?.length || 0} of {availableProviders.length} Selected
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      This custom plan will <strong className="text-indigo-900">ONLY</strong> show up in Plans &amp; Pricing for the provider accounts selected below.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSelectAllProviders}
+                    disabled={availableProviders.length === 0}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 transition-colors shadow-2xs disabled:opacity-50"
+                  >
+                    Select All ({availableProviders.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearProviders}
+                    disabled={!formData.targetProviders?.length}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors shadow-2xs disabled:opacity-50"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+
+              {/* Provider Search Filter */}
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={providerSearch}
+                  onChange={(e) => setProviderSearch(e.target.value)}
+                  placeholder="Search provider by name, company name, or email..."
+                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-indigo-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs"
+                />
+              </div>
+
+              {/* Selected Providers Chips */}
+              {formData.targetProviders && formData.targetProviders.length > 0 && (
+                <div className="space-y-1.5">
+                  <div className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider">
+                    Selected Providers ({formData.targetProviders.length}):
+                  </div>
+                  <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto p-2 bg-white/80 rounded-2xl border border-indigo-100">
+                    {formData.targetProviders.map((id) => {
+                      const providerObj = availableProviders.find((p) => p._id === id);
+                      const displayName = providerObj?.companyName
+                        ? `${providerObj.companyName} (${providerObj.name})`
+                        : providerObj?.name || id;
+                      return (
+                        <span
+                          key={id}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-medium shadow-2xs"
+                        >
+                          <Building2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                          <span className="truncate max-w-[220px]">{displayName}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleProvider(id)}
+                            className="text-indigo-400 hover:text-rose-600 p-0.5 rounded-full hover:bg-indigo-100 transition-colors ml-0.5"
+                            title="Remove"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Providers Selection List */}
+              <div className="bg-white rounded-2xl border border-indigo-100 overflow-hidden shadow-2xs">
+                {providersLoading ? (
+                  <div className="py-10 flex flex-col items-center justify-center gap-2 text-indigo-600">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span className="text-xs font-medium text-slate-500">
+                      Loading registered service providers...
+                    </span>
+                  </div>
+                ) : filteredProviders.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-slate-500">
+                    {providerSearch
+                      ? "No providers match your search filter."
+                      : "No registered service providers found on the platform."}
+                  </div>
+                ) : (
+                  <div className="max-h-60 overflow-y-auto divide-y divide-slate-100">
+                    {filteredProviders.map((provider) => {
+                      const isSelected = formData.targetProviders?.includes(
+                        provider._id,
+                      );
+                      return (
+                        <div
+                          key={provider._id}
+                          onClick={() => handleToggleProvider(provider._id)}
+                          className={`p-3.5 flex items-center justify-between gap-3 cursor-pointer transition-colors ${
+                            isSelected
+                              ? "bg-indigo-50/70 hover:bg-indigo-100/50"
+                              : "hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(isSelected)}
+                              onChange={() => {}} // toggled by parent onClick
+                              className="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer pointer-events-none"
+                            />
+                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm overflow-hidden">
+                              {provider.companyLogo ? (
+                                <img
+                                  src={provider.companyLogo}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                provider.name?.slice(0, 2).toUpperCase() || "PR"
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                                  {provider.name}
+                                </p>
+                                {provider.companyName && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md border border-indigo-200 truncate">
+                                    <Building2 className="w-2.5 h-2.5" />
+                                    {provider.companyName}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-500 truncate mt-0.5">
+                                {provider.email} {provider.phone ? `• ${provider.phone}` : ""}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="shrink-0">
+                            {isSelected ? (
+                              <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 bg-indigo-100 px-2.5 py-1 rounded-xl">
+                                <Check className="w-3.5 h-3.5" /> Selected
+                              </span>
+                            ) : (
+                              <span className="text-xs font-semibold text-slate-400 hover:text-indigo-600 px-2.5 py-1 rounded-xl">
+                                + Add
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Validation notification */}
+              {!formData.targetProviders || formData.targetProviders.length === 0 ? (
+                <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>
+                    Please select at least one service provider above. Only selected providers will be able to view and subscribe to this plan.
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    Great! This special plan is configured for <strong>{formData.targetProviders.length}</strong> selected provider user(s).
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Pricing & Discount Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 bg-indigo-50/40 p-4 rounded-2xl border border-indigo-100/60">

@@ -57,7 +57,11 @@ export default function PricingPlans() {
 
   // Initial tab based on user role
   const getDefaultCategory = () => {
-    if (user?.role === "recruiter" || user?.role === "employer")
+    if (
+      user?.role === "recruiter" ||
+      user?.role === "employer" ||
+      user?.role === "provider"
+    )
       return "employers";
     if (user?.role === "admin") return "employers";
     return "seekers";
@@ -75,7 +79,11 @@ export default function PricingPlans() {
 
   // Sync tab if user loads later
   useEffect(() => {
-    if (user?.role === "recruiter" || user?.role === "employer") {
+    if (
+      user?.role === "recruiter" ||
+      user?.role === "employer" ||
+      user?.role === "provider"
+    ) {
       setActiveTab("employers");
     }
   }, [user?.role]);
@@ -147,18 +155,25 @@ export default function PricingPlans() {
     plans.forEach((p) => {
       if (p.categoryId && !existingIds.has(p.categoryId)) {
         existingIds.add(p.categoryId);
+        const isCustom = p.categoryId === "custom";
         base.push({
           id: p.categoryId,
-          name: p.category || p.categoryId,
-          shortName: p.category || p.categoryId,
-          icon: Layers,
-          badge: "Special Plan",
-          tagline: "Custom curated plans for unique recruitment requirements.",
+          name: p.category || (isCustom ? "Special Offers for You" : p.categoryId),
+          shortName: isCustom ? "Special Offers" : (p.category || p.categoryId),
+          icon: isCustom ? Sparkles : Layers,
+          badge: isCustom ? "Exclusive" : "Special Plan",
+          tagline: isCustom
+            ? "Exclusive custom-curated plans created specifically for your account."
+            : "Custom curated plans for unique recruitment requirements.",
         });
       }
     });
 
     return base;
+  }, [plans]);
+
+  const hasCustomPlansForUser = React.useMemo(() => {
+    return plans.some((p) => p.categoryId === "custom");
   }, [plans]);
 
   const handleActivateFreePlan = async (plan) => {
@@ -470,6 +485,38 @@ export default function PricingPlans() {
         </motion.div>
       )}
 
+      {/* Exclusive Custom Plan Banner for Targeted Providers */}
+      {hasCustomPlansForUser && activeTab !== "custom" && (
+        <div className="max-w-4xl mx-auto mb-8 p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white shadow-xl border border-purple-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex items-center gap-3.5 relative z-10">
+            <div className="w-11 h-11 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-400/30 flex items-center justify-center shrink-0 shadow-sm">
+              <Sparkles className="w-6 h-6 text-amber-300" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm sm:text-base font-bold text-white">
+                  Exclusive Custom Plan Available!
+                </h4>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 uppercase tracking-wider">
+                  Special Offer
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5">
+                A custom pricing plan has been specifically tailored and assigned to your provider account.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setActiveTab("custom")}
+            className="shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-purple-900/30 relative z-10 flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>View My Custom Plan</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Category Tab Selector */}
       <div className="max-w-4xl mx-auto mb-12 relative z-10">
         <div className="bg-slate-100/80 p-1.5 rounded-2xl sm:rounded-full flex flex-wrap sm:flex-nowrap items-center justify-center gap-2 shadow-inner border border-slate-200">
@@ -490,6 +537,11 @@ export default function PricingPlans() {
                   className={`w-4 h-4 ${isActive ? "text-brand-300" : "text-slate-500"}`}
                 />
                 <span>{cat.name}</span>
+                {cat.id === "custom" && (
+                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-amber-400 text-amber-950 ml-1">
+                    Offer
+                  </span>
+                )}
               </button>
             );
           })}
@@ -678,6 +730,11 @@ export default function PricingPlans() {
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider text-white shadow-md flex items-center gap-1.5 bg-emerald-600">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>Your Active Plan</span>
+                    </div>
+                  ) : plan.categoryId === "custom" ? (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider text-white shadow-md flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>{plan.badge || "Special Offer For You"}</span>
                     </div>
                   ) : plan.badge ? (
                     <div

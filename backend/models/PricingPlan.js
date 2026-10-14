@@ -94,6 +94,12 @@ const pricingPlanSchema = new mongoose.Schema(
             default: true,
             index: true,
         },
+        targetProviders: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
