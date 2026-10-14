@@ -1,49 +1,45 @@
 import { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Search,
-  MapPin,
-  Briefcase,
-  CheckCircle2,
-  Star,
-  TrendingUp,
-  Sparkles,
-  ArrowRight,
-  ShieldCheck,
-  Building2,
-  Zap,
-} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, MapPin, Briefcase, ArrowRight, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const PREDEFINED_CITIES = [
-  "Bengaluru, India",
-  "Mumbai, India",
-  "Delhi NCR, India",
-  "Hyderabad, India",
-  "Pune, India",
-  "Chennai, India",
-  "Remote",
-  "San Francisco, USA",
-  "London, UK",
-  "Dubai, UAE",
-  "Singapore",
+  "Mumbai, Maharashtra",
+  "Delhi NCR, Delhi",
+  "Bengaluru, Karnataka",
+  "Pune, Maharashtra",
+  "Ahmedabad, Gujarat",
+  "Surat, Gujarat",
+  "Rajkot, Gujarat",
+  "Vadodara, Gujarat",
+  "Chennai, Tamil Nadu",
+  "Hyderabad, Telangana",
+  "Kolkata, West Bengal",
+  "Indore, Madhya Pradesh",
+  "Jaipur, Rajasthan",
+  "Remote, India",
 ];
 
-const TRENDING_TAGS = [
-  { label: "React Developer", type: "search" },
-  { label: "UI/UX Designer", type: "search" },
-  { label: "Remote", type: "mode" },
-  { label: "Product Manager", type: "search" },
-  { label: "Node.js", type: "search" },
-  { label: "Full Stack", type: "search" },
-  { label: "Data Analyst", type: "search" },
+const JOB_CATEGORIES = [
+  "Manufacturing & Production",
+  "Engineering & Technical",
+  "Industrial Machine Operator",
+  "Quality Assurance (QA / QC)",
+  "CNC & VMC Operator",
+  "Welder, Fitter & Turner",
+  "Electrical & Electronics",
+  "Warehouse & Logistics",
+  "Chemical & Textile Plants",
+  "Sales & Marketing",
+  "Office Admin & Back Office",
+  "IT & Software Development",
 ];
 
 export default function HeroSection() {
   const navigate = useNavigate();
   const [keywordInput, setKeywordInput] = useState("");
   const [locationInput, setLocationInput] = useState("");
-  const [jobTypeInput, setJobTypeInput] = useState("");
+  const [jobCategoryInput, setJobCategoryInput] = useState("");
   const [filteredCities, setFilteredCities] = useState(PREDEFINED_CITIES);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
@@ -63,7 +59,7 @@ export default function HeroSection() {
     setLocationInput(value);
     setShowDropdown(true);
 
-    if (value) {
+    if (value.trim()) {
       setFilteredCities(
         PREDEFINED_CITIES.filter((city) =>
           city.toLowerCase().includes(value.toLowerCase())
@@ -83,351 +79,330 @@ export default function HeroSection() {
     if (e) e.preventDefault();
     const params = new URLSearchParams();
     if (keywordInput.trim()) params.append("searchQuery", keywordInput.trim());
-    if (locationInput.trim()) params.append("locationQuery", locationInput.trim());
-    if (jobTypeInput.trim()) params.append("jobType", jobTypeInput.trim());
+    if (locationInput.trim())
+      params.append("locationQuery", locationInput.trim());
+    if (jobCategoryInput.trim())
+      params.append("category", jobCategoryInput.trim());
 
     navigate(`/jobs${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
-  const handleTagClick = (tag) => {
-    if (tag.type === "mode") {
-      navigate(`/jobs?workMode=${encodeURIComponent(tag.label.toLowerCase())}`);
-    } else {
-      navigate(`/jobs?searchQuery=${encodeURIComponent(tag.label)}`);
-    }
-  };
-
   return (
-    <section className="relative min-h-[92vh] flex items-center bg-[#FAF8F5] overflow-hidden pt-28 pb-16 lg:pt-32 lg:pb-24">
-      {/* Dynamic Background Halo & Angel Wing Glows */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Teal Angel Wing Aura (Left/Center) */}
-        <motion.div
-          animate={{
-            scale: [1, 1.15, 1],
-            opacity: [0.35, 0.55, 0.35],
-            rotate: [0, 45, 0],
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-[10%] -left-[10%] w-[550px] h-[550px] lg:w-[700px] lg:h-[700px] bg-gradient-to-br from-brand-300/40 via-brand-400/25 to-transparent rounded-full blur-[100px]"
-        />
+    <section className="relative min-h-[500px] lg:min-h-[560px] xl:min-h-[600px] flex items-center bg-gradient-to-r from-[#e3f9f6] via-[#d6f7f1] to-[#e4faf7] overflow-hidden pt-24 pb-12 lg:pt-28 lg:pb-14 select-none">
+      {/* ================= BACKGROUND GRAPHICS & TEXTURES ================= */}
 
-        {/* Navy Deep Atmosphere Orb (Right) */}
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.25, 0.45, 0.25],
-            rotate: [0, -35, 0],
+      {/* Industrial Factory Skyline & Walking Executives (Seamless gradient blend) */}
+      <div className="absolute right-0 top-0 bottom-0 w-[50%] lg:w-[46%] xl:w-[44%] pointer-events-none z-0 overflow-hidden mix-blend-multiply opacity-80">
+        <img
+          src="/Image/hero_factory_team.jpg"
+          alt="Manufacturing Landscape"
+          className="w-full h-full object-cover object-right-bottom"
+          style={{
+            maskImage:
+              "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 20%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,1) 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 20%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,1) 100%)",
           }}
-          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute top-[15%] right-[-5%] w-[450px] h-[450px] lg:w-[650px] lg:h-[650px] bg-gradient-to-bl from-navy-800/20 via-brand-500/20 to-transparent rounded-full blur-[110px]"
         />
-
-        {/* Subtle Halo Golden/Teal Ring Accent */}
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[900px] h-[350px] bg-gradient-to-b from-brand-100/40 to-transparent rounded-full blur-3xl opacity-60" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          {/* ================= LEFT COLUMN: HERO HEADLINE & SEARCH ================= */}
-          <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            className="lg:col-span-7 text-center lg:text-left"
-          >
-            {/* Guardian Angel Pill Badge */}
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/90 border border-brand-200/80 text-xs sm:text-sm font-bold text-navy-900 tracking-wide mb-6 shadow-[0_4px_15px_rgba(50,168,153,0.12)] backdrop-blur-md">
-              <span className="flex h-2.5 w-2.5 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-500"></span>
+      {/* Top Left Graceful Translucent White Arc Swoosh */}
+      <div className="absolute -top-12 -left-12 w-[380px] sm:w-[500px] lg:w-[620px] h-[380px] sm:h-[500px] lg:h-[620px] pointer-events-none z-0">
+        <svg viewBox="0 0 500 500" className="w-full h-full" fill="none">
+          <path
+            d="M-20,0 C150,50 260,180 240,380 C230,460 160,510 40,530 L-20,530 Z"
+            fill="url(#topSwoosh)"
+          />
+          <path
+            d="M-20,0 C150,50 260,180 240,380 C230,460 160,510 40,530"
+            stroke="rgba(255,255,255,0.9)"
+            strokeWidth="4"
+          />
+          <defs>
+            <linearGradient
+              id="topSwoosh"
+              x1="0"
+              y1="0"
+              x2="360"
+              y2="360"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop stopColor="white" stopOpacity="0.8" />
+              <stop offset="0.6" stopColor="#d5f7f2" stopOpacity="0.4" />
+              <stop offset="1" stopColor="#c2f2ea" stopOpacity="0.05" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      {/* Soft Ambient Radiance over left text area */}
+      <div className="absolute top-1/4 left-1/4 w-[450px] h-[300px] bg-white/50 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Bottom Glowing Neon-Teal Wave Swoop (Directly mirrors reference image) */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 sm:h-40 pointer-events-none z-10 overflow-hidden">
+        <svg
+          viewBox="0 0 1440 180"
+          className="w-full h-full preserve-3d"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Wave fill */}
+          <path
+            d="M0,140 C280,165 540,120 780,75 C1020,35 1240,25 1440,10 L1440,180 L0,180 Z"
+            fill="url(#neonWaveGrad)"
+            opacity="0.25"
+          />
+          {/* Glowing neon stroke */}
+          <path
+            d="M0,140 C280,165 540,120 780,75 C1020,35 1240,25 1440,10"
+            stroke="url(#neonStrokeGrad)"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            filter="url(#neonFilter)"
+          />
+          <defs>
+            <filter
+              id="neonFilter"
+              x="-10%"
+              y="-30%"
+              width="120%"
+              height="180%"
+            >
+              <feGaussianBlur stdDeviation="5.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <linearGradient
+              id="neonWaveGrad"
+              x1="0"
+              y1="0"
+              x2="1440"
+              y2="80"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop stopColor="#00e5c9" stopOpacity="0.35" />
+              <stop offset="1" stopColor="#00b49b" stopOpacity="0.8" />
+            </linearGradient>
+            <linearGradient
+              id="neonStrokeGrad"
+              x1="0"
+              y1="0"
+              x2="1440"
+              y2="0"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop stopColor="#5bf7e2" stopOpacity="0.25" />
+              <stop offset="0.3" stopColor="#00f3c8" />
+              <stop offset="0.75" stopColor="#00dfb8" />
+              <stop offset="1" stopColor="#00bf9e" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+      {/* ================= MAIN HERO CONTAINER ================= */}
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 relative z-20 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-4 items-center">
+          {/* ================= LEFT COLUMN: HERO CONTENT ================= */}
+          <div className="lg:col-span-8 xl:col-span-8 text-left">
+            {/* Tagline / Sub-badge */}
+            <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
+              <span className="w-7 h-[3.5px] bg-[#00a88a] rounded-full inline-block shrink-0" />
+              <span className="text-sm sm:text-base md:text-lg font-bold text-[#0c3144] tracking-wide">
+                Focus on Skill, Job हम देंगे
               </span>
-              <span className="text-brand-700 font-extrabold flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-brand-500" />
-                MR. JOB WALA
-              </span>
-              <span className="text-slate-300">|</span>
-              <span className="text-navy-800">Your Career Guardian Angel</span>
             </div>
 
-            {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-navy-900 leading-[1.08] tracking-tight mb-6">
-              Land Your Next Job With{" "}
-              <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-brand-500 to-navy-700">
-                Angel Precision
-                {/* Decorative Halo Curve under the gradient word */}
-                <svg
-                  className="absolute -bottom-2 left-0 w-full h-3 text-brand-400 opacity-70"
-                  viewBox="0 0 200 8"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M1 5.5C50 1.5 150 1.5 199 5.5"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                  />
-                </svg>
+            {/* Main Headline */}
+            <h1 className="tracking-tight uppercase mb-4">
+              <span className="block text-4xl sm:text-5xl lg:text-[54px] xl:text-[62px] font-black text-[#0a2f44] leading-[1.05] drop-shadow-[0_2px_10px_rgba(0,180,160,0.2)]">
+                MR. JOB WALA
+              </span>
+              <span className="block capitalize font-bold text-[#08283a] text-3xl sm:text-4xl lg:text-[46px] xl:text-[52px] leading-[1.08] mt-1 drop-shadow-xs">
+                Find Your Dream Job
+              </span>
+              <span className="block capitalize font-bold text-[#08283a] text-3xl sm:text-4xl lg:text-[46px] xl:text-[52px] leading-[1.08]">
+                Today
               </span>
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-base sm:text-lg text-slate-600 mb-8 lg:mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
-              Direct connection to <strong className="text-navy-900 font-semibold">12,000+ top companies</strong>. Verified recruiter chats, instant ATS resume matching, and zero spam.
+            {/* Subtitle Description */}
+            <p className="text-[#324f5f] text-sm sm:text-base lg:text-[16px] leading-relaxed max-w-xl mb-7 font-medium">
+              We connect skilled people with the right opportunities in all
+              fields, especially in manufacturing units and beyond.
             </p>
 
-            {/* Modern Multifunctional Search Bar */}
+            {/* Unified Search Bar Pill (Matching user's reference) */}
             <form
               onSubmit={handleSearchSubmit}
-              className="bg-white p-2.5 sm:p-3 rounded-2xl sm:rounded-3xl border border-brand-100 shadow-[0_15px_40px_-10px_rgba(14,39,56,0.12)] flex flex-col md:flex-row items-center gap-2 relative text-left mx-auto lg:mx-0 max-w-2xl lg:max-w-none hover:border-brand-300 transition-colors"
+              className="bg-white rounded-2xl md:rounded-full p-2 md:p-2 md:pl-5 shadow-[0_12px_36px_rgba(4,107,98,0.14)] border border-[#a8e6db] flex flex-col md:flex-row items-center gap-2 w-full max-w-full lg:max-w-[840px] xl:max-w-[880px] transition-all hover:shadow-[0_16px_44px_rgba(4,107,98,0.22)]"
             >
-              {/* Keyword Input */}
-              <div className="flex-1 flex items-center w-full px-3.5 py-3 md:py-3.5 border-b md:border-b-0 md:border-r border-slate-100">
-                <div className="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center mr-2.5 shrink-0 text-brand-600">
-                  <Search className="w-4 h-4" />
-                </div>
+              {/* Field 1: Job title, keyword, company */}
+              <div className="flex items-center w-full md:w-auto md:flex-[1.8] px-2 py-2.5 md:py-1 min-w-[230px]">
+                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[#0a2f44] shrink-0 mr-2.5" />
                 <input
                   type="text"
-                  placeholder="Job title, skill, company..."
+                  placeholder="Job title, keyword, company"
                   value={keywordInput}
                   onChange={(e) => setKeywordInput(e.target.value)}
-                  className="w-full bg-transparent border-none focus:ring-0 text-navy-950 placeholder-slate-400 text-sm sm:text-base outline-none font-medium"
+                  className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-[#0c2f42] placeholder-slate-400 text-xs sm:text-[13.5px] font-semibold"
                 />
               </div>
 
-              {/* Location Input with Auto-Dropdown */}
+              {/* Vertical Divider 1 */}
+              <div className="hidden md:block h-6 w-[1px] bg-slate-200/90 shrink-0 mx-1" />
+
+              {/* Field 2: Location */}
               <div
-                className="flex-1 flex items-center w-full px-3.5 py-3 md:py-3.5 border-b md:border-b-0 md:border-r border-slate-100 relative"
+                className="relative flex items-center w-full md:w-auto md:flex-[1] px-2 py-2.5 md:py-1 border-t md:border-t-0 border-slate-100 min-w-[120px]"
                 ref={dropdownRef}
               >
-                <div className="w-8 h-8 rounded-lg bg-navy-50 flex items-center justify-center mr-2.5 shrink-0 text-navy-600">
-                  <MapPin className="w-4 h-4" />
-                </div>
+                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[#0a2f44] shrink-0 mr-2" />
                 <input
                   type="text"
-                  placeholder="Location or Remote"
+                  placeholder="Location"
                   value={locationInput}
                   onChange={handleLocationChange}
                   onFocus={() => setShowDropdown(true)}
-                  className="w-full bg-transparent border-none focus:ring-0 text-navy-950 placeholder-slate-400 text-sm sm:text-base outline-none font-medium"
+                  className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-[#0c2f42] placeholder-slate-400 text-xs sm:text-[13.5px] font-semibold"
                 />
 
-                {showDropdown && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 w-full mt-3 bg-white border border-brand-100 rounded-2xl shadow-2xl overflow-hidden z-[70]"
-                  >
-                    <div className="p-2 border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-400 px-4">
-                      Popular Job Hubs
-                    </div>
-                    <ul className="max-h-56 overflow-y-auto py-1.5 custom-scrollbar">
-                      {filteredCities.length > 0 ? (
-                        filteredCities.map((city, index) => (
-                          <li
-                            key={index}
-                            onMouseDown={() => selectCity(city)}
-                            className="px-4 py-2.5 hover:bg-brand-50/70 cursor-pointer flex items-center gap-3 text-navy-900 font-medium transition-colors text-sm"
-                          >
-                            <MapPin className="w-4 h-4 text-brand-600" />
-                            {city}
-                          </li>
-                        ))
-                      ) : (
-                        <li className="px-4 py-3 text-slate-400 text-sm">
-                          No matching locations
-                        </li>
-                      )}
-                    </ul>
-                  </motion.div>
-                )}
+                {/* Auto-suggest dropdown */}
+                <AnimatePresence>
+                  {showDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-full left-0 mt-3 w-64 bg-white border border-[#a8e6db] rounded-2xl shadow-2xl py-2 z-50 max-h-56 overflow-y-auto custom-scrollbar"
+                    >
+                      <div className="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Popular Locations
+                      </div>
+                      {filteredCities.map((city, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onMouseDown={() => selectCity(city)}
+                          className="w-full text-left px-3.5 py-2 hover:bg-[#e6faf6] flex items-center gap-2.5 text-xs font-semibold text-[#0c3144] transition-colors cursor-pointer"
+                        >
+                          <MapPin className="w-3.5 h-3.5 text-[#009b86]" />
+                          {city}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
-              {/* Job Type Dropdown */}
-              <div className="hidden xl:flex items-center px-3 py-3 border-r border-slate-100">
+              {/* Vertical Divider 2 */}
+              <div className="hidden md:block h-6 w-[1px] bg-slate-200/90 shrink-0 mx-1" />
+
+              {/* Field 3: Job Category */}
+              <div className="flex items-center w-full md:w-auto md:flex-[1.1] px-2 py-2.5 md:py-1 border-t md:border-t-0 border-slate-100 min-w-[130px]">
+                <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-[#0a2f44] shrink-0 mr-2" />
                 <select
-                  value={jobTypeInput}
-                  onChange={(e) => setJobTypeInput(e.target.value)}
-                  className="bg-transparent text-sm font-medium text-navy-800 outline-none cursor-pointer pr-2"
+                  value={jobCategoryInput}
+                  onChange={(e) => setJobCategoryInput(e.target.value)}
+                  className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-[#0c2f42] text-xs sm:text-[13.5px] font-semibold cursor-pointer pr-1"
                 >
-                  <option value="">All Types</option>
-                  <option value="Full-time">Full-Time</option>
-                  <option value="Part-time">Part-Time</option>
-                  <option value="Contract">Contract</option>
-                  <option value="Internship">Internship</option>
+                  <option value="">Job Category</option>
+                  {JOB_CATEGORIES.map((cat, idx) => (
+                    <option key={idx} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              {/* Find Jobs Action Button */}
+              {/* Search Action Button with glowing cyan aura */}
               <button
                 type="submit"
-                className="w-full md:w-auto px-7 py-3.5 md:py-4 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-600 hover:from-brand-700 hover:to-brand-600 text-white rounded-xl sm:rounded-2xl text-base font-bold shadow-[0_8px_20px_rgba(38,137,125,0.35)] hover:shadow-[0_12px_28px_rgba(38,137,125,0.45)] transition-all hover:scale-[1.02] flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+                className="w-full md:w-auto px-6 sm:px-7 py-3 rounded-xl md:rounded-full bg-gradient-to-r from-[#01584f] via-[#026c62] to-[#01524a] hover:from-[#01473f] hover:to-[#013f38] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(2,108,98,0.45),0_0_18px_rgba(0,225,195,0.45)] hover:shadow-[0_6px_22px_rgba(2,108,98,0.6),0_0_24px_rgba(0,225,195,0.65)] transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0 cursor-pointer whitespace-nowrap"
               >
-                <span>Find Jobs</span>
+                <span>Search Jobs</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
 
-            {/* Trending Keywords Quick Search */}
-            <div className="mt-5 flex flex-wrap items-center justify-center lg:justify-start gap-2 text-xs sm:text-sm">
-              <span className="font-bold text-navy-900 flex items-center gap-1">
-                <TrendingUp className="w-3.5 h-3.5 text-brand-600" />
-                Popular:
-              </span>
-              {TRENDING_TAGS.map((tag, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleTagClick(tag)}
-                  className="px-3 py-1 rounded-lg bg-white border border-slate-200/80 hover:border-brand-400 hover:bg-brand-50/60 text-slate-600 hover:text-brand-700 font-medium text-xs transition-all shadow-2xs cursor-pointer"
-                >
-                  {tag.label}
-                </button>
-              ))}
-            </div>
+            {/* Feature Highlights with Green Checkmark Circles (Bottom of Left Column) */}
+            <div className="mt-8 flex flex-wrap items-center gap-5 sm:gap-7">
+              {/* Badge 1 */}
+              <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-[#092a3d]">
+                <span className="w-5 h-5 rounded-full bg-[#0a5c53] flex items-center justify-center text-white shrink-0 shadow-xs">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </span>
+                <span>100% Genuine Jobs</span>
+              </div>
 
-            {/* Key Trust Highlights */}
-            <div className="mt-8 pt-6 border-t border-slate-200/60 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs sm:text-sm font-semibold text-slate-600">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <span>
-                  <strong className="text-navy-900">50,000+</strong> Live Jobs
+              {/* Badge 2 */}
+              <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-[#092a3d]">
+                <span className="w-5 h-5 rounded-full bg-[#0a5c53] flex items-center justify-center text-white shrink-0 shadow-xs">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
                 </span>
+                <span>Free Registration</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-brand-100 text-brand-700 rounded-lg">
-                  <Zap className="w-4 h-4" />
-                </div>
-                <span>
-                  <strong className="text-navy-900">98%</strong> Match Accuracy
+
+              {/* Badge 3 */}
+              <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-[#092a3d]">
+                <span className="w-5 h-5 rounded-full bg-[#0a5c53] flex items-center justify-center text-white shrink-0 shadow-xs">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
                 </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-amber-100 text-amber-700 rounded-lg">
-                  <Star className="w-4 h-4 text-amber-600 fill-amber-500" />
-                </div>
-                <span>
-                  <strong className="text-navy-900">4.9/5</strong> Candidate Rating
-                </span>
+                <span>Direct Company Joining</span>
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          {/* ================= RIGHT COLUMN: MR. JOB WALA HERO COMPOSITION ================= */}
-          <div className="lg:col-span-5 relative h-[460px] sm:h-[540px] lg:h-[580px] w-full flex items-center justify-center">
-            {/* Animated Halo Ring behind central card */}
+          {/* ================= RIGHT COLUMN: MR. JOB WALA LOGO & BRAND AURA ================= */}
+          <div className="lg:col-span-4 xl:col-span-4 relative flex flex-col items-center justify-center z-20 -mt-8 sm:-mt-12 lg:-mt-16 xl:-mt-20 py-2 sm:py-4 lg:py-0">
+            {/* Brilliant White-Green Radiant Center Core Glow */}
+            <div className="absolute w-[320px] sm:w-[420px] lg:w-[480px] h-[320px] sm:h-[420px] lg:h-[480px] rounded-full bg-[radial-gradient(circle_at_center,_#ffffff_0%,_rgba(255,255,255,0.95)_18%,_rgba(30,225,175,0.65)_42%,_rgba(16,185,129,0.28)_62%,_transparent_75%)] blur-2xl pointer-events-none" />
+
+            {/* Ambient Animated Green/Mint Halo Flare */}
             <motion.div
               animate={{
-                rotate: 360,
-                scale: [1, 1.05, 1],
+                scale: [1, 1.06, 1],
+                opacity: [0.55, 0.8, 0.55],
               }}
               transition={{
-                rotate: { duration: 25, repeat: Infinity, ease: "linear" },
-                scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut",
               }}
-              className="absolute w-[320px] h-[320px] sm:w-[420px] sm:h-[420px] rounded-full border-2 border-dashed border-brand-400/40 pointer-events-none z-0"
+              className="absolute w-[260px] sm:w-[350px] lg:w-[390px] h-[260px] sm:h-[350px] lg:h-[390px] rounded-full bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.85)_0%,_rgba(0,240,195,0.5)_38%,_rgba(16,185,129,0.2)_65%,_transparent_75%)] blur-3xl pointer-events-none"
             />
 
-            {/* Glowing Angel Backdrop Shield */}
-            <div className="absolute w-[260px] h-[340px] sm:w-[320px] sm:h-[420px] bg-gradient-to-tr from-navy-900 via-navy-800 to-brand-800 rounded-[2.5rem] shadow-[0_25px_60px_-15px_rgba(14,39,56,0.35)] p-1 overflow-hidden z-10">
-              <img
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1200&auto=format&fit=crop"
-                alt="Confident Professional Working"
-                className="w-full h-full object-cover rounded-[2.4rem] opacity-90 brightness-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/20 to-transparent rounded-[2.4rem]" />
-
-              {/* Bottom text inside the main portrait card */}
-              <div className="absolute bottom-5 inset-x-5 text-white z-20">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-brand-500/80 backdrop-blur-sm text-[11px] font-bold uppercase tracking-wider mb-1.5">
-                  <Sparkles className="w-3 h-3" /> Angel Match AI
-                </div>
-                <h4 className="text-base font-bold text-white leading-snug">
-                  "Got 3 interview calls within 24 hours!"
-                </h4>
-                <p className="text-xs text-brand-200 mt-0.5">
-                  Sneha R. • Product Designer @ Tech Unicorn
-                </p>
-              </div>
-            </div>
-
-            {/* Floating Card 1: Instant Offer Released */}
+            {/* Angel Character & Brand Mark Container */}
             <motion.div
-              initial={{ opacity: 0, x: -40, y: -20 }}
-              animate={{ opacity: 1, x: 0, y: [0, -12, 0] }}
-              transition={{
-                opacity: { duration: 0.6, delay: 0.3 },
-                y: { repeat: Infinity, duration: 4.5, ease: "easeInOut", delay: 0.5 },
-              }}
-              className="absolute top-4 sm:top-8 -left-2 sm:-left-6 z-20 bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl shadow-[0_15px_35px_rgba(14,39,56,0.15)] border border-brand-100 flex items-center gap-3.5 max-w-[240px] sm:max-w-[270px]"
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="relative z-20 flex flex-col items-center"
             >
-              <div className="w-11 h-11 bg-gradient-to-tr from-brand-500 to-brand-400 rounded-xl flex items-center justify-center text-white shadow-md shrink-0">
-                <CheckCircle2 className="w-6 h-6" />
+              {/* Angel Logo Image from public/Image */}
+              <div className="w-[220px] sm:w-[270px] lg:w-[310px] h-[170px] sm:h-[210px] lg:h-[240px] relative flex items-center justify-center">
+                <img
+                  src="/Image/logo.png"
+                  alt="Mr. Job Wala Angel Logo"
+                  className="w-full h-full object-contain drop-shadow-[0_16px_32px_rgba(0,180,150,0.45)] filter brightness-[1.03]"
+                />
               </div>
-              <div>
-                <div className="flex items-center gap-1 text-[11px] font-bold text-brand-700 uppercase tracking-wider">
-                  <span>Offer Released 🎉</span>
-                </div>
-                <p className="text-xs sm:text-sm font-extrabold text-navy-950 mt-0.5">
-                  ₹28 LPA Full Stack Lead
-                </p>
-                <p className="text-[10px] text-slate-500 font-medium">
-                  Direct Verified Recruiter
-                </p>
-              </div>
-            </motion.div>
 
-            {/* Floating Card 2: 99% Skill Score Match */}
-            <motion.div
-              initial={{ opacity: 0, x: 40, y: 30 }}
-              animate={{ opacity: 1, x: 0, y: [0, 14, 0] }}
-              transition={{
-                opacity: { duration: 0.6, delay: 0.5 },
-                y: { repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 },
-              }}
-              className="absolute bottom-6 sm:bottom-10 -right-2 sm:-right-6 z-20 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-[0_15px_35px_rgba(14,39,56,0.15)] border border-brand-100 min-w-[210px]"
-            >
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[11px] font-bold text-navy-900 uppercase tracking-wide">
-                    Angel Match Score
-                  </span>
+              {/* Brand Typography under Angel */}
+              <div className="text-center mt-1 sm:mt-1.5">
+                <div className="text-base sm:text-lg font-black text-[#0b3145] tracking-[0.22em] leading-none drop-shadow-xs">
+                  MR.
                 </div>
-                <span className="text-xs font-black text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200">
-                  99%
-                </span>
-              </div>
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-2">
-                <div className="bg-gradient-to-r from-brand-500 to-brand-400 h-full w-[99%] rounded-full" />
-              </div>
-              <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
-                <Building2 className="w-3.5 h-3.5 text-brand-600" />
-                Matched with 18+ Top Startups
-              </p>
-            </motion.div>
-
-            {/* Floating Card 3: Top Recruiter Response */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1, y: [0, -8, 0] }}
-              transition={{
-                opacity: { duration: 0.5, delay: 0.7 },
-                y: { repeat: Infinity, duration: 3.8, ease: "easeInOut", delay: 1.5 },
-              }}
-              className="absolute top-1/2 -right-4 sm:-right-8 -translate-y-1/2 z-20 bg-navy-900 text-white p-3 sm:p-3.5 rounded-2xl shadow-xl border border-navy-700 hidden sm:flex items-center gap-3"
-            >
-              <div className="w-8 h-8 rounded-lg bg-brand-500 text-white flex items-center justify-center">
-                <Zap className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white">&lt; 15 Mins Response</p>
-                <p className="text-[10px] text-brand-300">Fast-Track Hiring</p>
+                <div className="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-tight text-[#00bda5] leading-tight drop-shadow-[0_2px_12px_rgba(0,189,165,0.45)]">
+                  JOB WALA
+                </div>
+                <div className="text-xs sm:text-sm font-bold text-[#0c3144] tracking-wide mt-1">
+                  Focus on Skill, Job हम देंगे
+                </div>
               </div>
             </motion.div>
           </div>
