@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   User,
@@ -22,6 +22,12 @@ import customerservice from "../customer/customerservice";
 
 export default function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+
+  const roleParam = searchParams.get("role") || location.state?.role;
+  const initialRole =
+    roleParam === "provider" || roleParam === "user" ? roleParam : "user";
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -32,8 +38,16 @@ export default function Register() {
     email: "",
     password: "",
     phone: "",
-    role: "user",
+    role: initialRole,
   });
+
+  // Sync role if navigation or URL query param changes
+  useEffect(() => {
+    const currentRole = searchParams.get("role") || location.state?.role;
+    if (currentRole && (currentRole === "user" || currentRole === "provider")) {
+      setFormData((prev) => ({ ...prev, role: currentRole }));
+    }
+  }, [searchParams, location.state]);
 
   // OTP State
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -373,6 +387,40 @@ export default function Register() {
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
                 Account Type
               </label>
+
+              {/* Visual Role Switcher */}
+              <div className="grid grid-cols-2 gap-2 mb-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, role: "user" }))
+                  }
+                  className={`py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    formData.role === "user"
+                      ? "bg-white text-brand-600 shadow-sm border border-slate-200/80 font-bold"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  <span>Job Seeker</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, role: "provider" }))
+                  }
+                  className={`py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    formData.role === "provider"
+                      ? "bg-white text-brand-600 shadow-sm border border-slate-200/80 font-bold"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  <Briefcase className="w-4 h-4" />
+                  <span>Employer</span>
+                </button>
+              </div>
+
+              {/* Native Select for standard form interaction */}
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                   <Briefcase className="w-4 h-4" />
@@ -381,10 +429,10 @@ export default function Register() {
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all appearance-none cursor-pointer"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all appearance-none cursor-pointer"
                 >
                   <option value="user">Job Seeker (Looking for jobs)</option>
-                  <option value="provider">Job Provider / Employer</option>
+                  <option value="provider">Job Provider / Employer (Hiring people)</option>
                 </select>
               </div>
             </div>

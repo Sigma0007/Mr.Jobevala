@@ -2,40 +2,30 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, MapPin, Briefcase, ArrowRight, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const PREDEFINED_CITIES = [
-  "Mumbai, Maharashtra",
-  "Delhi NCR, Delhi",
-  "Bengaluru, Karnataka",
-  "Pune, Maharashtra",
-  "Ahmedabad, Gujarat",
-  "Surat, Gujarat",
-  "Rajkot, Gujarat",
-  "Vadodara, Gujarat",
-  "Chennai, Tamil Nadu",
-  "Hyderabad, Telangana",
-  "Kolkata, West Bengal",
-  "Indore, Madhya Pradesh",
-  "Jaipur, Rajasthan",
-  "Remote, India",
-];
-
-const JOB_CATEGORIES = [
-  "Manufacturing & Production",
-  "Engineering & Technical",
-  "Industrial Machine Operator",
-  "Quality Assurance (QA / QC)",
-  "CNC & VMC Operator",
-  "Welder, Fitter & Turner",
-  "Electrical & Electronics",
-  "Warehouse & Logistics",
-  "Chemical & Textile Plants",
-  "Sales & Marketing",
-  "Office Admin & Back Office",
-  "IT & Software Development",
+  "Mumbai",
+  "Delhi",
+  "Bengaluru",
+  "Pune",
+  "Ahmedabad",
+  "Surat",
+  "Rajkot",
+  "Vadodara",
+  "Chennai",
+  "Hyderabad",
+  "Kolkata",
+  "Indore",
+  "Jaipur",
+  "Remote",
 ];
 
 export default function HeroSection() {
+  const JobCategories = useSelector(
+    (state) => state.dashboard?.categoriesType || [],
+  );
+
   const navigate = useNavigate();
   const [keywordInput, setKeywordInput] = useState("");
   const [locationInput, setLocationInput] = useState("");
@@ -62,8 +52,8 @@ export default function HeroSection() {
     if (value.trim()) {
       setFilteredCities(
         PREDEFINED_CITIES.filter((city) =>
-          city.toLowerCase().includes(value.toLowerCase())
-        )
+          city.toLowerCase().includes(value.toLowerCase()),
+        ),
       );
     } else {
       setFilteredCities(PREDEFINED_CITIES);
@@ -88,23 +78,10 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-[500px] lg:min-h-[560px] xl:min-h-[600px] flex items-center bg-gradient-to-r from-[#e3f9f6] via-[#d6f7f1] to-[#e4faf7] overflow-hidden pt-24 pb-12 lg:pt-28 lg:pb-14 select-none">
+    <section className="relative h-screen flex items-center bg-gradient-to-r from-[#e3f9f6] via-[#d6f7f1] to-[#e4faf7] overflow-hidden pt-24 pb-12 lg:pt-28 lg:pb-14 select-none">
       {/* ================= BACKGROUND GRAPHICS & TEXTURES ================= */}
 
       {/* Industrial Factory Skyline & Walking Executives (Seamless gradient blend) */}
-      <div className="absolute right-0 top-0 bottom-0 w-[50%] lg:w-[46%] xl:w-[44%] pointer-events-none z-0 overflow-hidden mix-blend-multiply opacity-80">
-        <img
-          src="/Image/hero_factory_team.jpg"
-          alt="Manufacturing Landscape"
-          className="w-full h-full object-cover object-right-bottom"
-          style={{
-            maskImage:
-              "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 20%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,1) 100%)",
-            WebkitMaskImage:
-              "linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 20%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,1) 100%)",
-          }}
-        />
-      </div>
 
       {/* Top Left Graceful Translucent White Arc Swoosh */}
       <div className="absolute -top-12 -left-12 w-[380px] sm:w-[500px] lg:w-[620px] h-[380px] sm:h-[500px] lg:h-[620px] pointer-events-none z-0">
@@ -137,71 +114,6 @@ export default function HeroSection() {
 
       {/* Soft Ambient Radiance over left text area */}
       <div className="absolute top-1/4 left-1/4 w-[450px] h-[300px] bg-white/50 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Bottom Glowing Neon-Teal Wave Swoop (Directly mirrors reference image) */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 sm:h-40 pointer-events-none z-10 overflow-hidden">
-        <svg
-          viewBox="0 0 1440 180"
-          className="w-full h-full preserve-3d"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Wave fill */}
-          <path
-            d="M0,140 C280,165 540,120 780,75 C1020,35 1240,25 1440,10 L1440,180 L0,180 Z"
-            fill="url(#neonWaveGrad)"
-            opacity="0.25"
-          />
-          {/* Glowing neon stroke */}
-          <path
-            d="M0,140 C280,165 540,120 780,75 C1020,35 1240,25 1440,10"
-            stroke="url(#neonStrokeGrad)"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            filter="url(#neonFilter)"
-          />
-          <defs>
-            <filter
-              id="neonFilter"
-              x="-10%"
-              y="-30%"
-              width="120%"
-              height="180%"
-            >
-              <feGaussianBlur stdDeviation="5.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <linearGradient
-              id="neonWaveGrad"
-              x1="0"
-              y1="0"
-              x2="1440"
-              y2="80"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#00e5c9" stopOpacity="0.35" />
-              <stop offset="1" stopColor="#00b49b" stopOpacity="0.8" />
-            </linearGradient>
-            <linearGradient
-              id="neonStrokeGrad"
-              x1="0"
-              y1="0"
-              x2="1440"
-              y2="0"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#5bf7e2" stopOpacity="0.25" />
-              <stop offset="0.3" stopColor="#00f3c8" />
-              <stop offset="0.75" stopColor="#00dfb8" />
-              <stop offset="1" stopColor="#00bf9e" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
 
       {/* ================= MAIN HERO CONTAINER ================= */}
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 relative z-20 w-full">
@@ -311,9 +223,9 @@ export default function HeroSection() {
                   className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-[#0c2f42] text-xs sm:text-[13.5px] font-semibold cursor-pointer pr-1"
                 >
                   <option value="">Job Category</option>
-                  {JOB_CATEGORIES.map((cat, idx) => (
-                    <option key={idx} value={cat}>
-                      {cat}
+                  {JobCategories.map((cat, idx) => (
+                    <option key={idx} value={cat.value}>
+                      {cat.label}
                     </option>
                   ))}
                 </select>

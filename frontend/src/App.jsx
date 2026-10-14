@@ -12,6 +12,7 @@ import HomePage from "./pages/HomePage";
 
 // Import the brand new Loader
 import InitialLoader from "./components/InitialLoader";
+import RoleSelectionModal from "./components/Modals/RoleSelectionModal";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import EmployerDashboard from "./components/provider/EmployerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -64,6 +65,7 @@ export default function App() {
             and seamlessly unmounts to reveal the app.
           */}
         <InitialLoader />
+        <RoleSelectionModal />
 
         <Navbar />
 
