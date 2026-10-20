@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
 import {
   Search,
   HelpCircle,
@@ -21,9 +22,27 @@ import {
 } from "lucide-react";
 
 export default function HelpCenter() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [expandedFaq, setExpandedFaq] = useState(null);
+  const [feedbackState, setFeedbackState] = useState({});
+
+  const handleFeedback = (articleId, isHelpful) => {
+    if (isHelpful) {
+      setFeedbackState((prev) => ({ ...prev, [articleId]: "yes" }));
+      toast.success("Thank you for your feedback! We're glad this helped.");
+    } else {
+      setFeedbackState((prev) => ({ ...prev, [articleId]: "no" }));
+      toast("Article not helpful? Redirecting you to our support team...", {
+        icon: "🎧",
+        duration: 3000,
+      });
+      setTimeout(() => {
+        navigate("/contact");
+      }, 1000);
+    }
+  };
 
   const categories = [
     { id: "all", name: "All Topics", icon: LifeBuoy },
@@ -311,14 +330,24 @@ export default function HelpCenter() {
                           <span>Was this article helpful?</span>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => toast.success("Thank you for your feedback!")}
-                              className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg hover:bg-brand-50 hover:text-brand-700 transition-colors"
+                              type="button"
+                              onClick={() => handleFeedback(article.id, true)}
+                              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                                feedbackState[article.id] === "yes"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-300 shadow-sm"
+                                  : "bg-white border-slate-200 text-slate-700 hover:bg-brand-50 hover:text-brand-700"
+                              }`}
                             >
                               👍 Yes
                             </button>
                             <button
-                              onClick={() => toast.success("Thank you! We will improve this guide.")}
-                              className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
+                              type="button"
+                              onClick={() => handleFeedback(article.id, false)}
+                              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                                feedbackState[article.id] === "no"
+                                  ? "bg-rose-50 text-rose-700 border-rose-300 shadow-sm"
+                                  : "bg-white border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-700"
+                              }`}
                             >
                               👎 No
                             </button>

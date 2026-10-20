@@ -13,13 +13,15 @@ import UserApplied from "./UserApplied";
 import UserSaved from "./UserSaved";
 import UserProfile from "./UserProfile";
 import PaymentHistory from "../../pages/PaymentHistory";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import { setDashboardActiveTab } from "../../Redux/Dashboard/DashboardAction";
 
 export function UserDashboard() {
   const { dashboardActiveTab } = useSelector((state) => state.dashboard);
   const dispatch = useDispatch();
+  const location = useLocation();
 
   const menuItems = [
     { id: "overview", name: "Dashboard", icon: LayoutDashboard },
@@ -28,6 +30,14 @@ export function UserDashboard() {
     { id: "profile", name: "My Profile", icon: User },
     { id: "payments", name: "Payments & Invoices", icon: CreditCard },
   ];
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    if (tabParam && menuItems.some((m) => m.id === tabParam)) {
+      dispatch(setDashboardActiveTab(tabParam));
+    }
+  }, [location.search]);
 
   return (
     <div className="min-h-screen pt-24 pb-12 bg-slate-50">

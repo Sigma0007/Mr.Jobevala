@@ -7,7 +7,7 @@ import {
   CreditCard,
   Sparkles,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import EmployerJobs from "./EmployerJobs";
 import EmployerPostJob from "./EmployerPostJob";
 import EmployerProfile from "./EmployerProfile";
@@ -18,12 +18,14 @@ import PaymentHistory from "../../pages/PaymentHistory";
 import { useDispatch, useSelector } from "react-redux";
 import { setDashboardActiveTab } from "../../Redux/Dashboard/DashboardAction";
 import { setSelectedJob } from "../../Redux/Job/JobAction";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const EmployerDashboard = () => {
   const { dashboardActiveTab } = useSelector((state) => state.dashboard);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
   const menuItems = [
     { id: "overview", name: "Dashboard", icon: LayoutDashboard },
     { id: "jobs", name: "View All Jobs", icon: Briefcase },
@@ -33,6 +35,15 @@ const EmployerDashboard = () => {
     { id: "profile", name: "Company Profile", icon: Building2 },
     { id: "billing", name: "Billing & Receipts", icon: CreditCard },
   ];
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    if (tabParam && menuItems.some((m) => m.id === tabParam)) {
+      dispatch(setSelectedJob(null));
+      dispatch(setDashboardActiveTab(tabParam));
+    }
+  }, [location.search]);
 
   return (
     <div className="min-h-screen pt-24 pb-12 bg-slate-50">

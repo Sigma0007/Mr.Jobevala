@@ -1,20 +1,32 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Briefcase, ArrowRight, Mail } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim() || !/\S+@\S+\.\S+/.test(newsletterEmail)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    toast.success("Thank you! You have subscribed to job alerts.");
+    setNewsletterEmail("");
+  };
 
   const footerLinks = {
     candidates: [
       { name: "Find Jobs", href: "/jobs" },
       { name: "Candidate Dashboard", href: "/user/dashboard" },
-      { name: "Saved Jobs", href: "/user/dashboard" },
-      { name: "Job Alerts", href: "#" },
-      { name: "Career Advice", href: "#" },
+      { name: "Saved Jobs", href: "/user/dashboard?tab=saved" },
+      { name: "Job Alerts", href: "/jobs" },
+      { name: "Career Advice", href: "/feed" },
     ],
     employers: [
-      { name: "Post a Job", href: "/provider/dashboard" },
+      { name: "Post a Job", href: "/provider/dashboard?tab=post-job" },
       { name: "Employer Dashboard", href: "/provider/dashboard" },
       { name: "Browse Candidates", href: "/candidates" },
       { name: "Pricing Plans", href: "/pricing" },
@@ -63,30 +75,42 @@ export default function Footer() {
             </p>
 
             {/* Newsletter CTA */}
-            <div className="mb-8">
+            <div className="mb-8" id="job-alerts">
               <p className="text-white font-semibold text-sm mb-3">
                 Subscribe to job alerts
               </p>
-              <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-xl focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500 transition-all max-w-md">
+              <form
+                onSubmit={handleSubscribe}
+                className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-xl focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500 transition-all max-w-md"
+              >
                 <div className="pl-3 flex-shrink-0">
                   <Mail className="w-4 h-4 text-slate-500" />
                 </div>
                 <input
                   type="email"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
                   placeholder="Enter your email"
                   className="w-full bg-transparent border-none focus:ring-0 text-slate-300 placeholder-slate-500 text-sm px-3 py-2.5 outline-none"
                 />
-                <button className="bg-brand-600 text-white p-2.5 rounded-lg hover:bg-brand-500 transition-colors flex-shrink-0">
+                <button
+                  type="submit"
+                  aria-label="Subscribe"
+                  className="bg-brand-600 text-white p-2.5 rounded-lg hover:bg-brand-500 transition-colors flex-shrink-0 cursor-pointer"
+                >
                   <ArrowRight className="w-4 h-4" />
                 </button>
-              </div>
+              </form>
             </div>
 
             {/* Social Icons using bulletproof inline SVGs */}
             <div className="flex items-center gap-4">
               {/* Twitter / X */}
               <a
-                href="#"
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow MR. JOB WALA on Twitter / X"
                 className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-brand-600 hover:text-white hover:border-brand-600 transition-all duration-300 hover:-translate-y-1"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -95,7 +119,10 @@ export default function Footer() {
               </a>
               {/* LinkedIn */}
               <a
-                href="#"
+                href="https://www.linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Connect with MR. JOB WALA on LinkedIn"
                 className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-brand-600 hover:text-white hover:border-brand-600 transition-all duration-300 hover:-translate-y-1"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -104,7 +131,10 @@ export default function Footer() {
               </a>
               {/* GitHub */}
               <a
-                href="#"
+                href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View MR. JOB WALA on GitHub"
                 className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-brand-600 hover:text-white hover:border-brand-600 transition-all duration-300 hover:-translate-y-1"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -113,7 +143,10 @@ export default function Footer() {
               </a>
               {/* Instagram */}
               <a
-                href="#"
+                href="https://www.instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow MR. JOB WALA on Instagram"
                 className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:bg-brand-600 hover:text-white hover:border-brand-600 transition-all duration-300 hover:-translate-y-1"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">

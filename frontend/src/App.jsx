@@ -109,14 +109,19 @@ export default function App() {
           <Route path="/resume" element={<ResumeBuilder />} />
           <Route path="/resume-builder" element={<ResumeBuilder />} />
           {/* Company & Support Pages */}
-          <Route path="/about" element={<AboutUs />} />\
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/about-us" element={<AboutUs />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/contact-us" element={<Contact />} />
+          <Route path="/support" element={<Contact />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/help-center" element={<HelpCenter />} />
+          <Route path="/job-alerts" element={<FindJobs />} />
+          <Route path="/career-advice" element={<CommunityFeed />} />
           {/* ADMIN */}
           <Route
             path="/admin/dashboard"

@@ -62,7 +62,7 @@ export default function Contact() {
       detail: "100 Innovation Parkway, Suite 400",
       subtext: "San Francisco, CA 94105, United States",
       badge: "Walk-ins by Appointment",
-      action: "#",
+      action: "https://maps.google.com/?q=100+Innovation+Parkway,+San+Francisco,+CA+94105",
     },
   ];
 
@@ -176,6 +176,8 @@ export default function Contact() {
                           </div>
                           <a
                             href={c.action}
+                            target={c.action.startsWith("http") ? "_blank" : undefined}
+                            rel={c.action.startsWith("http") ? "noopener noreferrer" : undefined}
                             className="text-brand-600 font-bold text-sm hover:underline block mb-1"
                           >
                             {c.detail}
