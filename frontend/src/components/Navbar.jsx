@@ -11,17 +11,38 @@ import Logo from "../../public/Image/logo.png";
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useSelector((state) => state.auth);
+  console.log("user", user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   // Smart routing flags: Find Jobs is public, others are protected
   const navLinks = [
-    { name: "Home", href: "/", protected: false },
-    { name: "Find Jobs", href: "/jobs", protected: false },
-    { name: "Abroad Post", href: "/feed", protected: false },
-    { name: "Find Candidates", href: "/candidates", protected: true },
-    { name: "Resume Maker", href: "/resume", protected: false },
-    { name: "Pricing & Plans", href: "/pricing", protected: false },
+    { name: "Home", href: "/", protected: false, key: "home" },
+    { name: "Find Jobs", href: "/jobs", protected: false, key: "find_jobs" },
+    {
+      name: "Abroad Post",
+      href: "/feed",
+      protected: false,
+      key: "abroad_post",
+    },
+    {
+      name: "Find Candidates",
+      href: "/candidates",
+      protected: true,
+      key: "find_candidates",
+    },
+    {
+      name: "Resume Maker",
+      href: "/resume",
+      protected: false,
+      key: "resume_maker",
+    },
+    {
+      name: "Pricing & Plans",
+      href: "/pricing",
+      protected: false,
+      key: "pricing",
+    },
   ];
 
   const requireAuth = (e, path) => {
@@ -78,16 +99,20 @@ export default function Navbar() {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                onClick={(e) => handleNavClick(e, link)}
-                className="text-sm font-medium text-slate-600 hover:text-brand-600 transition-colors cursor-pointer"
-              >
-                {link.name}
-              </a>
-            ))}
+            {navLinks
+              .filter((fi) =>
+                user?.role == "user" ? fi.key !== "find_candidates" : true,
+              )
+              .map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  onClick={(e) => handleNavClick(e, link)}
+                  className="text-sm font-medium text-slate-600 hover:text-brand-600 transition-colors cursor-pointer"
+                >
+                  {link.name}
+                </a>
+              ))}
           </div>
 
           {/* Desktop Auth / Dashboard */}
@@ -158,16 +183,20 @@ export default function Navbar() {
             className="md:hidden bg-white border-b border-slate-100 overflow-hidden shadow-xl"
           >
             <div className="px-4 pt-2 pb-6 space-y-1 sm:px-6">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  onClick={(e) => handleNavClick(e, link)}
-                  className="block px-3 py-3 text-base font-medium text-slate-600 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
-                >
-                  {link.name}
-                </a>
-              ))}
+              {navLinks
+                .filter((fi) =>
+                  user?.role == "user" ? fi.key !== "find_candidates" : true,
+                )
+                .map((link) => (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    onClick={(e) => handleNavClick(e, link)}
+                    className="block px-3 py-3 text-base font-medium text-slate-600 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
+                  >
+                    {link.name}
+                  </a>
+                ))}
 
               <div className="pt-4 mt-2 border-t border-slate-100 flex flex-col space-y-3">
                 {!user ? (
