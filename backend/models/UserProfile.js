@@ -15,6 +15,11 @@ const userProfileSchema = new mongoose.Schema(
             minlength: 2,
             maxlength: 100,
         },
+        countryCode: {
+            type: String,
+            default: "+91",
+            trim: true,
+        },
         phone: {
             type: String,
             default: "",

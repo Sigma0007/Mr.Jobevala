@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 
 import customerservice from "../customer/customerservice";
+import { isValidPhoneNumber } from "libphonenumber-js";
+import CountryCodeSelector from "../components/common/CountryCodeSelector";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -46,6 +48,8 @@ export default function Register() {
     password: "",
     repassword: "",
     phone: "",
+    countryCode: "+91",
+    countryIso: "IN",
     role: initialRole,
   });
 
@@ -202,8 +206,23 @@ export default function Register() {
     }
 
     const cleanPhone = formData.phone.trim().replace(/\D/g, "");
-    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
-      toast.error("Please enter a valid 10-digit Indian mobile number");
+    if (!cleanPhone) {
+      toast.error("Please enter your mobile phone number");
+      return;
+    }
+
+    const fullPhone = `${formData.countryCode}${cleanPhone}`;
+    let isPhoneValid = false;
+    try {
+      isPhoneValid = isValidPhoneNumber(fullPhone, formData.countryIso);
+    } catch {
+      isPhoneValid = cleanPhone.length >= 7 && cleanPhone.length <= 15;
+    }
+
+    if (!isPhoneValid) {
+      toast.error(
+        `Please enter a valid phone number for ${formData.countryCode} (${formData.countryIso})`
+      );
       return;
     }
 
@@ -261,9 +280,11 @@ export default function Register() {
     }
 
     setSendingOtp(true);
-    const fullPhone = phoneNumber.startsWith("91")
-      ? phoneNumber
-      : `91${phoneNumber}`;
+    const dialDigits = (formData.countryCode || "+91").replace(/\D/g, "");
+    const rawNumber = phoneNumber.replace(/\D/g, "");
+    const fullPhone = rawNumber.startsWith(dialDigits)
+      ? rawNumber
+      : `${dialDigits}${rawNumber}`;
 
     window.sendOtp(
       fullPhone,
@@ -273,7 +294,7 @@ export default function Register() {
         setShowOtpModal(true);
         setOtp("");
         startResendTimer();
-        toast.success(`OTP sent to +91 ${phoneNumber}`);
+        toast.success(`OTP sent to ${formData.countryCode} ${rawNumber}`);
         setTimeout(() => {
           if (otpInputRef.current) otpInputRef.current.focus();
         }, 300);
@@ -295,10 +316,11 @@ export default function Register() {
     if (!canResend) return;
 
     setSendingOtp(true);
+    const dialDigits = (formData.countryCode || "+91").replace(/\D/g, "");
     const cleanPhone = formData.phone.trim().replace(/\D/g, "");
-    const fullPhone = cleanPhone.startsWith("91")
+    const fullPhone = cleanPhone.startsWith(dialDigits)
       ? cleanPhone
-      : `91${cleanPhone}`;
+      : `${dialDigits}${cleanPhone}`;
 
     if (typeof window.retryOtp === "function") {
       window.retryOtp(
@@ -388,6 +410,7 @@ export default function Register() {
           email: formData.email.trim(),
           password: formData.password,
           role: formData.role,
+          countryCode: formData.countryCode,
           phone: cleanPhone,
         });
       },
@@ -544,19 +567,31 @@ export default function Register() {
 
             {/* PHONE NUMBER */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Phone Number
-              </label>
-              <div className="relative flex rounded-xl border border-slate-200 bg-slate-50/50 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500 transition-all overflow-hidden">
-                <span className="inline-flex items-center gap-1.5 px-3.5 border-r border-slate-200 text-xs font-medium text-slate-600 bg-slate-100/70 select-none">
-                  <Phone className="w-3.5 h-3.5 text-slate-400" />
-                  +91
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                  Phone Number
+                </label>
+                <span className="text-[11px] text-slate-400 font-medium">
+                  Select Country & Code
                 </span>
+              </div>
+              <div className="relative flex rounded-xl border border-slate-200 bg-slate-50/50 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500 transition-all">
+                <CountryCodeSelector
+                  value={formData.countryCode}
+                  selectedIso={formData.countryIso}
+                  onChange={({ dialCode, iso }) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      countryCode: dialCode,
+                      countryIso: iso,
+                    }));
+                  }}
+                />
                 <div className="relative flex-1">
                   <input
                     type="tel"
                     name="phone"
-                    maxLength={10}
+                    maxLength={15}
                     required
                     value={formData.phone}
                     onChange={(e) => {
@@ -564,12 +599,19 @@ export default function Register() {
                       setFormData((prev) => ({ ...prev, phone: val }));
                     }}
                     className="w-full pl-3 pr-4 py-3 bg-transparent text-slate-900 text-sm focus:outline-none placeholder:text-slate-400 font-mono tracking-wide"
-                    placeholder="9876543210"
+                    placeholder={
+                      formData.countryIso === "IN"
+                        ? "98765 43210"
+                        : "Enter mobile number"
+                    }
                   />
                 </div>
               </div>
               <p className="text-[11px] text-slate-400 mt-1">
-                We'll send a one-time OTP verification to this mobile number
+                We'll send an OTP verification to{" "}
+                <span className="font-mono text-slate-600">
+                  {formData.countryCode} {formData.phone || "your number"}
+                </span>
               </p>
             </div>
 
@@ -788,8 +830,8 @@ export default function Register() {
                 </h3>
                 <p className="text-sm text-slate-500 mt-1.5">
                   Enter the OTP sent to{" "}
-                  <span className="font-semibold text-slate-800">
-                    +91 {formData.phone}
+                  <span className="font-semibold text-slate-800 font-mono">
+                    {formData.countryCode} {formData.phone}
                   </span>
                 </p>
                 <button

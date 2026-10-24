@@ -1,3 +1,4 @@
+import { isValidPhoneNumber } from "libphonenumber-js";
 import CompanyProfile from "../models/CompanyProfile.js";
 import User from "../models/User.js";
 import UserProfile from "../models/UserProfile.js";
@@ -24,6 +25,7 @@ const sendAuthResponse = (
         id: user._id,
         name: user.name,
         email: user.email,
+        countryCode: user.countryCode || "+91",
         phone: user.phone,
         role: user.role,
         isActive: user.isActive,
@@ -43,6 +45,7 @@ export const register = catchAsync(
             name,
             email,
             password,
+            countryCode,
             phone,
             role,
         } = req.body;
@@ -56,8 +59,40 @@ export const register = catchAsync(
             );
         }
 
+        let formattedCountryCode = "+91";
+        if (countryCode && typeof countryCode === "string") {
+            const trimmed = countryCode.trim();
+            formattedCountryCode = trimmed.startsWith("+") ? trimmed : `+${trimmed}`;
+        }
+
+        const cleanPhone = phone ? String(phone).trim().replace(/\D/g, "") : "";
+
+        // Validate international phone number if phone is provided
+        if (cleanPhone) {
+            const fullPhone = `${formattedCountryCode}${cleanPhone}`;
+            try {
+                if (!isValidPhoneNumber(fullPhone)) {
+                    return next(
+                        new AppError(
+                            `Invalid phone number for country code ${formattedCountryCode}.`,
+                            400
+                        )
+                    );
+                }
+            } catch (err) {
+                if (cleanPhone.length < 6 || cleanPhone.length > 15) {
+                    return next(
+                        new AppError(
+                            "Please enter a valid phone number between 6 and 15 digits.",
+                            400
+                        )
+                    );
+                }
+            }
+        }
+
         const existingUser =
-            await User.findOne({ email });
+            await User.findOne({ email: email.toLowerCase().trim() });
 
         if (existingUser) {
             return next(
@@ -88,10 +123,11 @@ export const register = catchAsync(
                 : "user";
 
         const userData = {
-            name,
-            email,
+            name: name.trim(),
+            email: email.toLowerCase().trim(),
             password,
-            phone,
+            countryCode: formattedCountryCode,
+            phone: cleanPhone,
             role: userRole,
         };
 
@@ -101,8 +137,9 @@ export const register = catchAsync(
         if (userRole === "user") {
             await UserProfile.create({
                 user: user._id,
-                phone: phone || "",
-                name: name || "",
+                countryCode: formattedCountryCode,
+                phone: cleanPhone,
+                name: name.trim(),
             });
 
             // Send real-time notification to user to complete profile 100%
@@ -119,9 +156,12 @@ export const register = catchAsync(
         if (userRole === "provider") {
             await CompanyProfile.create({
                 user: user._id,
-                ownerPhone: phone || "",
-                ownerName: name || "",
-                ownerEmail: email || ""
+                ownerCountryCode: formattedCountryCode,
+                countryCode: formattedCountryCode,
+                ownerPhone: cleanPhone,
+                phone: cleanPhone,
+                ownerName: name.trim(),
+                ownerEmail: email.toLowerCase().trim(),
             });
 
             // Send real-time notification to employer to complete company profile
@@ -219,18 +259,26 @@ export const updateProfile = catchAsync(
     async (req, res, next) => {
         const {
             name,
+            countryCode,
             phone,
             avatar,
         } = req.body;
 
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (avatar !== undefined) updateData.avatar = avatar;
+        if (phone !== undefined) {
+            updateData.phone = String(phone).trim().replace(/\D/g, "");
+        }
+        if (countryCode !== undefined) {
+            const trimmed = String(countryCode).trim();
+            updateData.countryCode = trimmed.startsWith("+") ? trimmed : `+${trimmed}`;
+        }
+
         const user =
             await User.findByIdAndUpdate(
                 req.user._id,
-                {
-                    name,
-                    phone,
-                    avatar,
-                },
+                updateData,
                 {
                     new: true,
                     runValidators: true,

@@ -3,8 +3,12 @@ import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { Phone, ShieldCheck, RotateCw, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import customerservice from "../../customer/customerservice";
+import { isValidPhoneNumber } from "libphonenumber-js";
+import CountryCodeSelector from "../common/CountryCodeSelector";
 
 export default function MSGLogin() {
+  const [countryCode, setCountryCode] = useState("+91");
+  const [countryIso, setCountryIso] = useState("IN");
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -74,8 +78,21 @@ export default function MSGLogin() {
 
   const sendOTP = () => {
     const cleanMobile = mobile.trim().replace(/\D/g, "");
-    if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
-      toast.error("Enter a valid 10-digit Indian mobile number");
+    if (!cleanMobile) {
+      toast.error("Enter a valid mobile phone number");
+      return;
+    }
+
+    const fullPhone = `${countryCode}${cleanMobile}`;
+    let isPhoneValid = false;
+    try {
+      isPhoneValid = isValidPhoneNumber(fullPhone, countryIso);
+    } catch {
+      isPhoneValid = cleanMobile.length >= 7 && cleanMobile.length <= 15;
+    }
+
+    if (!isPhoneValid) {
+      toast.error(`Enter a valid phone number for ${countryCode} (${countryIso})`);
       return;
     }
 
@@ -87,14 +104,19 @@ export default function MSGLogin() {
       return;
     }
 
+    const dialDigits = (countryCode || "+91").replace(/\D/g, "");
+    const formattedSendNumber = cleanMobile.startsWith(dialDigits)
+      ? cleanMobile
+      : `${dialDigits}${cleanMobile}`;
+
     window.sendOtp(
-      `91${cleanMobile}`,
+      formattedSendNumber,
       (data) => {
         console.log("OTP sent:", data);
         setOtpSent(true);
         setLoading(false);
         startResendTimer();
-        toast.success(`OTP sent to +91 ${cleanMobile}`);
+        toast.success(`OTP sent to ${countryCode} ${cleanMobile}`);
       },
       (error) => {
         console.error("Send OTP error:", error);
@@ -211,18 +233,22 @@ export default function MSGLogin() {
               <label className="block text-xs font-semibold uppercase text-slate-600 mb-1.5">
                 Mobile Number
               </label>
-              <div className="flex rounded-xl border border-slate-200 bg-slate-50/50 overflow-hidden focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500">
-                <span className="inline-flex items-center gap-1.5 px-3.5 border-r border-slate-200 text-xs font-medium text-slate-600 bg-slate-100/70 select-none">
-                  <Phone className="w-3.5 h-3.5 text-slate-400" />
-                  +91
-                </span>
+              <div className="flex rounded-xl border border-slate-200 bg-slate-50/50 focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500">
+                <CountryCodeSelector
+                  value={countryCode}
+                  selectedIso={countryIso}
+                  onChange={({ dialCode, iso }) => {
+                    setCountryCode(dialCode);
+                    setCountryIso(iso);
+                  }}
+                />
                 <input
                   type="tel"
-                  maxLength={10}
-                  placeholder="Enter 10-digit mobile"
+                  maxLength={15}
+                  placeholder={countryIso === "IN" ? "98765 43210" : "Mobile number"}
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-                  className="w-full px-3.5 py-3 text-sm focus:outline-none bg-transparent"
+                  className="w-full px-3.5 py-3 text-sm focus:outline-none bg-transparent font-mono tracking-wide"
                 />
               </div>
             </div>
@@ -249,7 +275,7 @@ export default function MSGLogin() {
           <div className="space-y-5">
             <div>
               <label className="block text-xs font-semibold uppercase text-slate-600 mb-2 text-center">
-                Enter OTP sent to +91 {mobile}
+                Enter OTP sent to {countryCode} {mobile}
               </label>
               <input
                 type="text"

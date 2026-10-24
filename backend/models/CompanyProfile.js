@@ -18,6 +18,11 @@ const companyProfileSchema = new mongoose.Schema(
             trim: true,
             default: "",
         },
+        ownerCountryCode: {
+            type: String,
+            trim: true,
+            default: "+91",
+        },
         ownerPhone: {
             type: String,
             trim: true,
@@ -44,6 +49,10 @@ const companyProfileSchema = new mongoose.Schema(
         lng: {
             type: Number,
             default: null,
+        },
+        countryCode: {
+            type: String,
+            default: "+91",
         },
         phone: {
             type: String,

@@ -26,6 +26,12 @@ const userSchema = new mongoose.Schema(
             select: false,
         },
 
+        countryCode: {
+            type: String,
+            default: "+91",
+            trim: true,
+        },
+
         phone: {
             type: String,
             trim: true,

@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
@@ -38,6 +39,15 @@ export const protect = catchAsync(
             return next(
                 new AppError(
                     "Invalid or expired token.",
+                    401
+                )
+            );
+        }
+
+        if (!decoded?.id || !mongoose.Types.ObjectId.isValid(decoded.id)) {
+            return next(
+                new AppError(
+                    "Invalid token payload.",
                     401
                 )
             );
@@ -83,9 +93,11 @@ export const optionalAuth = catchAsync(async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id);
-        if (user && user.isActive) {
-            req.user = user;
+        if (decoded?.id && mongoose.Types.ObjectId.isValid(decoded.id)) {
+            const user = await User.findById(decoded.id);
+            if (user && user.isActive) {
+                req.user = user;
+            }
         }
     } catch (err) {
         // Silently continue as unauthenticated
