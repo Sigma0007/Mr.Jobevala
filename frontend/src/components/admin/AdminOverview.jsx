@@ -1,23 +1,36 @@
 import React, { useState, useEffect } from "react";
 import api from "../../customer/customerservice";
-import { Users, Briefcase, FileText, Building, ShieldAlert } from "lucide-react";
+import { Users, Briefcase, FileText, Building, ShieldAlert, Activity } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { setDashboardActiveTab } from "../../Redux/Dashboard/DashboardAction";
 
 const AdminOverview = () => {
   const [stats, setStats] = useState(null);
+  const [issueStats, setIssueStats] = useState({ openCount: 0, criticalCount: 0 });
+  const [healthStatus, setHealthStatus] = useState("healthy");
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await api.getAdminStats();
-        const data = response;
+        const [response, issueRes, healthRes] = await Promise.allSettled([
+          api.getAdminStats(),
+          api.getSystemIssueStats(),
+          api.getLiveHealth(),
+        ]);
 
-        if (data.success) {
-          setStats(data.stats);
+        if (response.status === "fulfilled" && response.value?.success) {
+          setStats(response.value.stats);
+        }
+
+        if (issueRes.status === "fulfilled" && issueRes.value?.success && issueRes.value?.stats) {
+          setIssueStats(issueRes.value.stats);
+        }
+
+        if (healthRes.status === "fulfilled" && healthRes.value?.success && healthRes.value?.health) {
+          setHealthStatus(healthRes.value.health.status);
         }
       } catch (error) {
         console.error("Error fetching admin stats:", error);
@@ -29,6 +42,7 @@ const AdminOverview = () => {
 
     fetchStats();
   }, []);
+
 
   if (loading) {
     return (
@@ -89,10 +103,25 @@ const AdminOverview = () => {
       bg: "bg-rose-100",
       tab: "reports",
     },
+    {
+      title: "System & Server Issues",
+      value: issueStats.openCount || 0,
+      subValue:
+        issueStats.criticalCount > 0
+          ? `${issueStats.criticalCount} critical`
+          : healthStatus !== "healthy"
+          ? healthStatus
+          : "healthy",
+      icon: Activity,
+      color: issueStats.criticalCount > 0 ? "text-red-600" : "text-indigo-600",
+      bg: issueStats.criticalCount > 0 ? "bg-red-100" : "bg-indigo-100",
+      tab: "issues",
+    },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
+
       {statCards.map((stat, index) => {
         const Icon = stat.icon;
         return (

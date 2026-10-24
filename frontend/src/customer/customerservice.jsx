@@ -578,6 +578,47 @@ const seedMarqueeCompanies = (data = {}) => {
   return Auth(endpoint, data, "POST");
 };
 
+// --- System Issues & Server Monitoring APIs ---
+const getSystemIssues = (params = "") => {
+  const endpoint = `/api/admin/system-issues${params}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getSystemIssueStats = () => {
+  const endpoint = `/api/admin/system-issues/stats`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getLiveHealth = () => {
+  const endpoint = `/api/admin/system-issues/health`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getSystemIssueById = (id) => {
+  const endpoint = `/api/admin/system-issues/${id}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const updateSystemIssueStatus = (id, data = {}) => {
+  const endpoint = `/api/admin/system-issues/${id}/status`;
+  return Auth(endpoint, data, "PATCH");
+};
+
+const deleteSystemIssue = (id) => {
+  const endpoint = `/api/admin/system-issues/${id}`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
+const clearResolvedSystemIssues = () => {
+  const endpoint = `/api/admin/system-issues/clear-resolved`;
+  return Auth(endpoint, {}, "POST");
+};
+
+const simulateTestIssue = (data = {}) => {
+  const endpoint = `/api/admin/system-issues/simulate`;
+  return Auth(endpoint, data, "POST");
+};
+
 export default {
   registerUser,
   sendOtp,
@@ -693,5 +734,14 @@ export default {
   deleteMarqueeCompany,
   toggleMarqueeCompanyStatus,
   seedMarqueeCompanies,
+  getSystemIssues,
+  getSystemIssueStats,
+  getLiveHealth,
+  getSystemIssueById,
+  updateSystemIssueStatus,
+  deleteSystemIssue,
+  clearResolvedSystemIssues,
+  simulateTestIssue,
 };
+
 

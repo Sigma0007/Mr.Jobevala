@@ -8,6 +8,7 @@ import AdminPlansList from "./AdminPlansList";
 import AdminSubscriptionsList from "./AdminSubscriptionsList";
 import AdminReportsList from "./AdminReportsList";
 import AdminMarqueeList from "./AdminMarqueeList";
+import AdminSystemIssuesList from "./AdminSystemIssuesList";
 import {
   LayoutDashboard,
   Users,
@@ -18,16 +19,47 @@ import {
   Crown,
   ShieldAlert,
   Building2,
+  Activity,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { setDashboardActiveTab } from "../../Redux/Dashboard/DashboardAction";
+import customerservice from "../../customer/customerservice";
+import { useSocket } from "../../context/SocketContext";
+import { useEffect } from "react";
 
 const AdminDashboard = () => {
   const { dashboardActiveTab } = useSelector((state) => state.dashboard);
   const dispatch = useDispatch();
+  const { socket } = useSocket();
+  const [criticalIssuesCount, setCriticalIssuesCount] = useState(0);
+
+  useEffect(() => {
+    const fetchIssueStats = async () => {
+      try {
+        const res = await customerservice.getSystemIssueStats();
+        if (res && res.success && res.stats) {
+          setCriticalIssuesCount(res.stats.criticalCount + res.stats.openCount);
+        }
+      } catch (_) {}
+    };
+
+    fetchIssueStats();
+
+    if (socket) {
+      const handleAlert = () => fetchIssueStats();
+      socket.on("system_issue_alert", handleAlert);
+      return () => socket.off("system_issue_alert", handleAlert);
+    }
+  }, [socket]);
 
   const tabs = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
+    {
+      id: "issues",
+      label: "Server & Issues Monitor",
+      icon: Activity,
+      badge: criticalIssuesCount,
+    },
     { id: "reports", label: "Job Reports & Fraud", icon: ShieldAlert },
     { id: "subscriptions", label: "Subscriptions & Billing", icon: Crown },
     { id: "plans", label: "Manage Plans", icon: CreditCard },
@@ -66,6 +98,11 @@ const AdminDashboard = () => {
             >
               <Icon size={18} />
               {tab.label}
+              {tab.badge > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white animate-pulse">
+                  {tab.badge}
+                </span>
+              )}
             </button>
           );
         })}
@@ -73,6 +110,7 @@ const AdminDashboard = () => {
 
       <div className="min-h-[500px]">
         {dashboardActiveTab === "overview" && <AdminOverview />}
+        {dashboardActiveTab === "issues" && <AdminSystemIssuesList />}
         {dashboardActiveTab === "reports" && <AdminReportsList />}
         {dashboardActiveTab === "subscriptions" && <AdminSubscriptionsList />}
         {dashboardActiveTab === "plans" && <AdminPlansList />}
