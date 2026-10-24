@@ -53,6 +53,8 @@ export default function Register() {
     role: initialRole,
   });
 
+  const isIndia = (formData.countryCode || "+91").trim() === "+91";
+
   // Password Security Criteria (Alphanumeric, Case-Sensitive & Special Characters)
   const passwordCriteria = [
     {
@@ -268,17 +270,54 @@ export default function Register() {
       return;
     }
 
-    // Trigger OTP sending
-    sendOTP(cleanPhone);
+    // Send OTP: India (+91) -> Phone SMS; Any other country -> Email via Nodemailer (Gmail)
+    if (isIndia) {
+      sendPhoneOtp(cleanPhone);
+    } else {
+      sendEmailOtp();
+    }
   };
 
-  // Send OTP via MSG91
-  const sendOTP = (phoneNumber) => {
-    if (typeof window.sendOtp !== "function") {
-      toast.error("OTP Service is initializing. Please try again in a moment.");
-      return;
-    }
+  // Send Email OTP via Backend Nodemailer (Gmail)
+  const sendEmailOtp = async () => {
+    try {
+      setSendingOtp(true);
+      const res = await customerservice.sendOtp({
+        email: formData.email.trim(),
+        phone: formData.phone.trim().replace(/\D/g, ""),
+        countryCode: formData.countryCode,
+        name: formData.name.trim(),
+        role: formData.role,
+        type: "email",
+      });
 
+      if (res.success === true) {
+        setShowOtpModal(true);
+        setOtp("");
+        startResendTimer();
+        toast.success(
+          res.message || `6-digit verification code sent to ${formData.email}`
+        );
+        setTimeout(() => {
+          if (otpInputRef.current) otpInputRef.current.focus();
+        }, 300);
+      } else {
+        toast.error(res.message || "Failed to send email verification code");
+      }
+    } catch (error) {
+      console.error("Send Email OTP error:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to send email OTP. Please try again."
+      );
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  // Send Phone OTP via MSG91 or backend fallback (+91 India)
+  const sendPhoneOtp = (phoneNumber) => {
     setSendingOtp(true);
     const dialDigits = (formData.countryCode || "+91").replace(/\D/g, "");
     const rawNumber = phoneNumber.replace(/\D/g, "");
@@ -286,35 +325,118 @@ export default function Register() {
       ? rawNumber
       : `${dialDigits}${rawNumber}`;
 
-    window.sendOtp(
-      fullPhone,
-      (data) => {
-        console.log("OTP sent successfully:", data);
-        setSendingOtp(false);
-        setShowOtpModal(true);
-        setOtp("");
-        startResendTimer();
-        toast.success(`OTP sent to ${formData.countryCode} ${rawNumber}`);
-        setTimeout(() => {
-          if (otpInputRef.current) otpInputRef.current.focus();
-        }, 300);
-      },
-      (error) => {
-        console.error("Send OTP error:", error);
-        setSendingOtp(false);
-        toast.error(
-          typeof error === "string"
-            ? error
-            : error?.message || "Failed to send OTP. Please try again.",
-        );
-      },
-    );
+    if (typeof window.sendOtp === "function") {
+      window.sendOtp(
+        fullPhone,
+        (data) => {
+          console.log("OTP sent successfully:", data);
+          setSendingOtp(false);
+          setShowOtpModal(true);
+          setOtp("");
+          startResendTimer();
+          toast.success(`OTP sent to +91 ${rawNumber}`);
+          setTimeout(() => {
+            if (otpInputRef.current) otpInputRef.current.focus();
+          }, 300);
+        },
+        async (error) => {
+          console.warn("MSG91 widget send error, falling back to backend:", error);
+          try {
+            const res = await customerservice.sendOtp({
+              email: formData.email.trim(),
+              phone: rawNumber,
+              countryCode: "+91",
+              name: formData.name.trim(),
+              type: "phone",
+            });
+            if (res.success === true) {
+              setShowOtpModal(true);
+              setOtp("");
+              startResendTimer();
+              toast.success(res.message || `OTP sent to +91 ${rawNumber}`);
+              setTimeout(() => {
+                if (otpInputRef.current) otpInputRef.current.focus();
+              }, 300);
+            } else {
+              toast.error(res.message || "Failed to send SMS OTP");
+            }
+          } catch (backendErr) {
+            toast.error(
+              backendErr?.response?.data?.message ||
+                "Failed to send SMS OTP. Please try again."
+            );
+          } finally {
+            setSendingOtp(false);
+          }
+        }
+      );
+    } else {
+      // Backend sendOtp direct call
+      customerservice
+        .sendOtp({
+          email: formData.email.trim(),
+          phone: rawNumber,
+          countryCode: "+91",
+          name: formData.name.trim(),
+          type: "phone",
+        })
+        .then((res) => {
+          setSendingOtp(false);
+          if (res.success === true) {
+            setShowOtpModal(true);
+            setOtp("");
+            startResendTimer();
+            toast.success(res.message || `OTP sent to +91 ${rawNumber}`);
+            setTimeout(() => {
+              if (otpInputRef.current) otpInputRef.current.focus();
+            }, 300);
+          } else {
+            toast.error(res.message || "Failed to send SMS OTP");
+          }
+        })
+        .catch((err) => {
+          setSendingOtp(false);
+          toast.error(
+            err?.response?.data?.message ||
+              "Failed to send SMS OTP. Please try again."
+          );
+        });
+    }
   };
 
-  // Resend OTP via MSG91
-  const handleResendOtp = () => {
+  // Resend OTP
+  const handleResendOtp = async () => {
     if (!canResend) return;
 
+    if (!isIndia) {
+      // Email Resend
+      try {
+        setSendingOtp(true);
+        const res = await customerservice.resendOtp({
+          email: formData.email.trim(),
+          countryCode: formData.countryCode,
+          name: formData.name.trim(),
+          type: "email",
+        });
+        if (res.success === true) {
+          startResendTimer();
+          toast.success(
+            res.message || "A new 6-digit verification code has been sent to your email!"
+          );
+        } else {
+          toast.error(res.message || "Failed to resend verification code");
+        }
+      } catch (err) {
+        toast.error(
+          err?.response?.data?.message || "Failed to resend code. Please try again."
+        );
+      } finally {
+        setSendingOtp(false);
+      }
+      return;
+    }
+
+    // Phone Resend (+91)
     setSendingOtp(true);
     const dialDigits = (formData.countryCode || "+91").replace(/\D/g, "");
     const cleanPhone = formData.phone.trim().replace(/\D/g, "");
@@ -329,7 +451,7 @@ export default function Register() {
           console.log("OTP resent:", data);
           setSendingOtp(false);
           startResendTimer();
-          toast.success("A new OTP has been sent!");
+          toast.success("A new OTP has been sent to your mobile!");
         },
         (error) => {
           console.error("Resend error:", error);
@@ -339,91 +461,184 @@ export default function Register() {
               () => {
                 setSendingOtp(false);
                 startResendTimer();
-                toast.success("A new OTP has been sent!");
+                toast.success("A new OTP has been sent to your mobile!");
               },
               (err) => {
                 setSendingOtp(false);
                 toast.error(err?.message || "Failed to resend OTP");
-              },
+              }
             );
           } else {
             setSendingOtp(false);
             toast.error(error?.message || "Failed to resend OTP");
           }
-        },
+        }
       );
-    } else if (typeof window.sendOtp === "function") {
-      window.sendOtp(
-        fullPhone,
-        () => {
+    } else {
+      customerservice
+        .resendOtp({
+          phone: cleanPhone,
+          countryCode: "+91",
+          type: "phone",
+        })
+        .then((res) => {
           setSendingOtp(false);
-          startResendTimer();
-          toast.success("A new OTP has been sent!");
-        },
-        (err) => {
+          if (res.success === true) {
+            startResendTimer();
+            toast.success("A new OTP has been sent to your mobile!");
+          } else {
+            toast.error(res.message || "Failed to resend OTP");
+          }
+        })
+        .catch(() => {
           setSendingOtp(false);
-          toast.error(err?.message || "Failed to resend OTP");
-        },
-      );
+          toast.error("Failed to resend OTP. Please try again.");
+        });
     }
   };
 
-  // Step 2: Verify OTP via MSG91 and then call registerUser
-  const handleVerifyOtp = () => {
+  // Step 2: Verify OTP & Register
+  const handleVerifyOtp = async () => {
     const cleanOtp = otp.trim();
-    if (!cleanOtp || cleanOtp.length < 4) {
-      toast.error("Please enter a valid OTP");
-      return;
-    }
-
-    if (typeof window.verifyOtp !== "function") {
-      toast.error("OTP Service error. Please refresh and try again.");
+    const minLen = isIndia ? 4 : 6;
+    if (!cleanOtp || cleanOtp.length < minLen) {
+      toast.error(
+        `Please enter a valid ${isIndia ? "4-digit" : "6-digit"} verification code`
+      );
       return;
     }
 
     setVerifyingOtp(true);
 
-    window.verifyOtp(
-      cleanOtp,
-      async (data) => {
-        console.log("OTP verified successfully:", data);
+    if (!isIndia) {
+      // Verify Email OTP via Backend API
+      try {
+        const res = await customerservice.verifyOtp({
+          email: formData.email.trim(),
+          otp: cleanOtp,
+          countryCode: formData.countryCode,
+          type: "email",
+        });
 
-        const accessToken =
-          data?.message || data?.["access-token"] || data?.token;
-        const cleanPhone = formData.phone.trim().replace(/\D/g, "");
+        if (res.success === true) {
+          toast.success("Email verified successfully! Creating your account...");
+          await registerUser({
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            password: formData.password,
+            role: formData.role,
+            countryCode: formData.countryCode,
+            phone: formData.phone.trim().replace(/\D/g, ""),
+          });
+        } else {
+          toast.error(res.message || "Invalid or expired verification code");
+        }
+      } catch (err) {
+        toast.error(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Verification failed. Please try again."
+        );
+      } finally {
+        setVerifyingOtp(false);
+      }
+      return;
+    }
 
-        // If backend verification endpoint is configured, verify access token
-        if (accessToken) {
+    // Verify Phone OTP (+91)
+    if (typeof window.verifyOtp === "function") {
+      window.verifyOtp(
+        cleanOtp,
+        async (data) => {
+          console.log("OTP verified successfully:", data);
+          const accessToken =
+            data?.message || data?.["access-token"] || data?.token;
+          const cleanPhone = formData.phone.trim().replace(/\D/g, "");
+
+          if (accessToken) {
+            try {
+              await customerservice.msg91WidgetVerify({
+                accessToken,
+                mobile: cleanPhone,
+              });
+            } catch (err) {
+              console.warn("Backend widget verify check:", err);
+            }
+          }
+
+          await registerUser({
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            password: formData.password,
+            role: formData.role,
+            countryCode: formData.countryCode,
+            phone: cleanPhone,
+          });
+        },
+        async (error) => {
+          console.warn("MSG91 widget verify failed, trying backend verify:", error);
           try {
-            await customerservice.msg91WidgetVerify({
-              accessToken,
-              mobile: cleanPhone,
+            const cleanPhone = formData.phone.trim().replace(/\D/g, "");
+            const res = await customerservice.verifyOtp({
+              phone: cleanPhone,
+              otp: cleanOtp,
+              countryCode: "+91",
+              type: "phone",
             });
+            if (res.success === true) {
+              await registerUser({
+                name: formData.name.trim(),
+                email: formData.email.trim(),
+                password: formData.password,
+                role: formData.role,
+                countryCode: formData.countryCode,
+                phone: cleanPhone,
+              });
+            } else {
+              toast.error(res.message || "Invalid or expired OTP");
+              setVerifyingOtp(false);
+            }
           } catch (err) {
-            console.warn("Backend widget verify check:", err);
+            toast.error(
+              typeof error === "string"
+                ? error
+                : error?.message || "Invalid or expired OTP. Please try again."
+            );
+            setVerifyingOtp(false);
           }
         }
-
-        // Now perform user registration
-        await registerUser({
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          password: formData.password,
-          role: formData.role,
-          countryCode: formData.countryCode,
+      );
+    } else {
+      // Backend verifyOtp direct call
+      try {
+        const cleanPhone = formData.phone.trim().replace(/\D/g, "");
+        const res = await customerservice.verifyOtp({
           phone: cleanPhone,
+          otp: cleanOtp,
+          countryCode: "+91",
+          type: "phone",
         });
-      },
-      (error) => {
-        console.error("OTP verification failed:", error);
-        setVerifyingOtp(false);
+        if (res.success === true) {
+          await registerUser({
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            password: formData.password,
+            role: formData.role,
+            countryCode: formData.countryCode,
+            phone: cleanPhone,
+          });
+        } else {
+          toast.error(res.message || "Invalid or expired OTP");
+          setVerifyingOtp(false);
+        }
+      } catch (err) {
         toast.error(
-          typeof error === "string"
-            ? error
-            : error?.message || "Invalid or expired OTP. Please try again.",
+          err?.response?.data?.message ||
+            "Invalid or expired OTP. Please try again."
         );
-      },
-    );
+        setVerifyingOtp(false);
+      }
+    }
   };
 
   // Step 3: Register User on backend
@@ -787,11 +1002,11 @@ export default function Register() {
             {sendingOtp ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Sending OTP...</span>
+                <span>{isIndia ? "Sending SMS OTP..." : "Sending Email OTP..."}</span>
               </>
             ) : (
               <>
-                <span>Continue &amp; Verify Phone</span>
+                <span>{isIndia ? "Continue & Verify Phone" : "Continue & Verify Email"}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -823,23 +1038,38 @@ export default function Register() {
               {/* Modal Header */}
               <div className="text-center pt-2">
                 <div className="w-14 h-14 rounded-2xl bg-brand-50 border border-brand-100 text-brand-600 flex items-center justify-center mx-auto mb-4">
-                  <ShieldCheck className="w-7 h-7" />
+                  {isIndia ? (
+                    <ShieldCheck className="w-7 h-7" />
+                  ) : (
+                    <Mail className="w-7 h-7" />
+                  )}
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-                  Verify Mobile Number
+                  {isIndia ? "Verify Mobile Number" : "Verify Email Address"}
                 </h3>
                 <p className="text-sm text-slate-500 mt-1.5">
-                  Enter the OTP sent to{" "}
-                  <span className="font-semibold text-slate-800 font-mono">
-                    {formData.countryCode} {formData.phone}
-                  </span>
+                  {isIndia ? (
+                    <>
+                      Enter the OTP sent to{" "}
+                      <span className="font-semibold text-slate-800 font-mono">
+                        {formData.countryCode} {formData.phone}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      Enter the 6-digit code sent to{" "}
+                      <span className="font-semibold text-slate-800">
+                        {formData.email}
+                      </span>
+                    </>
+                  )}
                 </p>
                 <button
                   type="button"
                   onClick={() => setShowOtpModal(false)}
                   className="text-xs font-semibold text-brand-600 hover:underline mt-1 focus:outline-none"
                 >
-                  Change phone number?
+                  {isIndia ? "Change phone number?" : "Change email address?"}
                 </button>
               </div>
 
@@ -847,26 +1077,26 @@ export default function Register() {
               <div className="mt-6 space-y-5">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2 text-center">
-                    Enter Verification Code
+                    {isIndia ? "Enter 4-Digit SMS Code" : "Enter 6-Digit Verification Code"}
                   </label>
                   <input
                     ref={otpInputRef}
                     type="text"
                     inputMode="numeric"
-                    maxLength={4}
+                    maxLength={isIndia ? 4 : 6}
                     value={otp}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "");
                       setOtp(val);
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && otp.length >= 4) {
+                      if (e.key === "Enter" && otp.length >= (isIndia ? 4 : 6)) {
                         e.preventDefault();
                         handleVerifyOtp();
                       }
                     }}
-                    placeholder="• • • •"
-                    className="w-full py-3.5 px-4 text-center text-2xl font-bold tracking-[0.5em] bg-slate-50 border-2 border-slate-200 rounded-2xl focus:bg-white focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-slate-900 placeholder:text-slate-300 placeholder:tracking-[0.3em] font-mono transition-all"
+                    placeholder={isIndia ? "• • • •" : "• • • • • •"}
+                    className="w-full py-3.5 px-4 text-center text-2xl font-bold tracking-[0.4em] bg-slate-50 border-2 border-slate-200 rounded-2xl focus:bg-white focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-slate-900 placeholder:text-slate-300 placeholder:tracking-[0.3em] font-mono transition-all"
                   />
                 </div>
 
@@ -899,8 +1129,8 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={handleVerifyOtp}
-                  disabled={verifyingOtp || loading || otp.length < 4}
-                  className="w-full py-3.5 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-brand-500/20 transition-all flex items-center justify-center gap-2"
+                  disabled={verifyingOtp || loading || otp.length < (isIndia ? 4 : 6)}
+                  className="w-full py-3.5 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-brand-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {verifyingOtp || loading ? (
                     <>

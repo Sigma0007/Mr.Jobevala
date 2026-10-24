@@ -26,6 +26,21 @@ const resetPassword = (data = {}) => {
   return Auth(endpoint, data, "POST");
 };
 
+const sendOtp = (data = {}) => {
+  const endpoint = "/api/auth/send-otp";
+  return Auth(endpoint, data, "POST");
+};
+
+const resendOtp = (data = {}) => {
+  const endpoint = "/api/auth/resend-otp";
+  return Auth(endpoint, data, "POST");
+};
+
+const verifyOtp = (data = {}) => {
+  const endpoint = "/api/auth/verify-otp";
+  return Auth(endpoint, data, "POST");
+};
+
 const createJob = (data = {}) => {
   const endpoint = "/api/jobs";
   return Auth(endpoint, data, "POST");
@@ -565,6 +580,9 @@ const seedMarqueeCompanies = (data = {}) => {
 
 export default {
   registerUser,
+  sendOtp,
+  resendOtp,
+  verifyOtp,
   loginUser,
   fetchMe,
   logoutUser,
