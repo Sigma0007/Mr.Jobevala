@@ -76,6 +76,16 @@ const pricingPlanSchema = new mongoose.Schema(
             default: 0,
             min: [0, "Unlock contacts limit cannot be negative"],
         },
+        extraJobPostPrice: {
+            type: Number,
+            default: 99,
+            min: [0, "Extra job post price cannot be negative"],
+        },
+        extraCompanyPostPrice: {
+            type: Number,
+            default: 49,
+            min: [0, "Extra company post price cannot be negative"],
+        },
         resumeAccess: {
             type: Boolean,
             default: false,

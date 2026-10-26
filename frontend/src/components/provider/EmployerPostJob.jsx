@@ -8,9 +8,12 @@ import {
   AlertTriangle,
   CheckCircle2,
   ArrowRight,
+  CreditCard,
+  Plus,
 } from "lucide-react";
 import customerservice from "../../customer/customerservice";
 import { clearSelectedJob } from "../../Redux/Job/JobAction";
+import ExtraPostModal from "../Modals/ExtraPostModal";
 import {
   workModeType,
   qualificationTypes,
@@ -31,6 +34,7 @@ export default function EmployerPostJob() {
   const [locationsLoading, setLocationsLoading] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
+  const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -233,8 +237,122 @@ export default function EmployerPostJob() {
     (cat) => cat.value === formData.category,
   );
 
+  const buildJobPayload = () => {
+    return {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      subCategory: formData.subCategory,
+      skills: formData.skills
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean),
+      jobType: formData.jobType,
+      qualification: formData.qualification,
+      education: formData.education,
+      genderPreference: formData.genderPreference,
+      jobTimings: formData.jobTimings,
+      jobShift: formData.jobShift,
+      experience: {
+        min: Number(formData.experienceMin) || 0,
+        max: Number(formData.experienceMax) || 0,
+      },
+      salary: {
+        min: Number(formData.salaryMin) || 0,
+        max: Number(formData.salaryMax) || 0,
+        currency: "INR",
+      },
+      location: {
+        city: formData.city || "rajkot",
+        state: formData.state || "gujrat",
+        country: formData.country || "india",
+        talukaOrVillage: formData.talukaOrVillage,
+        address: formData.address,
+        workMode: formData.workMode,
+      },
+      vacancies: Number(formData.vacancies) || 1,
+      status: "active",
+      applicationDeadline: formData.applicationDeadline || null,
+    };
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      category: "",
+      subCategory: "",
+      skills: "",
+      jobType: "full-time",
+      qualification: "",
+      education: "",
+      genderPreference: "any",
+      jobTimings: "",
+      jobShift: "day",
+      experienceMin: "",
+      experienceMax: "",
+      salaryMin: "",
+      salaryMax: "",
+      city: "",
+      state: "",
+      country: "India",
+      talukaOrVillage: "",
+      address: "",
+      workMode: "on-site",
+      vacancies: 1,
+      applicationDeadline: "",
+    });
+  };
+
+  const submitJobData = async () => {
+    try {
+      setLoading(true);
+      const payload = buildJobPayload();
+      const res = await customerservice.createJob(payload);
+      if (res.success) {
+        toast.success("Job posted successfully 🎉");
+        fetchSubscription();
+        resetForm();
+        navigate("/provider/dashboard");
+      } else {
+        toast.error(res.message);
+      }
+    } catch (error) {
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to create job";
+      toast.error(errorMsg);
+      if (error?.response?.data?.quotaExhausted) {
+        setIsExtraModalOpen(true);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExtraPostSuccess = async (updatedSub) => {
+    if (updatedSub) {
+      setSubscription(updatedSub);
+    } else {
+      await fetchSubscription();
+    }
+    // Now trigger job creation
+    await submitJobData();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.title || !formData.title.trim()) {
+      toast.error("Please enter a Job Title");
+      return;
+    }
+
+    if (!formData.description || !formData.description.trim()) {
+      toast.error("Please enter a Job Description");
+      return;
+    }
 
     if (!formData.category) {
       toast.error("Please select a Category Type");
@@ -246,103 +364,43 @@ export default function EmployerPostJob() {
       return;
     }
 
-    if (!formData.state) {
-      toast.error("Please select a State");
+    // if (!formData.state) {
+    //   toast.error("Please select a State");
+    //   return;
+    // }
+
+    // if (!formData.city) {
+    //   toast.error("Please select a District / City");
+    //   return;
+    // }
+
+    // If quota exhausted on new job post, prompt for extra post payment modal!
+    if (!isEditMode && isQuotaExhausted) {
+      setIsExtraModalOpen(true);
       return;
     }
 
-    if (!formData.city) {
-      toast.error("Please select a District / City");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        subCategory: formData.subCategory,
-        skills: formData.skills
-          .split(",")
-          .map((skill) => skill.trim())
-          .filter(Boolean),
-        jobType: formData.jobType,
-        qualification: formData.qualification,
-        education: formData.education,
-        genderPreference: formData.genderPreference,
-        jobTimings: formData.jobTimings,
-        jobShift: formData.jobShift,
-        experience: {
-          min: Number(formData.experienceMin) || 0,
-          max: Number(formData.experienceMax) || 0,
-        },
-        salary: {
-          min: Number(formData.salaryMin) || 0,
-          max: Number(formData.salaryMax) || 0,
-          currency: "INR",
-        },
-        location: {
-          city: formData.city,
-          state: formData.state,
-          country: formData.country,
-          talukaOrVillage: formData.talukaOrVillage,
-          address: formData.address,
-          workMode: formData.workMode,
-        },
-        vacancies: Number(formData.vacancies) || 1,
-        status: "active",
-        applicationDeadline: formData.applicationDeadline || null,
-      };
-
-      if (isEditMode) {
+    if (isEditMode) {
+      try {
+        setLoading(true);
+        const payload = buildJobPayload();
         const res = await customerservice.updateJob(id, payload);
         if (res.success) {
           toast.success("Job updated successfully");
-        }
-      } else {
-        const res = await customerservice.createJob(payload);
-        if (res.success) {
-          toast.success("Job posted successfully 🎉");
-          fetchSubscription();
-          setFormData({
-            title: "",
-            description: "",
-            category: "",
-            subCategory: "",
-            skills: "",
-            jobType: "full-time",
-            qualification: "",
-            education: "",
-            genderPreference: "any",
-            jobTimings: "",
-            jobShift: "day",
-            experienceMin: "",
-            experienceMax: "",
-            salaryMin: "",
-            salaryMax: "",
-            city: "",
-            state: "",
-            country: "India",
-            talukaOrVillage: "",
-            address: "",
-            workMode: "on-site",
-            vacancies: 1,
-            applicationDeadline: "",
-          });
         } else {
           toast.error(res.message);
         }
+      } catch (error) {
+        toast.error(
+          error?.response?.data?.message ||
+            error?.message ||
+            "Failed to update job",
+        );
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      const errorMsg =
-        error?.response?.data?.message ||
-        error?.message ||
-        `Failed to ${isEditMode ? "update" : "create"} job`;
-      toast.error(errorMsg);
-    } finally {
-      setLoading(false);
+    } else {
+      await submitJobData();
     }
   };
 
@@ -362,6 +420,10 @@ export default function EmployerPostJob() {
   const jobUsed = subscription?.jobPostsUsed || 0;
   const jobRemaining = Math.max(0, jobLimit - jobUsed);
   const isQuotaExhausted = hasActiveSub && jobLimit > 0 && jobUsed >= jobLimit;
+  const extraJobPostPrice =
+    subscription?.planDetails?.extraJobPostPrice ??
+    subscription?.plan?.extraJobPostPrice ??
+    99;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -378,18 +440,35 @@ export default function EmployerPostJob() {
         </div>
 
         {!isEditMode && !subLoading && (
-          <div>
+          <div className="flex items-center gap-2">
             {hasActiveSub ? (
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-                <span>
-                  Quota:{" "}
-                  <strong>
-                    {jobUsed} / {jobLimit > 0 ? jobLimit : "∞"}
-                  </strong>{" "}
-                  used (
-                  {jobLimit > 0 ? `${jobRemaining} remaining` : "Unlimited"})
-                </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <div
+                  className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold ${
+                    isQuotaExhausted
+                      ? "bg-rose-50 text-rose-700 border border-rose-200"
+                      : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>
+                    Quota:{" "}
+                    <strong>
+                      {jobUsed} / {jobLimit > 0 ? jobLimit : "∞"}
+                    </strong>{" "}
+                    used (
+                    {jobLimit > 0 ? `${jobRemaining} remaining` : "Unlimited"})
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsExtraModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 shadow-sm transition-all cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5 text-brand-600" />
+                  <span>Buy Extra Job (₹{extraJobPostPrice})</span>
+                </button>
               </div>
             ) : (
               <Link
@@ -431,30 +510,46 @@ export default function EmployerPostJob() {
               </Link>
             </div>
           ) : isQuotaExhausted ? (
-            <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-rose-50 to-red-50 border border-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-50 via-rose-50 to-orange-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-rose-600 mt-0.5 flex-shrink-0" />
+                <div className="p-2 rounded-xl bg-amber-100 text-amber-800 shrink-0">
+                  <CreditCard className="w-5 h-5 text-amber-700" />
+                </div>
                 <div>
-                  <h4 className="text-sm font-bold text-rose-900">
-                    Job Post Quota Exhausted ({jobUsed}/{jobLimit})
-                  </h4>
-                  <p className="text-xs text-rose-700 mt-0.5">
-                    You have reached the maximum job posting limit for your
-                    current plan (
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-slate-900">
+                      Job Post Quota Reached ({jobUsed}/{jobLimit})
+                    </h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200/70 text-amber-800">
+                      Pay-per-post available
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                    You have used all jobs included in your plan (
                     <strong>
                       {subscription.planDetails?.name || "Active Plan"}
                     </strong>
-                    ).
+                    ). Pay <strong>₹{extraJobPostPrice}</strong> to publish this
+                    extra job right away without changing your monthly plan!
                   </p>
                 </div>
               </div>
-              <Link
-                to="/pricing"
-                className="px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 text-white text-xs font-semibold rounded-xl hover:shadow-md transition-all whitespace-nowrap flex items-center gap-1.5"
-              >
-                <Crown className="w-3.5 h-3.5" />
-                Upgrade Plan
-              </Link>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setIsExtraModalOpen(true)}
+                  className="flex-1 sm:flex-none px-4 py-2.5 bg-gradient-to-r from-brand-600 to-teal-600 text-white text-xs font-bold rounded-xl hover:shadow-md transition-all whitespace-nowrap flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Pay ₹{extraJobPostPrice} Extra Post
+                </button>
+                <Link
+                  to="/pricing"
+                  className="px-3 py-2.5 bg-white text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all whitespace-nowrap"
+                >
+                  View Plans
+                </Link>
+              </div>
             </div>
           ) : null}
         </>
@@ -921,19 +1016,41 @@ export default function EmployerPostJob() {
         <div className="flex justify-end pt-4">
           <button
             type="submit"
-            disabled={loading || (isQuotaExhausted && !isEditMode)}
-            className="px-8 py-3.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-medium rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            disabled={loading || (!hasActiveSub && !isEditMode)}
+            className={`px-8 py-3.5 font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
+              isQuotaExhausted && !isEditMode
+                ? "bg-gradient-to-r from-brand-600 via-teal-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white shadow-brand-500/25 hover:scale-[1.01] active:scale-[0.99]"
+                : "bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white"
+            }`}
           >
-            {loading
-              ? isEditMode
-                ? "Updating..."
-                : "Posting..."
-              : isEditMode
-                ? "Update Job"
-                : "Post Job"}
+            {loading ? (
+              isEditMode ? (
+                "Updating..."
+              ) : (
+                "Posting..."
+              )
+            ) : isQuotaExhausted && !isEditMode ? (
+              <>
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Pay ₹{extraJobPostPrice} & Post Job</span>
+              </>
+            ) : isEditMode ? (
+              "Update Job"
+            ) : (
+              "Post Job"
+            )}
           </button>
         </div>
       </form>
+
+      {/* Extra Post Pay Modal */}
+      <ExtraPostModal
+        isOpen={isExtraModalOpen}
+        onClose={() => setIsExtraModalOpen(false)}
+        actionType="job_post"
+        subscription={subscription}
+        onSuccess={handleExtraPostSuccess}
+      />
     </div>
   );
 }

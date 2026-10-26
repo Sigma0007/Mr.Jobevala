@@ -25,6 +25,7 @@ import toast from "react-hot-toast";
 import { statusConfig } from "../../Utility/utilites";
 import CandidateDetailsModal from "../Modals/CandidateDetailsModal";
 import SubscriptionModal from "../Modals/SubscriptionModal";
+import ExtraPostModal from "../Modals/ExtraPostModal";
 import { useDispatch } from "react-redux";
 import { setDashboardActiveTab } from "../../Redux/Dashboard/DashboardAction";
 
@@ -37,6 +38,7 @@ export default function EmployerOverview() {
   const [updatingStatus, setUpdatingStatus] = useState(null);
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
+  const [extraModalAction, setExtraModalAction] = useState(null);
 
   const fetchOverview = async () => {
     try {
@@ -259,7 +261,7 @@ export default function EmployerOverview() {
           </div>
 
           {/* Plan Quotas Breakdown Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2 border-t border-indigo-800/40">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-2 border-t border-indigo-800/40">
             {/* Direct Messages */}
             <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col justify-between">
               <div className="flex items-center justify-between text-xs mb-1.5">
@@ -330,16 +332,25 @@ export default function EmployerOverview() {
                   }}
                 />
               </div>
-              <span className="text-[11px] text-emerald-400 font-semibold">
-                Remaining:{" "}
-                {currentSubscription.jobPostsLimit > 0
-                  ? Math.max(
-                      0,
-                      currentSubscription.jobPostsLimit -
-                        (currentSubscription.jobPostsUsed || 0),
-                    )
-                  : "Unlimited"}
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-emerald-400 font-semibold">
+                  Remaining:{" "}
+                  {currentSubscription.jobPostsLimit > 0
+                    ? Math.max(
+                        0,
+                        currentSubscription.jobPostsLimit -
+                          (currentSubscription.jobPostsUsed || 0),
+                      )
+                    : "Unlimited"}
+                </span>
+                <button
+                  onClick={() => setExtraModalAction("job_post")}
+                  className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-300 hover:text-amber-200 bg-amber-500/20 hover:bg-amber-500/30 px-2 py-0.5 rounded-md transition-all cursor-pointer border border-amber-500/30"
+                  title="Buy Extra Job Posts"
+                >
+                  + Buy Extra
+                </button>
+              </div>
             </div>
 
             {/* Candidate Unlocks */}
@@ -414,16 +425,25 @@ export default function EmployerOverview() {
                   }}
                 />
               </div>
-              <span className="text-[11px] text-emerald-400 font-semibold">
-                Remaining:{" "}
-                {currentSubscription.companyPostsLimit > 0
-                  ? Math.max(
-                      0,
-                      currentSubscription.companyPostsLimit -
-                        (currentSubscription.companyPostsUsed || 0),
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-emerald-400 font-semibold">
+                  Remaining:{" "}
+                  {currentSubscription.companyPostsLimit > 0
+                    ? Math.max(
+                        0,
+                        currentSubscription.companyPostsLimit -
+                          (currentSubscription.companyPostsUsed || 0),
                     )
-                  : "Unlimited"}
-              </span>
+                    : "Unlimited"}
+                </span>
+                <button
+                  onClick={() => setExtraModalAction("company_post")}
+                  className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-300 hover:text-purple-200 bg-purple-500/20 hover:bg-purple-500/30 px-2 py-0.5 rounded-md transition-all cursor-pointer border border-purple-500/30"
+                  title="Buy Extra Company Posts"
+                >
+                  + Buy Extra
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -949,6 +969,18 @@ export default function EmployerOverview() {
         subscription={currentSubscription}
         onSubscriptionCancelled={() => {
           fetchSubscription();
+        }}
+      />
+
+      {/* Extra Post Top-up Modal */}
+      <ExtraPostModal
+        isOpen={Boolean(extraModalAction)}
+        onClose={() => setExtraModalAction(null)}
+        actionType={extraModalAction || "job_post"}
+        subscription={currentSubscription}
+        onSuccess={() => {
+          fetchSubscription();
+          fetchOverview();
         }}
       />
     </motion.div>

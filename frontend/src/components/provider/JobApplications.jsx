@@ -837,9 +837,6 @@ export default function JobApplications() {
                 ? import.meta.env.VITE_API_URL + profile.profileImage
                 : `https://ui-avatars.com/api/?name=${encodeURIComponent(candidateName)}&background=eff6ff&color=2563eb&bold=true`;
 
-              const resumeLink = profile.resume
-                ? import.meta.env.VITE_API_URL + profile.resume
-                : "";
               const currentStatus = (app.status || "pending").toLowerCase();
               const config =
                 statusConfig[currentStatus] || statusConfig.pending;
@@ -873,73 +870,6 @@ export default function JobApplications() {
                             <span className="px-3 py-1 bg-brand-50 text-brand-700 border border-brand-100 text-xs font-semibold rounded-full">
                               {candidateTitle}
                             </span>
-                          )}
-                        </div>
-
-                        {/* Contact Chips with Copy actions */}
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-xs">
-                          {candidateEmail && (
-                            <div className="inline-flex items-center gap-1.5 text-slate-600 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-100">
-                              <Mail size={13} className="text-slate-400" />
-                              <a
-                                href={`mailto:${candidateEmail}`}
-                                className="hover:text-brand-600 font-medium"
-                              >
-                                {candidateEmail}
-                              </a>
-                              <button
-                                onClick={() =>
-                                  copyToClipboard(
-                                    candidateEmail,
-                                    "Email",
-                                    app._id,
-                                  )
-                                }
-                                className="p-1 hover:text-brand-600 text-slate-400 rounded-md transition-colors"
-                                title="Copy Email"
-                              >
-                                {copiedId === `${app._id}-Email` ? (
-                                  <Check
-                                    size={12}
-                                    className="text-emerald-600"
-                                  />
-                                ) : (
-                                  <Copy size={12} />
-                                )}
-                              </button>
-                            </div>
-                          )}
-
-                          {candidatePhone && (
-                            <div className="inline-flex items-center gap-1.5 text-slate-600 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-100">
-                              <Phone size={13} className="text-slate-400" />
-                              <a
-                                href={`tel:${candidatePhone}`}
-                                className="hover:text-brand-600 font-medium"
-                              >
-                                {candidatePhone}
-                              </a>
-                              <button
-                                onClick={() =>
-                                  copyToClipboard(
-                                    candidatePhone,
-                                    "Phone",
-                                    app._id,
-                                  )
-                                }
-                                className="p-1 hover:text-brand-600 text-slate-400 rounded-md transition-colors"
-                                title="Copy Phone"
-                              >
-                                {copiedId === `${app._id}-Phone` ? (
-                                  <Check
-                                    size={12}
-                                    className="text-emerald-600"
-                                  />
-                                ) : (
-                                  <Copy size={12} />
-                                )}
-                              </button>
-                            </div>
                           )}
                         </div>
 
@@ -1153,22 +1083,6 @@ export default function JobApplications() {
                       <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
                         {app.coverLetter}
                       </p>
-                    </div>
-                  )}
-
-                  {/* Resume / Attachment */}
-                  {resumeLink && (
-                    <div className="flex items-center gap-3 pt-1">
-                      <a
-                        href={resumeLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-brand-50 text-slate-700 hover:text-brand-600 border border-slate-200 hover:border-brand-200 rounded-xl text-xs font-semibold transition-all shadow-2xs"
-                      >
-                        <FileText size={14} />
-                        <span>View Attached Resume / CV</span>
-                        <ExternalLink size={12} />
-                      </a>
                     </div>
                   )}
 

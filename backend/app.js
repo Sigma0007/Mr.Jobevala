@@ -20,6 +20,7 @@ import resumeRoutes from "./routes/resumeRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import marqueeCompanyRoutes from "./routes/marqueeCompanyRoutes.js";
 import systemIssueRoutes from "./routes/systemIssueRoutes.js";
+import extraPostPlanRoutes from "./routes/extraPostPlanRoutes.js";
 
 import { errorHandler } from "./middleware/errorMiddleware.js";
 
@@ -67,6 +68,7 @@ app.use("/api/resume", resumeRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/marquee-companies", marqueeCompanyRoutes);
 app.use("/api/admin/system-issues", systemIssueRoutes);
+app.use("/api/extra-post-plans", extraPostPlanRoutes);
 
 app.use(errorHandler);
 

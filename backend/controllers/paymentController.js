@@ -3,6 +3,7 @@ import { getRazorpayInstance } from "../config/razorpay.js";
 import Payment from "../models/Payment.js";
 import PricingPlan from "../models/PricingPlan.js";
 import Subscription from "../models/Subscription.js";
+import ExtraPostPlan from "../models/ExtraPostPlan.js";
 import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
@@ -51,6 +52,8 @@ const createOrActivateSubscription = async (payment, userId) => {
             features: planDoc?.features || [],
             resumeAccess: Boolean(planDoc?.resumeAccess),
             validityDays,
+            extraJobPostPrice: planDoc?.extraJobPostPrice ?? 99,
+            extraCompanyPostPrice: planDoc?.extraCompanyPostPrice ?? 49,
         },
         payment: payment._id,
         paymentId: payment.paymentId || "pay_verified",
@@ -65,6 +68,8 @@ const createOrActivateSubscription = async (payment, userId) => {
         jobPostsUsed: 0,
         companyPostsLimit: planDoc?.companyPostsLimit || 0,
         companyPostsUsed: 0,
+        extraJobPostsPurchased: 0,
+        extraCompanyPostsPurchased: 0,
         unlockContactsLimit: planDoc?.unlockContactsLimit || 0,
         unlockContactsUsed: 0,
     });
@@ -82,6 +87,79 @@ const createOrActivateSubscription = async (payment, userId) => {
         type: "subscription",
         link: role === "provider" ? "/provider/dashboard" : "/user/dashboard",
         data: { tab: role === "provider" ? "billing" : "payments" },
+    });
+
+    return populatedSub;
+};
+
+/**
+ * Helper to process extra job post or company post add-on payment
+ */
+export const handleExtraPostPayment = async (payment, userId) => {
+    if (!payment || !userId) return null;
+
+    // Find active subscription
+    const activeSub = await Subscription.findOne({
+        user: userId,
+        status: "active",
+    });
+
+    if (!activeSub) {
+        throw new AppError(
+            "No active subscription found to apply extra post quota. Please subscribe to an employer plan first.",
+            400
+        );
+    }
+
+    let actionType =
+        payment.notes?.actionType ||
+        (payment.planId === "extra_company_post" ? "company_post" : "job_post");
+    let quantity = Math.max(1, Number(payment.notes?.quantity) || 1);
+
+    // If linked to an ExtraPostPlan, resolve details directly from DB
+    if (payment.notes?.extraPlanId) {
+        try {
+            const extraPlanDoc = await ExtraPostPlan.findById(payment.notes.extraPlanId);
+            if (extraPlanDoc) {
+                actionType = extraPlanDoc.postType || actionType;
+                quantity = extraPlanDoc.quantity || quantity;
+            }
+        } catch (_) {}
+    } else if (payment.planId && payment.planId !== "extra_job_post" && payment.planId !== "extra_company_post") {
+        try {
+            const extraPlanDoc = await ExtraPostPlan.findOne({ planId: payment.planId });
+            if (extraPlanDoc) {
+                actionType = extraPlanDoc.postType || actionType;
+                quantity = extraPlanDoc.quantity || quantity;
+            }
+        } catch (_) {}
+    }
+
+    if (actionType === "job_post") {
+        activeSub.jobPostsLimit = (activeSub.jobPostsLimit || 0) + quantity;
+        activeSub.extraJobPostsPurchased = (activeSub.extraJobPostsPurchased || 0) + quantity;
+    } else if (actionType === "company_post") {
+        activeSub.companyPostsLimit = (activeSub.companyPostsLimit || 0) + quantity;
+        activeSub.extraCompanyPostsPurchased = (activeSub.extraCompanyPostsPurchased || 0) + quantity;
+    }
+
+    await activeSub.save();
+
+    const populatedSub = await Subscription.findById(activeSub._id)
+        .populate("user", "name email phone role")
+        .populate("plan")
+        .populate("payment");
+
+    const label = actionType === "job_post" ? "Job Post" : "Company Post";
+    createAndSendNotification({
+        recipient: userId,
+        title: `Extra ${label} Added! 🚀`,
+        message: `Your payment of ₹${payment.amount} was verified. +${quantity} extra ${label}${
+            quantity > 1 ? "s" : ""
+        } added to your subscription.`,
+        type: "subscription",
+        link: actionType === "job_post" ? "/provider/dashboard" : "/community",
+        data: { tab: actionType === "job_post" ? "jobs" : "posts" },
     });
 
     return populatedSub;
@@ -113,14 +191,71 @@ export const getRazorpayKey = catchAsync(async (req, res, next) => {
 export const createOrder = catchAsync(async (req, res, next) => {
     const { amount, currency = "INR", purpose = "Job Portal Service", planId = "custom", notes = {}, customerDetails = {} } = req.body;
 
-    if (!amount || isNaN(amount) || Number(amount) <= 0) {
+    const isExtraPost =
+        planId === "extra_job_post" ||
+        planId === "extra_company_post" ||
+        notes?.type === "extra_post";
+
+    let finalAmount = Number(amount);
+    let finalPurpose = purpose;
+    let extraActionType = notes?.actionType || (planId === "extra_company_post" ? "company_post" : "job_post");
+    let extraQuantity = Math.max(1, Number(notes?.quantity) || 1);
+
+    if (isExtraPost) {
+        if (!req.user?._id) {
+            return next(new AppError("You must be logged in to purchase extra posts.", 401));
+        }
+
+        const activeSub = await Subscription.findOne({
+            user: req.user._id,
+            status: "active",
+        });
+
+        if (!activeSub || (activeSub.endDate && new Date() > activeSub.endDate)) {
+            return next(
+                new AppError(
+                    "You must have an active subscription plan to purchase extra posts. Please subscribe to an employer plan first.",
+                    400
+                )
+            );
+        }
+
+        let matchedExtraPlan = null;
+        if (notes?.extraPlanId) {
+            try {
+                matchedExtraPlan = await ExtraPostPlan.findById(notes.extraPlanId);
+            } catch (_) {}
+        }
+        if (!matchedExtraPlan && planId && planId !== "extra_job_post" && planId !== "extra_company_post") {
+            try {
+                matchedExtraPlan = await ExtraPostPlan.findOne({ planId });
+            } catch (_) {}
+        }
+
+        if (matchedExtraPlan) {
+            extraActionType = matchedExtraPlan.postType;
+            extraQuantity = matchedExtraPlan.quantity;
+            finalAmount = matchedExtraPlan.price;
+            finalPurpose = `Extra ${extraActionType === "job_post" ? "Job" : "Company"} Post (+${extraQuantity}): ${matchedExtraPlan.name}`;
+        } else {
+            const unitPrice =
+                extraActionType === "job_post"
+                    ? (activeSub.planDetails?.extraJobPostPrice ?? 99)
+                    : (activeSub.planDetails?.extraCompanyPostPrice ?? 49);
+
+            finalAmount = unitPrice * extraQuantity;
+            finalPurpose = `Extra ${extraActionType === "job_post" ? "Job Post" : "Company Post"} (${extraQuantity} post${extraQuantity > 1 ? "s" : ""})`;
+        }
+    }
+
+    if (!finalAmount || isNaN(finalAmount) || Number(finalAmount) <= 0) {
         return next(new AppError("Please provide a valid amount greater than 0.", 400));
     }
 
     const razorpay = getRazorpayInstance();
 
     // Razorpay requires amount in the smallest currency sub-unit (e.g., paise for INR)
-    const amountInPaise = Math.round(Number(amount) * 100);
+    const amountInPaise = Math.round(Number(finalAmount) * 100);
     const receipt = `rcpt_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
     const options = {
@@ -128,9 +263,13 @@ export const createOrder = catchAsync(async (req, res, next) => {
         currency: currency.toUpperCase(),
         receipt,
         notes: {
-            purpose,
+            purpose: finalPurpose,
             planId,
             userId: req.user?._id ? req.user._id.toString() : "guest",
+            type: isExtraPost ? "extra_post" : (notes?.type || "plan_subscription"),
+            actionType: isExtraPost ? extraActionType : undefined,
+            quantity: isExtraPost ? extraQuantity : undefined,
+            extraPlanId: matchedExtraPlan ? matchedExtraPlan._id.toString() : notes?.extraPlanId,
             ...notes,
         },
     };
@@ -147,10 +286,10 @@ export const createOrder = catchAsync(async (req, res, next) => {
     const paymentRecord = await Payment.create({
         user: req.user?._id || null,
         orderId: order.id,
-        amount: Number(amount),
+        amount: Number(finalAmount),
         currency: order.currency,
         status: "created",
-        purpose,
+        purpose: finalPurpose,
         planId,
         receipt,
         notes: options.notes,
@@ -228,22 +367,34 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
         { new: true }
     );
 
-    // Create & activate Subscription for user/provider
+    const isExtraPost =
+        payment?.planId === "extra_job_post" ||
+        payment?.planId === "extra_company_post" ||
+        payment?.notes?.type === "extra_post";
+
+    // Process Subscription or Extra Post Add-on
     let subscription = null;
     const targetUserId = req.user?._id || payment?.user;
     if (targetUserId && payment) {
         try {
-            subscription = await createOrActivateSubscription(payment, targetUserId);
+            if (isExtraPost) {
+                subscription = await handleExtraPostPayment(payment, targetUserId);
+            } else {
+                subscription = await createOrActivateSubscription(payment, targetUserId);
+            }
         } catch (subErr) {
-            console.error("Auto subscription creation warning:", subErr);
+            console.error("Auto subscription / extra post processing warning:", subErr);
         }
     }
 
     res.status(200).json({
         success: true,
-        message: "Payment verified and recorded successfully!",
+        message: isExtraPost
+            ? "Payment verified and extra post added to your subscription!"
+            : "Payment verified and recorded successfully!",
         payment,
         subscription,
+        isExtraPost,
     });
 });
 
@@ -286,7 +437,16 @@ export const handleWebhook = catchAsync(async (req, res, next) => {
 
             if (updatedPayment && updatedPayment.user) {
                 try {
-                    await createOrActivateSubscription(updatedPayment, updatedPayment.user);
+                    const isExtraPost =
+                        updatedPayment.planId === "extra_job_post" ||
+                        updatedPayment.planId === "extra_company_post" ||
+                        updatedPayment.notes?.type === "extra_post";
+
+                    if (isExtraPost) {
+                        await handleExtraPostPayment(updatedPayment, updatedPayment.user);
+                    } else {
+                        await createOrActivateSubscription(updatedPayment, updatedPayment.user);
+                    }
                 } catch (subErr) {
                     console.error("Webhook subscription creation error:", subErr);
                 }

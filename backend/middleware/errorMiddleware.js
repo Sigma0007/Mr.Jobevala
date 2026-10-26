@@ -38,5 +38,12 @@ export const errorHandler = (
         message:
             err.message ||
             "Something went wrong.",
+        ...(err.quotaExhausted && {
+            quotaExhausted: true,
+            actionType: err.actionType,
+            limit: err.limit,
+            used: err.used,
+            extraPrice: err.extraPrice,
+        }),
     });
 };

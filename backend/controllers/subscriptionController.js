@@ -48,11 +48,17 @@ export const getCurrentSubscription = catchAsync(async (req, res, next) => {
         }
     }
 
+    const extraPricing = {
+        extraJobPostPrice: activeSub?.planDetails?.extraJobPostPrice ?? (activeSub?.plan?.extraJobPostPrice ?? 99),
+        extraCompanyPostPrice: activeSub?.planDetails?.extraCompanyPostPrice ?? (activeSub?.plan?.extraCompanyPostPrice ?? 49),
+    };
+
     res.status(200).json({
         success: true,
         hasActiveSubscription: Boolean(activeSub),
         data: activeSub || latestSub || null,
         activeSubscription: activeSub || null,
+        extraPricing,
     });
 });
 
@@ -341,14 +347,25 @@ export const validateSubscriptionAction = catchAsync(async (req, res, next) => {
     const remaining = Math.max(0, limit - used);
 
     if (limit > 0 && used >= limit) {
+        const extraPrice =
+            actionType === "job_post"
+                ? (sub.planDetails?.extraJobPostPrice ?? (sub.plan?.extraJobPostPrice ?? 99))
+                : actionType === "company_post"
+                ? (sub.planDetails?.extraCompanyPostPrice ?? (sub.plan?.extraCompanyPostPrice ?? 49))
+                : null;
+
         return res.status(200).json({
             success: false,
             allowed: false,
-            message: `You have exhausted your ${actionType.replace("_", " ")} limit (${limit}/${limit}). Please upgrade your plan.`,
+            message: `You have exhausted your ${actionType.replace("_", " ")} limit (${limit}/${limit}). ${
+                extraPrice ? `You can pay ₹${extraPrice} for an extra post or upgrade your plan.` : "Please upgrade your plan."
+            }`,
             quotaExhausted: true,
             limit,
             used,
             remaining: 0,
+            extraPrice,
+            actionType,
         });
     }
 

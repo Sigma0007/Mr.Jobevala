@@ -144,6 +144,8 @@ export const DEFAULT_PLANS = [
         jobPostsLimit: 2,
         companyPostsLimit: 5,
         unlockContactsLimit: 25,
+        extraJobPostPrice: 99,
+        extraCompanyPostPrice: 49,
         validityDays: 30,
         sortOrder: 4,
         isActive: true,
@@ -171,6 +173,8 @@ export const DEFAULT_PLANS = [
         jobPostsLimit: 5,
         companyPostsLimit: 15,
         unlockContactsLimit: 100,
+        extraJobPostPrice: 89,
+        extraCompanyPostPrice: 39,
         validityDays: 30,
         sortOrder: 5,
         isActive: true,
@@ -198,6 +202,8 @@ export const DEFAULT_PLANS = [
         jobPostsLimit: 10,
         companyPostsLimit: 50,
         unlockContactsLimit: 250,
+        extraJobPostPrice: 79,
+        extraCompanyPostPrice: 29,
         validityDays: 30,
         sortOrder: 6,
         isActive: true,
@@ -414,6 +420,8 @@ export const createPlan = catchAsync(async (req, res, next) => {
         jobPostsLimit,
         companyPostsLimit,
         unlockContactsLimit,
+        extraJobPostPrice,
+        extraCompanyPostPrice,
         validityDays,
         sortOrder,
         isActive,
@@ -459,6 +467,8 @@ export const createPlan = catchAsync(async (req, res, next) => {
         jobPostsLimit: Number(jobPostsLimit) || 0,
         companyPostsLimit: Number(companyPostsLimit) || 0,
         unlockContactsLimit: Number(unlockContactsLimit) || 0,
+        extraJobPostPrice: extraJobPostPrice !== undefined ? Number(extraJobPostPrice) : 99,
+        extraCompanyPostPrice: extraCompanyPostPrice !== undefined ? Number(extraCompanyPostPrice) : 49,
         validityDays: Number(validityDays) || 30,
         sortOrder: Number(sortOrder) || 0,
         isActive: isActive !== undefined ? Boolean(isActive) : true,
@@ -511,6 +521,8 @@ export const updatePlan = catchAsync(async (req, res, next) => {
         jobPostsLimit,
         companyPostsLimit,
         unlockContactsLimit,
+        extraJobPostPrice,
+        extraCompanyPostPrice,
         validityDays,
         sortOrder,
         isActive,
@@ -545,6 +557,8 @@ export const updatePlan = catchAsync(async (req, res, next) => {
     if (jobPostsLimit !== undefined) plan.jobPostsLimit = Number(jobPostsLimit) || 0;
     if (companyPostsLimit !== undefined) plan.companyPostsLimit = Number(companyPostsLimit) || 0;
     if (unlockContactsLimit !== undefined) plan.unlockContactsLimit = Number(unlockContactsLimit) || 0;
+    if (extraJobPostPrice !== undefined) plan.extraJobPostPrice = Number(extraJobPostPrice) || 0;
+    if (extraCompanyPostPrice !== undefined) plan.extraCompanyPostPrice = Number(extraCompanyPostPrice) || 0;
     if (validityDays !== undefined) plan.validityDays = Number(validityDays);
     if (sortOrder !== undefined) plan.sortOrder = Number(sortOrder);
     if (isActive !== undefined) plan.isActive = Boolean(isActive);

@@ -306,6 +306,11 @@ export default function SubscriptionModal({
                       <div className="text-base font-extrabold text-slate-900">
                         {subscription.jobPostsUsed || 0} /{" "}
                         {subscription.jobPostsLimit}
+                        {subscription.extraJobPostsPurchased > 0 && (
+                          <span className="text-[10px] text-amber-600 font-semibold ml-1.5">
+                            (+{subscription.extraJobPostsPurchased} extra)
+                          </span>
+                        )}
                       </div>
                       <div className="text-[10px] text-slate-500">
                         Remaining:{" "}
@@ -327,6 +332,11 @@ export default function SubscriptionModal({
                       <div className="text-base font-extrabold text-slate-900">
                         {subscription.companyPostsUsed || 0} /{" "}
                         {subscription.companyPostsLimit}
+                        {subscription.extraCompanyPostsPurchased > 0 && (
+                          <span className="text-[10px] text-purple-600 font-semibold ml-1.5">
+                            (+{subscription.extraCompanyPostsPurchased} extra)
+                          </span>
+                        )}
                       </div>
                       <div className="text-[10px] text-slate-500">
                         Remaining:{" "}
@@ -360,6 +370,28 @@ export default function SubscriptionModal({
                     </div>
                   )}
                 </div>
+
+                {/* Extra Post Add-on Pricing Information */}
+                {(plan.extraJobPostPrice ||
+                  plan.extraCompanyPostPrice ||
+                  plan.categoryId === "employers") && (
+                  <div className="mt-3 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-indigo-900 font-medium">
+                      <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <span>
+                        Need more posts after exhausting quota? Pay-per-post add-on rates:
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-lg bg-white border border-indigo-200 text-slate-800 font-semibold text-[11px]">
+                        Job: ₹{plan.extraJobPostPrice || 99}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-lg bg-white border border-indigo-200 text-slate-800 font-semibold text-[11px]">
+                        Company: ₹{plan.extraCompanyPostPrice || 49}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

@@ -16,6 +16,8 @@ import {
   Send,
   AlertCircle,
   Eye,
+  CreditCard,
+  Plus,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -23,6 +25,7 @@ import customerservice from "../customer/customerservice";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { setDashboardActiveTab } from "../Redux/Dashboard/DashboardAction";
+import ExtraPostModal from "../components/Modals/ExtraPostModal";
 
 export default function CommunityFeed() {
   const { user } = useSelector((state) => state.auth);
@@ -47,6 +50,20 @@ export default function CommunityFeed() {
   const [companyProfile, setCompanyProfile] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [subLoading, setSubLoading] = useState(false);
+  const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
+
+  const hasActiveSub = subscription && subscription.status === "active";
+  const companyLimit = subscription?.companyPostsLimit || 0;
+  const companyUsed = subscription?.companyPostsUsed || 0;
+  const companyRemaining = Math.max(0, companyLimit - companyUsed);
+  const isQuotaExhausted =
+    user?.role === "provider" &&
+    hasActiveSub &&
+    companyLimit > 0 &&
+    companyUsed >= companyLimit;
+  const extraCompanyPostPrice =
+    subscription?.planDetails?.extraCompanyPostPrice ??
+    (subscription?.plan?.extraCompanyPostPrice ?? 49);
 
   useEffect(() => {
     fetchPosts();
@@ -124,26 +141,8 @@ export default function CommunityFeed() {
     setPostImagePreview("");
   };
 
-  // Submit New Employer Post
-  const handleSubmitPost = async (e) => {
-    e.preventDefault();
-
-    if (user?.role !== "provider" && user?.role !== "admin") {
-      toast.error("Only registered employers can publish company posts.");
-      return;
-    }
-
+  const executePostCreation = async () => {
     const descTrimmed = postDescription.trim();
-    if (!descTrimmed && !postImageFile) {
-      toast.error("Please add either a description or an image to share your company post.");
-      return;
-    }
-
-    if (descTrimmed.length > 3000) {
-      toast.error("Post description cannot exceed 3000 characters.");
-      return;
-    }
-
     setSubmittingPost(true);
     try {
       let res;
@@ -178,9 +177,50 @@ export default function CommunityFeed() {
         error.message ||
         "Something went wrong while publishing the post.";
       toast.error(errMsg);
+      if (error?.response?.data?.quotaExhausted) {
+        setIsExtraModalOpen(true);
+      }
     } finally {
       setSubmittingPost(false);
     }
+  };
+
+  const handleExtraPostSuccess = async (updatedSub) => {
+    if (updatedSub) {
+      setSubscription(updatedSub);
+    } else {
+      await fetchSubscriptionData();
+    }
+    // Now trigger post creation
+    await executePostCreation();
+  };
+
+  // Submit New Employer Post
+  const handleSubmitPost = async (e) => {
+    e.preventDefault();
+
+    if (user?.role !== "provider" && user?.role !== "admin") {
+      toast.error("Only registered employers can publish company posts.");
+      return;
+    }
+
+    const descTrimmed = postDescription.trim();
+    if (!descTrimmed && !postImageFile) {
+      toast.error("Please add either a description or an image to share your company post.");
+      return;
+    }
+
+    if (descTrimmed.length > 3000) {
+      toast.error("Post description cannot exceed 3000 characters.");
+      return;
+    }
+
+    if (isQuotaExhausted) {
+      setIsExtraModalOpen(true);
+      return;
+    }
+
+    await executePostCreation();
   };
 
   // Toggle Like Handler (Available to both Users and Providers)
@@ -399,20 +439,37 @@ export default function CommunityFeed() {
             </div>
 
             {/* Quota Indicator Bar for Employer */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 text-xs">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+              <div className="flex flex-wrap items-center gap-2">
                 {user?.role === "admin" ? (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-indigo-50 text-indigo-700 border border-indigo-100">
                     <Sparkles className="w-3 h-3 text-indigo-600" />
                     Admin Unlimited Access
                   </span>
                 ) : subscription && subscription.status === "active" ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-100">
-                    <Sparkles className="w-3 h-3 text-emerald-600" />
-                    {subscription.companyPostsLimit > 0
-                      ? `${Math.max(0, subscription.companyPostsLimit - (subscription.companyPostsUsed || 0))} of ${subscription.companyPostsLimit} Company Posts Remaining`
-                      : "Company Posts: Unlimited"}
-                  </span>
+                  <>
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold text-[11px] ${
+                        isQuotaExhausted
+                          ? "bg-rose-50 text-rose-700 border border-rose-200"
+                          : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                      }`}
+                    >
+                      <Sparkles className="w-3 h-3 text-emerald-600" />
+                      {subscription.companyPostsLimit > 0
+                        ? `${Math.max(0, subscription.companyPostsLimit - (subscription.companyPostsUsed || 0))} of ${subscription.companyPostsLimit} Company Posts Remaining`
+                        : "Company Posts: Unlimited"}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsExtraModalOpen(true)}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Buy Extra Post (₹{extraCompanyPostPrice})</span>
+                    </button>
+                  </>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-amber-50 text-amber-700 border border-amber-100">
                     <AlertCircle className="w-3 h-3 text-amber-600" />
@@ -422,13 +479,15 @@ export default function CommunityFeed() {
               </div>
 
               {user?.role === "provider" && (!subscription || subscription.status !== "active" || (subscription.companyPostsLimit > 0 && subscription.companyPostsUsed >= subscription.companyPostsLimit)) && (
-                <Link
-                  to="/pricing"
-                  className="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline flex items-center gap-1"
-                >
-                  <span>Choose Plan / Upgrade</span>
-                  <ExternalLink className="w-3 h-3" />
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/pricing"
+                    className="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline flex items-center gap-1"
+                  >
+                    <span>Upgrade Plan</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
               )}
             </div>
           </div>
@@ -882,12 +941,13 @@ export default function CommunityFeed() {
                     <button
                       type="submit"
                       disabled={
-                        (!postDescription.trim() && !postImageFile) ||
+                        (!postDescription.trim() && !postImageFile && !isQuotaExhausted) ||
                         submittingPost
                       }
                       className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                        (postDescription.trim() || postImageFile) &&
-                        !submittingPost
+                        isQuotaExhausted
+                          ? "bg-gradient-to-r from-brand-600 via-teal-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white shadow-md shadow-brand-500/25 cursor-pointer"
+                          : (postDescription.trim() || postImageFile) && !submittingPost
                           ? "bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-500/20 cursor-pointer"
                           : "bg-slate-200 text-slate-400 cursor-not-allowed"
                       }`}
@@ -896,6 +956,11 @@ export default function CommunityFeed() {
                         <>
                           <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                           <span>Publishing...</span>
+                        </>
+                      ) : isQuotaExhausted ? (
+                        <>
+                          <Sparkles className="w-4 h-4 text-amber-300" />
+                          <span>Pay ₹{extraCompanyPostPrice} & Publish Post</span>
                         </>
                       ) : (
                         <>
@@ -984,6 +1049,15 @@ export default function CommunityFeed() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Extra Post Pay Modal */}
+      <ExtraPostModal
+        isOpen={isExtraModalOpen}
+        onClose={() => setIsExtraModalOpen(false)}
+        actionType="company_post"
+        subscription={subscription}
+        onSuccess={handleExtraPostSuccess}
+      />
     </div>
   );
 }

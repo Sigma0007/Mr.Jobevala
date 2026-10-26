@@ -386,6 +386,38 @@ const getPricingPlanProviders = () => {
   return Auth(endpoint, {}, "GET");
 };
 
+// --- Extra Post Plan APIs (Unlock Extra Job / Company Posts) ---
+
+const getExtraPostPlans = (params = "") => {
+  const endpoint = `/api/extra-post-plans${params}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const getExtraPostPlanById = (id) => {
+  const endpoint = `/api/extra-post-plans/${id}`;
+  return Auth(endpoint, {}, "GET");
+};
+
+const createExtraPostPlan = (data = {}) => {
+  const endpoint = `/api/extra-post-plans`;
+  return Auth(endpoint, data, "POST");
+};
+
+const updateExtraPostPlan = (id, data = {}) => {
+  const endpoint = `/api/extra-post-plans/${id}`;
+  return Auth(endpoint, data, "PUT");
+};
+
+const deleteExtraPostPlan = (id) => {
+  const endpoint = `/api/extra-post-plans/${id}`;
+  return Auth(endpoint, {}, "DELETE");
+};
+
+const seedExtraPostPlans = (data = {}) => {
+  const endpoint = `/api/extra-post-plans/seed`;
+  return Auth(endpoint, data, "POST");
+};
+
 // --- Subscription APIs ---
 
 const getCurrentSubscription = () => {
@@ -696,6 +728,12 @@ export default {
   deletePricingPlan,
   seedPricingPlans,
   getPricingPlanProviders,
+  getExtraPostPlans,
+  getExtraPostPlanById,
+  createExtraPostPlan,
+  updateExtraPostPlan,
+  deleteExtraPostPlan,
+  seedExtraPostPlans,
   getCurrentSubscription,
   getMySubscriptionHistory,
   getAllSubscriptionsAdmin,

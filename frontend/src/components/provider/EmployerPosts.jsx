@@ -13,12 +13,16 @@ import {
   CheckCircle2,
   Clock,
   Eye,
+  Crown,
+  CreditCard,
+  Plus,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import customerservice from "../../customer/customerservice";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import ExtraPostModal from "../Modals/ExtraPostModal";
 
 export default function EmployerPosts() {
   const { user } = useSelector((state) => state.auth);
@@ -26,6 +30,9 @@ export default function EmployerPosts() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [companyProfile, setCompanyProfile] = useState(null);
+  const [subscription, setSubscription] = useState(null);
+  const [subLoading, setSubLoading] = useState(true);
+  const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
 
   // Form State
   const [description, setDescription] = useState("");
@@ -34,17 +41,19 @@ export default function EmployerPosts() {
   const [deleteModalPostId, setDeleteModalPostId] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  // Load provider company profile & existing posts
+  // Load provider company profile & existing posts & subscription
   useEffect(() => {
     fetchInitialData();
   }, []);
 
   const fetchInitialData = async () => {
     setLoading(true);
+    setSubLoading(true);
     try {
-      const [profileRes, postsRes] = await Promise.all([
+      const [profileRes, postsRes, subRes] = await Promise.all([
         customerservice.getCompanyProfile(),
         customerservice.getMyPosts(),
+        customerservice.getCurrentSubscription(),
       ]);
 
       if (profileRes?.success && profileRes?.data) {
@@ -53,11 +62,15 @@ export default function EmployerPosts() {
       if (postsRes?.success && Array.isArray(postsRes?.data)) {
         setPosts(postsRes.data);
       }
+      if (subRes?.success) {
+        setSubscription(subRes.activeSubscription || subRes.data || null);
+      }
     } catch (error) {
       console.error("Error fetching provider posts data:", error);
       toast.error("Failed to load your posts");
     } finally {
       setLoading(false);
+      setSubLoading(false);
     }
   };
 
@@ -89,20 +102,16 @@ export default function EmployerPosts() {
     setImagePreview("");
   };
 
-  // Submit Post
-  const handleCreatePost = async (e) => {
-    e.preventDefault();
+  const hasActiveSub = subscription && subscription.status === "active";
+  const companyLimit = subscription?.companyPostsLimit || 0;
+  const companyUsed = subscription?.companyPostsUsed || 0;
+  const companyRemaining = Math.max(0, companyLimit - companyUsed);
+  const isQuotaExhausted = hasActiveSub && companyLimit > 0 && companyUsed >= companyLimit;
+  const extraCompanyPostPrice =
+    subscription?.planDetails?.extraCompanyPostPrice ??
+    (subscription?.plan?.extraCompanyPostPrice ?? 49);
 
-    const hasDesc = description.trim().length > 0;
-    const hasImg = !!imageFile || !!imagePreview;
-
-    if (!hasDesc && !hasImg) {
-      toast.error(
-        "Please add either a description or an image to publish your post.",
-      );
-      return;
-    }
-
+  const submitPostData = async () => {
     setSubmitting(true);
     try {
       let res;
@@ -118,25 +127,76 @@ export default function EmployerPosts() {
       }
 
       if (res?.success) {
-        toast.success("Post published to community feed!");
+        toast.success("Post published to community feed! 🎉");
         setDescription("");
         setImageFile(null);
         setImagePreview("");
         setShowPreview(false);
-        // Refresh posts
-        const updatedPosts = await customerservice.getMyPosts();
+        // Refresh posts and subscription
+        const [updatedPosts, updatedSub] = await Promise.all([
+          customerservice.getMyPosts(),
+          customerservice.getCurrentSubscription(),
+        ]);
         if (updatedPosts?.success) {
           setPosts(updatedPosts.data);
+        }
+        if (updatedSub?.success) {
+          setSubscription(updatedSub.activeSubscription || updatedSub.data || null);
         }
       } else {
         toast.error(res?.message || "Failed to publish post");
       }
     } catch (error) {
       console.error("Error creating post:", error);
-      toast.error("Something went wrong while creating the post.");
+      const errMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong while creating the post.";
+      toast.error(errMsg);
+      if (error?.response?.data?.quotaExhausted) {
+        setIsExtraModalOpen(true);
+      }
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleExtraPostSuccess = async (updatedSub) => {
+    if (updatedSub) {
+      setSubscription(updatedSub);
+    } else {
+      const subRes = await customerservice.getCurrentSubscription();
+      if (subRes?.success) setSubscription(subRes.activeSubscription || subRes.data || null);
+    }
+    // Now trigger post creation
+    await submitPostData();
+  };
+
+  // Submit Post
+  const handleCreatePost = async (e) => {
+    e.preventDefault();
+
+    const hasDesc = description.trim().length > 0;
+    const hasImg = !!imageFile || !!imagePreview;
+
+    if (!hasDesc && !hasImg) {
+      toast.error(
+        "Please add either a description or an image to publish your post.",
+      );
+      return;
+    }
+
+    if (!hasActiveSub) {
+      toast.error("An active subscription plan is required to publish company posts.");
+      return;
+    }
+
+    if (isQuotaExhausted) {
+      setIsExtraModalOpen(true);
+      return;
+    }
+
+    await submitPostData();
   };
 
   // Delete Post
@@ -172,7 +232,7 @@ export default function EmployerPosts() {
 
   return (
     <div className="space-y-8">
-      {/* Header with quick link to Public Feed */}
+      {/* Header with quick link to Public Feed and Quota Pill */}
       <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-brand-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 text-blue-100 text-xs font-semibold uppercase tracking-wider mb-2">
@@ -186,6 +246,44 @@ export default function EmployerPosts() {
             Publish announcements, hiring news, company culture, or updates to
             the community feed. Posts only require either text or an image.
           </p>
+
+          {!subLoading && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {hasActiveSub ? (
+                <>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                      isQuotaExhausted
+                        ? "bg-rose-500/20 text-rose-200 border border-rose-400/30"
+                        : "bg-emerald-500/20 text-emerald-200 border border-emerald-400/30"
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    Quota: {companyUsed} /{" "}
+                    {companyLimit > 0 ? companyLimit : "∞"} used (
+                    {companyLimit > 0
+                      ? `${companyRemaining} remaining`
+                      : "Unlimited"}
+                    )
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsExtraModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/20 hover:bg-white/30 text-white border border-white/25 shadow-sm transition-all cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Buy Extra Post (₹{extraCompanyPostPrice})</span>
+                  </button>
+                </>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-200 border border-amber-400/30">
+                  <Crown className="w-3.5 h-3.5 text-amber-300" />
+                  Subscription Required
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <Link
@@ -196,6 +294,73 @@ export default function EmployerPosts() {
           View Live Feed
         </Link>
       </div>
+
+      {/* Subscription / Quota Alerts */}
+      {!subLoading && (
+        <>
+          {!hasActiveSub ? (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm font-bold text-amber-900">
+                    Active Subscription Plan Required
+                  </h4>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    You need an active employer subscription to post company updates to the feed.
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/pricing"
+                className="px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 text-white text-xs font-semibold rounded-xl hover:shadow-md transition-all whitespace-nowrap flex items-center gap-1.5"
+              >
+                <Crown className="w-3.5 h-3.5" />
+                View Employer Plans
+              </Link>
+            </div>
+          ) : isQuotaExhausted ? (
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-50 via-rose-50 to-orange-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-amber-100 text-amber-800 shrink-0">
+                  <CreditCard className="w-5 h-5 text-amber-700" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-slate-900">
+                      Company Post Quota Reached ({companyUsed}/{companyLimit})
+                    </h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200/70 text-amber-800">
+                      Pay-per-post available
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                    You have used all company posts included in your plan (
+                    <strong>{subscription.planDetails?.name || "Active Plan"}</strong>
+                    ). Pay <strong>₹{extraCompanyPostPrice}</strong> to publish this extra company post right away!
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setIsExtraModalOpen(true)}
+                  className="flex-1 sm:flex-none px-4 py-2.5 bg-gradient-to-r from-brand-600 to-teal-600 text-white text-xs font-bold rounded-xl hover:shadow-md transition-all whitespace-nowrap flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Pay ₹{extraCompanyPostPrice} Extra Post
+                </button>
+                <Link
+                  to="/pricing"
+                  className="px-3 py-2.5 bg-white text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all whitespace-nowrap"
+                >
+                  View Plans
+                </Link>
+              </div>
+            </div>
+          ) : null}
+        </>
+      )}
 
       {/* Post Creator Box */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-[0_4px_25px_rgb(0,0,0,0.03)]">
@@ -286,9 +451,11 @@ export default function EmployerPosts() {
 
             <button
               type="submit"
-              disabled={!canSubmit || submitting}
+              disabled={(!canSubmit && !isQuotaExhausted) || submitting || (!hasActiveSub && !subLoading)}
               className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                canSubmit && !submitting
+                isQuotaExhausted
+                  ? "bg-gradient-to-r from-brand-600 via-teal-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white shadow-md shadow-brand-500/25 hover:-translate-y-0.5 cursor-pointer"
+                  : canSubmit && !submitting
                   ? "bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-500/20 hover:-translate-y-0.5 cursor-pointer"
                   : "bg-slate-200 text-slate-400 cursor-not-allowed"
               }`}
@@ -297,6 +464,11 @@ export default function EmployerPosts() {
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   <span>Publishing...</span>
+                </>
+              ) : isQuotaExhausted ? (
+                <>
+                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  <span>Pay ₹{extraCompanyPostPrice} & Publish Post</span>
                 </>
               ) : (
                 <>
@@ -566,6 +738,15 @@ export default function EmployerPosts() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Extra Post Pay Modal */}
+      <ExtraPostModal
+        isOpen={isExtraModalOpen}
+        onClose={() => setIsExtraModalOpen(false)}
+        actionType="company_post"
+        subscription={subscription}
+        onSuccess={handleExtraPostSuccess}
+      />
     </div>
   );
 }

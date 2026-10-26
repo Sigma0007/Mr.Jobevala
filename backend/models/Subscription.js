@@ -30,6 +30,8 @@ const subscriptionSchema = new mongoose.Schema(
             features: { type: [String], default: [] },
             resumeAccess: { type: Boolean, default: false },
             validityDays: { type: Number, default: 30 },
+            extraJobPostPrice: { type: Number, default: 99 },
+            extraCompanyPostPrice: { type: Number, default: 49 },
         },
         payment: {
             type: mongoose.Schema.Types.ObjectId,
@@ -89,6 +91,14 @@ const subscriptionSchema = new mongoose.Schema(
             default: 0,
         },
         companyPostsUsed: {
+            type: Number,
+            default: 0,
+        },
+        extraJobPostsPurchased: {
+            type: Number,
+            default: 0,
+        },
+        extraCompanyPostsPurchased: {
             type: Number,
             default: 0,
         },

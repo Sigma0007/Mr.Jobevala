@@ -85,10 +85,27 @@ export const validateSubscriptionQuota = async (user, actionType, autoConsume = 
 
     // 3. If limit > 0 and used >= limit, reject with quota error
     if (limit > 0 && used >= limit) {
-        throw new AppError(
-            `You have reached your ${config.label} quota (${used}/${limit}). Please upgrade your subscription plan to continue.`,
+        const extraPrice =
+            actionType === "job_post"
+                ? (sub.planDetails?.extraJobPostPrice ?? (sub.plan?.extraJobPostPrice ?? 99))
+                : actionType === "company_post"
+                ? (sub.planDetails?.extraCompanyPostPrice ?? (sub.plan?.extraCompanyPostPrice ?? 49))
+                : null;
+
+        const err = new AppError(
+            `You have reached your ${config.label} quota (${used}/${limit}). ${
+                extraPrice
+                    ? `You can pay ₹${extraPrice} for an extra post or upgrade your plan.`
+                    : "Please upgrade your subscription plan to continue."
+            }`,
             403
         );
+        err.quotaExhausted = true;
+        err.actionType = actionType;
+        err.limit = limit;
+        err.used = used;
+        err.extraPrice = extraPrice;
+        throw err;
     }
 
     // 4. Consume quota if requested
