@@ -37,9 +37,7 @@ export const getR2PublicUrl = (key) => {
     if (process.env.R2_PUBLIC_URL) {
         return `${process.env.R2_PUBLIC_URL.replace(/\/$/, "")}/${key}`;
     }
-    // Default to API storage file route
-    const baseUrl = process.env.SERVER_URL || "";
-    return `${baseUrl}/api/storage/file/${key}`;
+    return `/api/storage/file/${key}`;
 };
 
 // Upload file to Cloudflare R2

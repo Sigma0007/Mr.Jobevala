@@ -338,7 +338,7 @@ export default function EmployerPostJob() {
       await fetchSubscription();
     }
     // Now trigger job creation
-    await submitJobData();
+    // await submitJobData();
   };
 
   const handleSubmit = async (e) => {

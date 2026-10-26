@@ -1,6 +1,40 @@
 import puppeteer from "puppeteer";
 import mongoose from "mongoose";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { uploadToR2 } from "./r2Storage.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Helper to get local optimized logo (base64) for ultra-fast, lightweight & offline PDF rendering
+let cachedLogoDataUri = null;
+export const getInvoiceLogo = () => {
+    if (cachedLogoDataUri) return cachedLogoDataUri;
+    try {
+        const candidatePaths = [
+            path.resolve(__dirname, "../assets/logo.png"),
+            path.resolve(__dirname, "../../frontend/public/Image/logo.png"),
+            path.resolve(__dirname, "../public/Image/logo.png"),
+        ];
+        for (const p of candidatePaths) {
+            if (fs.existsSync(p)) {
+                const buf = fs.readFileSync(p);
+                // Only use local if it is reasonably sized (< 2MB)
+                if (buf.length > 0 && buf.length < 2 * 1024 * 1024) {
+                    cachedLogoDataUri = `data:image/png;base64,${buf.toString("base64")}`;
+                    return cachedLogoDataUri;
+                }
+            }
+        }
+    } catch (_) {}
+
+    return (
+        process.env.COMPANY_LOGO_PATH ||
+        "https://job-portal-f-az3p.onrender.com/Image/logo.png"
+    );
+};
 
 /**
  * Get company details from environment variables with graceful fallbacks
@@ -11,7 +45,8 @@ export const getCompanyDetails = () => {
         gstin: process.env.COMPANY_GSTIN || "GST123458791MRR",
         address: process.env.COMPANY_ADDRESS || "Rajkot, Gujarat, India.",
         email: process.env.COMPANY_EMAIL || "billing@jobwala.com",
-        logo:
+        logo: getInvoiceLogo(),
+        publicLogoUrl:
             process.env.COMPANY_LOGO_PATH ||
             "https://job-portal-f-az3p.onrender.com/Image/logo.png",
         sacCode: "998311", // SAC for Employment Placement and Recruiting Services
@@ -998,7 +1033,7 @@ export const generateAndUploadInvoice = async (
             gstin: company.gstin,
             address: company.address,
             email: company.email,
-            logo: company.logo,
+            logo: company.publicLogoUrl || company.logo,
         };
         payment.customerDetails = {
             ...payment.customerDetails,

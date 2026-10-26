@@ -6,45 +6,45 @@ import nodemailer from "nodemailer";
  * 2. Service-based provider (e.g. Gmail) via EMAIL_SERVICE
  */
 export const getTransporter = () => {
-    const user = process.env.EMAIL_USER || process.env.MAIL_USER || process.env.GMAIL_USER;
-    const pass = process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.GMAIL_APP_PASSWORD;
-    const host = process.env.MAIL_HOST || process.env.EMAIL_HOST;
+  const user = process.env.EMAIL_USER || process.env.MAIL_USER || process.env.GMAIL_USER;
+  const pass = process.env.EMAIL_PASS || process.env.MAIL_PASS || process.env.GMAIL_APP_PASSWORD;
+  const host = process.env.MAIL_HOST || process.env.EMAIL_HOST;
 
-    if (!user || !pass) {
-        return null;
-    }
+  if (!user || !pass) {
+    return null;
+  }
 
-    // Custom SMTP Server (GoDaddy secureserver, Microsoft 365, Titan, etc.)
-    if (host) {
-        const port = Number(process.env.MAIL_PORT || process.env.EMAIL_PORT) || 587;
-        const isSecure =
-            process.env.MAIL_SECURE === "true" ||
-            process.env.MAIL_SECURE === true ||
-            port === 465;
+  // Custom SMTP Server (GoDaddy secureserver, Microsoft 365, Titan, etc.)
+  if (host) {
+    const port = Number(process.env.MAIL_PORT || process.env.EMAIL_PORT) || 587;
+    const isSecure =
+      process.env.MAIL_SECURE === "true" ||
+      process.env.MAIL_SECURE === true ||
+      port === 465;
 
-        return nodemailer.createTransport({
-            host,
-            port,
-            secure: isSecure, // true for 465, false for 587
-            auth: {
-                user,
-                pass,
-            },
-            tls: {
-                ciphers: "SSLv3",
-                rejectUnauthorized: false,
-            },
-        });
-    }
-
-    // Default to service-based provider (e.g. Gmail)
     return nodemailer.createTransport({
-        service: process.env.EMAIL_SERVICE || "gmail",
-        auth: {
-            user,
-            pass,
-        },
+      host,
+      port,
+      secure: isSecure, // true for 465, false for 587
+      auth: {
+        user,
+        pass,
+      },
+      tls: {
+        ciphers: "SSLv3",
+        rejectUnauthorized: false,
+      },
     });
+  }
+
+  // Default to service-based provider (e.g. Gmail)
+  return nodemailer.createTransport({
+    service: process.env.EMAIL_SERVICE || "gmail",
+    auth: {
+      user,
+      pass,
+    },
+  });
 };
 
 /**
@@ -56,12 +56,12 @@ export const getTransporter = () => {
  * @returns {Promise<{ success: boolean, messageId?: string, mocked?: boolean }>}
  */
 export const sendOtpEmail = async ({ to, otp, name = "Valued Member" }) => {
-    const transporter = getTransporter();
-    const senderEmail = process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@mrjobwala.com";
-    const senderName = process.env.EMAIL_FROM_NAME || "Mr. Job Wala";
-    const fromAddress = `"${senderName}" <${senderEmail}>`;
+  const transporter = getTransporter();
+  const senderEmail = process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@mrjobwala.com";
+  const senderName = process.env.EMAIL_FROM_NAME || "Mr. Job Wala";
+  const fromAddress = `"${senderName}" <${senderEmail}>`;
 
-    const htmlContent = `
+  const htmlContent = `
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -196,51 +196,51 @@ export const sendOtpEmail = async ({ to, otp, name = "Valued Member" }) => {
     </html>
   `;
 
-    // If transporter is not configured (e.g. EMAIL_USER/PASS not set yet in .env)
-    if (!transporter) {
-        console.log("\n=======================================================");
-        console.log("📧 [DEVELOPMENT NOTICE - EMAIL CREDENTIALS NOT CONFIGURED]");
-        console.log(`To: ${to}`);
-        console.log(`Generated OTP: ${otp}`);
-        console.log("Add MAIL_HOST, EMAIL_USER, and EMAIL_PASS to backend/.env to send live emails.");
-        console.log("=======================================================\n");
+  // If transporter is not configured (e.g. EMAIL_USER/PASS not set yet in .env)
+  if (!transporter) {
+    console.log("\n=======================================================");
+    console.log("📧 [DEVELOPMENT NOTICE - EMAIL CREDENTIALS NOT CONFIGURED]");
+    console.log(`To: ${to}`);
+    console.log(`Generated OTP: ${otp}`);
+    console.log("Add MAIL_HOST, EMAIL_USER, and EMAIL_PASS to backend/.env to send live emails.");
+    console.log("=======================================================\n");
 
-        return {
-            success: true,
-            mocked: true,
-            message: "Credentials not configured in .env. OTP displayed in backend console.",
-        };
-    }
+    return {
+      success: true,
+      mocked: true,
+      message: "Credentials not configured in .env. OTP displayed in backend console.",
+    };
+  }
 
-    try {
-        const info = await transporter.sendMail({
-            from: fromAddress,
-            to,
-            subject: `${otp} is your Mr. Job Wala verification code`,
-            text: `Hello ${name},\n\nYour Mr. Job Wala registration verification code is: ${otp}\n\nThis code expires in 10 minutes. Do not share it with anyone.\n\nThank you,\nMr. Job Wala Team`,
-            html: htmlContent,
-        });
+  try {
+    const info = await transporter.sendMail({
+      from: fromAddress,
+      to,
+      subject: `${otp} is your Mr. Job Wala verification code`,
+      text: `Hello ${name},\n\nYour Mr. Job Wala registration verification code is: ${otp}\n\nThis code expires in 10 minutes. Do not share it with anyone.\n\nThank you,\nMr. Job Wala Team`,
+      html: htmlContent,
+    });
 
-        console.log(`[EMAIL SENT] OTP successfully sent to ${to}. MessageId: ${info.messageId}`);
-        return {
-            success: true,
-            messageId: info.messageId,
-        };
-    } catch (error) {
-        console.error("[EMAIL SEND ERROR]", error);
+    console.log(`[EMAIL SENT] OTP successfully sent to ${to}. MessageId: ${info.messageId}`);
+    return {
+      success: true,
+      messageId: info.messageId,
+    };
+  } catch (error) {
+    console.error("[EMAIL SEND ERROR]", error);
 
-        // Fallback log so registration test is not blocked if credentials failed
-        console.log("\n=======================================================");
-        console.log("📧 [FALLBACK DEV OTP LOG (Email delivery failed)]");
-        console.log(`Recipient: ${to}`);
-        console.log(`OTP Code: ${otp}`);
-        console.log(`Error: ${error.message}`);
-        console.log("=======================================================\n");
+    // Fallback log so registration test is not blocked if credentials failed
+    console.log("\n=======================================================");
+    console.log("📧 [FALLBACK DEV OTP LOG (Email delivery failed)]");
+    console.log(`Recipient: ${to}`);
+    console.log(`OTP Code: ${otp}`);
+    console.log(`Error: ${error.message}`);
+    console.log("=======================================================\n");
 
-        throw new Error(
-            `Failed to send verification email: ${error.message}. Please check your SMTP settings in backend/.env.`
-        );
-    }
+    throw new Error(
+      `Failed to send verification email: ${error.message}. Please check your SMTP settings in backend/.env.`
+    );
+  }
 };
 
 /**
@@ -262,46 +262,47 @@ export const sendOtpEmail = async ({ to, otp, name = "Valued Member" }) => {
  * @returns {Promise<{ success: boolean, messageId?: string, mocked?: boolean }>}
  */
 export const sendSubscriptionInvoiceEmail = async ({
-    to,
-    name = "Valued Member",
-    planName = "Job Portal Subscription",
-    amount,
-    invoiceNumber,
-    paymentId,
-    orderId,
-    startDate,
-    endDate,
-    invoiceUrl,
-    pdfBuffer = null,
-    isExtraPost = false,
-    quantity = 1,
+  to,
+  name = "Valued Member",
+  planName = "Job Portal Subscription",
+  amount,
+  invoiceNumber,
+  paymentId,
+  orderId,
+  startDate,
+  endDate,
+  invoiceUrl,
+  pdfBuffer = null,
+  isExtraPost = false,
+  quantity = 1,
 }) => {
-    const transporter = getTransporter();
-    const senderEmail = process.env.EMAIL_USER || process.env.GMAIL_USER || "billing@jobwala.com";
-    const senderName = process.env.COMPANY_NAME || process.env.EMAIL_FROM_NAME || "Mr. Job Wala";
-    const companyLogo =
-        process.env.COMPANY_LOGO_PATH ||
-        "https://job-portal-f-az3p.onrender.com/Image/logo.png";
-    const companyEmail = process.env.COMPANY_EMAIL || senderEmail;
-    const fromAddress = `"${senderName}" <${senderEmail}>`;
+  console.log("invoiceUrl++++++++++++++++", invoiceUrl);
+  const transporter = getTransporter();
+  const senderEmail = process.env.EMAIL_USER || process.env.GMAIL_USER || "billing@jobwala.com";
+  const senderName = process.env.COMPANY_NAME || process.env.EMAIL_FROM_NAME || "Mr. Job Wala";
+  const companyLogo =
+    process.env.COMPANY_LOGO_PATH ||
+    "https://job-portal-f-az3p.onrender.com/Image/logo.png";
+  const companyEmail = process.env.COMPANY_EMAIL || senderEmail;
+  const fromAddress = `"${senderName}" <${senderEmail}>`;
 
-    const formattedStartDate = startDate
-        ? new Date(startDate).toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-          })
-        : "Immediate";
+  const formattedStartDate = startDate
+    ? new Date(startDate).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
+    : "Immediate";
 
-    const formattedEndDate = endDate
-        ? new Date(endDate).toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-          })
-        : "N/A";
+  const formattedEndDate = endDate
+    ? new Date(endDate).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
+    : "N/A";
 
-    const htmlContent = `
+  const htmlContent = `
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -454,11 +455,10 @@ export const sendSubscriptionInvoiceEmail = async ({
           <div class="greeting">Hello, ${name}! 👋</div>
           <p class="text">
             We are pleased to inform you that your payment has been successfully processed and verified.
-            ${
-                isExtraPost
-                    ? `Your account has been credited with <strong>+${quantity} extra post${quantity > 1 ? "s" : ""}</strong>.`
-                    : `Your subscription to the <strong>${planName}</strong> plan is now active.`
-            }
+            ${isExtraPost
+      ? `Your account has been credited with <strong>+${quantity} extra post${quantity > 1 ? "s" : ""}</strong>.`
+      : `Your subscription to the <strong>${planName}</strong> plan is now active.`
+    }
           </p>
 
           <div class="receipt-card">
@@ -470,14 +470,13 @@ export const sendSubscriptionInvoiceEmail = async ({
               <span class="card-label">Item / Plan</span>
               <span class="card-val">${planName}</span>
             </div>
-            ${
-                !isExtraPost && startDate && endDate
-                    ? `<div class="card-row">
+            ${!isExtraPost && startDate && endDate
+      ? `<div class="card-row">
                         <span class="card-label">Subscription Validity</span>
                         <span class="card-val">${formattedStartDate} &ndash; ${formattedEndDate}</span>
                       </div>`
-                    : ""
-            }
+      : ""
+    }
             <div class="card-row">
               <span class="card-label">Payment ID</span>
               <span class="card-val" style="font-family: monospace;">${paymentId}</span>
@@ -500,13 +499,12 @@ export const sendSubscriptionInvoiceEmail = async ({
             📄 <strong>Tax Invoice Attached:</strong> A formal PDF receipt (<strong>${invoiceNumber}.pdf</strong>) has been generated and attached to this email for your accounting and taxation records.
           </div>
 
-          ${
-              invoiceUrl
-                  ? `<div class="btn-container">
-                      <a href="${invoiceUrl}" target="_blank" class="btn">View & Download Invoice PDF</a>
+          ${invoiceUrl
+      ? `<div class="btn-container">
+                      <a href="${process.env.FRONTEND_URL + invoiceUrl}" target="_blank" class="btn">View & Download Invoice PDF</a>
                     </div>`
-                  : ""
-          }
+      : ""
+    }
 
           <p class="text" style="font-size: 12.5px; color: #64748b; margin-bottom: 0;">
             If you have any questions or require custom billing information, please reply to this email or reach us at <a href="mailto:${companyEmail}" style="color: #0d9488;">${companyEmail}</a>.
@@ -521,52 +519,84 @@ export const sendSubscriptionInvoiceEmail = async ({
     </html>
     `;
 
-    if (!transporter) {
-        console.log("\n=======================================================");
-        console.log("📧 [DEVELOPMENT NOTICE - INVOICE EMAIL]");
-        console.log(`To: ${to}`);
-        console.log(`Invoice: ${invoiceNumber} | Plan: ${planName} | Amount: ₹${amount}`);
-        console.log(`Invoice URL: ${invoiceUrl || "N/A"}`);
-        console.log("PDF Buffer Attached:", Boolean(pdfBuffer));
-        console.log("=======================================================\n");
+  if (!transporter) {
+    console.log("\n=======================================================");
+    console.log("📧 [DEVELOPMENT NOTICE - INVOICE EMAIL]");
+    console.log(`To: ${to}`);
+    console.log(`Invoice: ${invoiceNumber} | Plan: ${planName} | Amount: ₹${amount}`);
+    console.log(`Invoice URL: ${invoiceUrl || "N/A"}`);
+    console.log("PDF Buffer Attached:", Boolean(pdfBuffer));
+    console.log("=======================================================\n");
 
-        return {
-            success: true,
-            mocked: true,
-            message: "Email credentials not configured in .env. Logged to console.",
-        };
+    return {
+      success: true,
+      mocked: true,
+      message: "Email credentials not configured in .env. Logged to console.",
+    };
+  }
+
+  try {
+    const mailOptions = {
+      from: fromAddress,
+      to,
+      subject: `Payment Receipt & Tax Invoice #${invoiceNumber} - ${senderName}`,
+      text: `Hello ${name},\n\nYour payment of ₹${amount} for ${planName} was successful.\nInvoice Number: ${invoiceNumber}\nPayment ID: ${paymentId}\nOrder ID: ${orderId}\n\nYour tax invoice PDF is attached.\n\nThank you,\n${senderName}`,
+      html: htmlContent,
+      attachments: [],
+    };
+
+    // Attach PDF buffer if within safe email limits (max 8MB)
+    if (pdfBuffer) {
+      const bufferSize = Buffer.isBuffer(pdfBuffer) ? pdfBuffer.length : 0;
+      if (bufferSize > 0 && bufferSize <= 8 * 1024 * 1024) {
+        mailOptions.attachments.push({
+          filename: `${invoiceNumber}.pdf`,
+          content: pdfBuffer,
+          contentType: "application/pdf",
+        });
+      } else if (bufferSize > 8 * 1024 * 1024) {
+        console.warn(
+          `[INVOICE EMAIL WARNING] PDF size (${(bufferSize / 1024 / 1024).toFixed(2)} MB) exceeds safe SMTP attachment threshold (8 MB). Sending with direct Cloudflare R2 download link instead.`
+        );
+      }
     }
 
     try {
-        const mailOptions = {
-            from: fromAddress,
-            to,
-            subject: `Payment Receipt & Tax Invoice #${invoiceNumber} - ${senderName}`,
-            text: `Hello ${name},\n\nYour payment of ₹${amount} for ${planName} was successful.\nInvoice Number: ${invoiceNumber}\nPayment ID: ${paymentId}\nOrder ID: ${orderId}\n\nYour tax invoice PDF is attached.\n\nThank you,\n${senderName}`,
-            html: htmlContent,
-            attachments: [],
-        };
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`[INVOICE EMAIL SENT] Sent to ${to}. MessageId: ${info.messageId}`);
+      return {
+        success: true,
+        messageId: info.messageId,
+      };
+    } catch (sendErr) {
+      // If the error was due to SMTP size rejection (e.g. 552 DATA size exceeds maximum permitted), retry without attachment
+      const isSizeError =
+        sendErr.responseCode === 552 ||
+        (sendErr.message && /552|size exceeds|maximum permitted/i.test(sendErr.message));
 
-        if (pdfBuffer) {
-            mailOptions.attachments.push({
-                filename: `${invoiceNumber}.pdf`,
-                content: pdfBuffer,
-                contentType: "application/pdf",
-            });
-        }
-
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[INVOICE EMAIL SENT] Sent to ${to}. MessageId: ${info.messageId}`);
+      if (isSizeError && mailOptions.attachments.length > 0) {
+        console.warn(
+          `[INVOICE EMAIL RETRY] SMTP 552 size limit encountered. Retrying email to ${to} without attachment...`
+        );
+        mailOptions.attachments = [];
+        const retryInfo = await transporter.sendMail(mailOptions);
+        console.log(
+          `[INVOICE EMAIL SENT - NO ATTACHMENT] Sent to ${to}. MessageId: ${retryInfo.messageId}`
+        );
         return {
-            success: true,
-            messageId: info.messageId,
+          success: true,
+          messageId: retryInfo.messageId,
+          fallbackWithoutAttachment: true,
         };
-    } catch (error) {
-        console.error("[INVOICE EMAIL SEND ERROR]", error);
-        return {
-            success: false,
-            error: error.message,
-        };
+      }
+      throw sendErr;
     }
+  } catch (error) {
+    console.error("[INVOICE EMAIL SEND ERROR]", error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
 };
 
