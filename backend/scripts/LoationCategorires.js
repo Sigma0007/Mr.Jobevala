@@ -20,18 +20,18 @@ const AddLocationCategories = async () => {
         await connectDB();
         // Add State Names
 
-        const StateData = StateJson.records.map(item => ({
+        const StateData = StateJson.map(item => ({
             state_code: item.state_code,
-            state_name: item.state_name_english
+            state_name: item?.state_name_english || item.state_name
         }))
 
         await StateName.insertMany(StateData)
 
         // Add District Names
 
-        const DistrictData = DistrictJson.records.map(item => ({
+        const DistrictData = DistrictJson.map(item => ({
             district_code: item.district_code,
-            district_name: item.district_name_english,
+            district_name: item?.district_name_english || item.district_name,
             state_code: item.state_code
         }))
 
@@ -39,9 +39,9 @@ const AddLocationCategories = async () => {
 
         // Add Sub Division Names
 
-        const SubDivisionData = SubDivisionJson.records.map(item => ({
-            sub_division_code: item.subdistrict_code,
-            sub_division_name: item.subdistrict_name_english,
+        const SubDivisionData = SubDivisionJson.map(item => ({
+            sub_division_code: item.subdistrict_code || item.sub_division_code,
+            sub_division_name: item.subdistrict_name_english || item.sub_division_name,
             district_code: item.district_code
         }))
 
