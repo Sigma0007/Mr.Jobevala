@@ -1,9 +1,12 @@
 import Subscription from "../models/Subscription.js";
 import PricingPlan from "../models/PricingPlan.js";
+import Payment from "../models/Payment.js";
 import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
 import { createAndSendNotification } from "../utils/notificationService.js";
+import { generateAndUploadInvoice } from "../utils/invoiceService.js";
+import { getFileStreamFromR2 } from "../utils/r2Storage.js";
 
 
 /**
@@ -576,6 +579,82 @@ export const activateFreePlan = catchAsync(async (req, res, next) => {
         success: true,
         message: "Free plan activated successfully!",
         data: populatedSub,
+    });
+});
+
+/**
+ * @desc Get or Download Subscription Invoice PDF
+ * @route GET /api/subscription/:id/invoice
+ * @access Private
+ */
+export const getSubscriptionInvoice = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+
+    const subscription = await Subscription.findById(id)
+        .populate("payment")
+        .populate("user", "name email phone role");
+
+    if (!subscription) {
+        return next(new AppError("Subscription not found with this ID.", 404));
+    }
+
+    if (
+        req.user.role !== "admin" &&
+        subscription.user &&
+        subscription.user._id.toString() !== req.user._id.toString()
+    ) {
+        return next(new AppError("Not authorized to access this subscription's invoice.", 403));
+    }
+
+    let payment = subscription.payment;
+    if (!payment && subscription.orderId) {
+        payment = await Payment.findOne({ orderId: subscription.orderId });
+    }
+
+    if (!payment) {
+        return next(
+            new AppError("No payment transaction record found for this subscription.", 404)
+        );
+    }
+
+    // Generate invoice if not present or requested to regenerate
+    if (!payment.invoiceUrl || req.query.regenerate === "true") {
+        await generateAndUploadInvoice(payment, subscription);
+        payment = await Payment.findById(payment._id);
+    }
+
+    if (req.query.download === "true") {
+        if (payment.invoiceKey) {
+            try {
+                const r2Object = await getFileStreamFromR2(payment.invoiceKey);
+                res.setHeader("Content-Type", "application/pdf");
+                res.setHeader(
+                    "Content-Disposition",
+                    `attachment; filename="${payment.invoiceNumber || "Invoice"}.pdf"`
+                );
+                if (r2Object.Body && typeof r2Object.Body.pipe === "function") {
+                    return r2Object.Body.pipe(res);
+                } else if (r2Object.Body && typeof r2Object.Body.transformToByteArray === "function") {
+                    const bytes = await r2Object.Body.transformToByteArray();
+                    return res.end(Buffer.from(bytes));
+                }
+            } catch (streamErr) {
+                console.error("Direct stream failed, falling back to redirect:", streamErr);
+            }
+        }
+        if (payment.invoiceUrl) {
+            return res.redirect(payment.invoiceUrl);
+        }
+    }
+
+    res.status(200).json({
+        success: true,
+        invoiceNumber: payment.invoiceNumber,
+        invoiceUrl: payment.invoiceUrl,
+        invoiceDate: payment.invoiceDate || payment.createdAt,
+        taxDetails: payment.taxDetails,
+        payment,
+        subscription,
     });
 });
 

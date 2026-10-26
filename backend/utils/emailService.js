@@ -242,3 +242,331 @@ export const sendOtpEmail = async ({ to, otp, name = "Valued Member" }) => {
         );
     }
 };
+
+/**
+ * Sends a Subscription Confirmation & Tax Invoice Receipt Email with PDF attachment
+ * @param {Object} options
+ * @param {string} options.to - Recipient customer email
+ * @param {string} [options.name] - Customer name
+ * @param {string} options.planName - Name of subscription or add-on
+ * @param {number} options.amount - Total amount paid
+ * @param {string} options.invoiceNumber - Unique tax invoice number
+ * @param {string} options.paymentId - Razorpay Payment ID
+ * @param {string} options.orderId - Razorpay Order ID
+ * @param {Date|string} [options.startDate] - Subscription start date
+ * @param {Date|string} [options.endDate] - Subscription end date
+ * @param {string} [options.invoiceUrl] - Cloudflare R2 / stream invoice URL
+ * @param {Buffer} [options.pdfBuffer] - The invoice PDF binary buffer
+ * @param {boolean} [options.isExtraPost] - Whether this was an extra post purchase
+ * @param {number} [options.quantity] - Number of extra posts or items
+ * @returns {Promise<{ success: boolean, messageId?: string, mocked?: boolean }>}
+ */
+export const sendSubscriptionInvoiceEmail = async ({
+    to,
+    name = "Valued Member",
+    planName = "Job Portal Subscription",
+    amount,
+    invoiceNumber,
+    paymentId,
+    orderId,
+    startDate,
+    endDate,
+    invoiceUrl,
+    pdfBuffer = null,
+    isExtraPost = false,
+    quantity = 1,
+}) => {
+    const transporter = getTransporter();
+    const senderEmail = process.env.EMAIL_USER || process.env.GMAIL_USER || "billing@jobwala.com";
+    const senderName = process.env.COMPANY_NAME || process.env.EMAIL_FROM_NAME || "Mr. Job Wala";
+    const companyLogo =
+        process.env.COMPANY_LOGO_PATH ||
+        "https://job-portal-f-az3p.onrender.com/Image/logo.png";
+    const companyEmail = process.env.COMPANY_EMAIL || senderEmail;
+    const fromAddress = `"${senderName}" <${senderEmail}>`;
+
+    const formattedStartDate = startDate
+        ? new Date(startDate).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+          })
+        : "Immediate";
+
+    const formattedEndDate = endDate
+        ? new Date(endDate).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+          })
+        : "N/A";
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Payment Receipt & Invoice - ${invoiceNumber}</title>
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          background-color: #f1f5f9;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          color: #1e293b;
+        }
+        .container {
+          max-width: 600px;
+          margin: 32px auto;
+          background-color: #ffffff;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+          border: 1px solid #e2e8f0;
+        }
+        .header {
+          background: linear-gradient(135deg, #0d9488, #0f766e);
+          padding: 32px 24px;
+          text-align: center;
+          color: #ffffff;
+        }
+        .logo {
+          max-height: 48px;
+          margin-bottom: 12px;
+        }
+        .header h1 {
+          margin: 0;
+          font-size: 24px;
+          font-weight: 800;
+          letter-spacing: -0.5px;
+        }
+        .header p {
+          margin: 6px 0 0;
+          font-size: 14px;
+          opacity: 0.92;
+        }
+        .content {
+          padding: 32px 28px;
+        }
+        .greeting {
+          font-size: 17px;
+          font-weight: 700;
+          color: #0f172a;
+          margin-bottom: 10px;
+        }
+        .text {
+          font-size: 14px;
+          line-height: 1.6;
+          color: #475569;
+          margin-bottom: 20px;
+        }
+        .receipt-card {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 20px;
+          margin-bottom: 24px;
+        }
+        .card-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 8px 0;
+          border-bottom: 1px solid #e2e8f0;
+          font-size: 13px;
+        }
+        .card-row:last-child {
+          border-bottom: none;
+          padding-bottom: 0;
+        }
+        .card-label {
+          color: #64748b;
+          font-weight: 500;
+        }
+        .card-val {
+          color: #0f172a;
+          font-weight: 700;
+          text-align: right;
+        }
+        .total-row {
+          background: #f0fdfa;
+          margin: 12px -20px -20px -20px;
+          padding: 14px 20px;
+          border-radius: 0 0 12px 12px;
+          border-top: 2px solid #0d9488;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .total-label {
+          font-size: 14px;
+          font-weight: 700;
+          color: #0f766e;
+        }
+        .total-amount {
+          font-size: 20px;
+          font-weight: 800;
+          color: #0f766e;
+        }
+        .btn-container {
+          text-align: center;
+          margin: 28px 0;
+        }
+        .btn {
+          display: inline-block;
+          background: #0d9488;
+          color: #ffffff !important;
+          font-weight: 700;
+          font-size: 14px;
+          padding: 12px 28px;
+          border-radius: 8px;
+          text-decoration: none;
+          box-shadow: 0 2px 8px rgba(13, 148, 136, 0.35);
+        }
+        .attachment-note {
+          background-color: #f0fdf4;
+          border-left: 4px solid #16a34a;
+          padding: 12px 16px;
+          border-radius: 6px;
+          font-size: 12.5px;
+          color: #166534;
+          margin-bottom: 24px;
+        }
+        .footer {
+          background-color: #f8fafc;
+          padding: 20px 28px;
+          border-top: 1px solid #e2e8f0;
+          text-align: center;
+          font-size: 12px;
+          color: #94a3b8;
+          line-height: 1.5;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          ${companyLogo ? `<img src="${companyLogo}" alt="${senderName}" class="logo" />` : ""}
+          <h1>Payment Receipt & Confirmation</h1>
+          <p>Thank you for subscribing to ${senderName}</p>
+        </div>
+        <div class="content">
+          <div class="greeting">Hello, ${name}! 👋</div>
+          <p class="text">
+            We are pleased to inform you that your payment has been successfully processed and verified.
+            ${
+                isExtraPost
+                    ? `Your account has been credited with <strong>+${quantity} extra post${quantity > 1 ? "s" : ""}</strong>.`
+                    : `Your subscription to the <strong>${planName}</strong> plan is now active.`
+            }
+          </p>
+
+          <div class="receipt-card">
+            <div class="card-row">
+              <span class="card-label">Invoice Number</span>
+              <span class="card-val" style="font-family: monospace;">${invoiceNumber}</span>
+            </div>
+            <div class="card-row">
+              <span class="card-label">Item / Plan</span>
+              <span class="card-val">${planName}</span>
+            </div>
+            ${
+                !isExtraPost && startDate && endDate
+                    ? `<div class="card-row">
+                        <span class="card-label">Subscription Validity</span>
+                        <span class="card-val">${formattedStartDate} &ndash; ${formattedEndDate}</span>
+                      </div>`
+                    : ""
+            }
+            <div class="card-row">
+              <span class="card-label">Payment ID</span>
+              <span class="card-val" style="font-family: monospace;">${paymentId}</span>
+            </div>
+            <div class="card-row">
+              <span class="card-label">Order ID</span>
+              <span class="card-val" style="font-family: monospace;">${orderId}</span>
+            </div>
+            <div class="card-row">
+              <span class="card-label">Payment Status</span>
+              <span class="card-val" style="color: #16a34a;">Paid & Confirmed</span>
+            </div>
+            <div class="total-row">
+              <span class="total-label">Total Amount Paid</span>
+              <span class="total-amount">₹${Number(amount).toLocaleString("en-IN")}</span>
+            </div>
+          </div>
+
+          <div class="attachment-note">
+            📄 <strong>Tax Invoice Attached:</strong> A formal PDF receipt (<strong>${invoiceNumber}.pdf</strong>) has been generated and attached to this email for your accounting and taxation records.
+          </div>
+
+          ${
+              invoiceUrl
+                  ? `<div class="btn-container">
+                      <a href="${invoiceUrl}" target="_blank" class="btn">View & Download Invoice PDF</a>
+                    </div>`
+                  : ""
+          }
+
+          <p class="text" style="font-size: 12.5px; color: #64748b; margin-bottom: 0;">
+            If you have any questions or require custom billing information, please reply to this email or reach us at <a href="mailto:${companyEmail}" style="color: #0d9488;">${companyEmail}</a>.
+          </p>
+        </div>
+        <div class="footer">
+          <p style="margin: 0 0 4px;">&copy; ${new Date().getFullYear()} ${senderName}. All rights reserved.</p>
+          <p style="margin: 0;">This is an automated transaction confirmation.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    if (!transporter) {
+        console.log("\n=======================================================");
+        console.log("📧 [DEVELOPMENT NOTICE - INVOICE EMAIL]");
+        console.log(`To: ${to}`);
+        console.log(`Invoice: ${invoiceNumber} | Plan: ${planName} | Amount: ₹${amount}`);
+        console.log(`Invoice URL: ${invoiceUrl || "N/A"}`);
+        console.log("PDF Buffer Attached:", Boolean(pdfBuffer));
+        console.log("=======================================================\n");
+
+        return {
+            success: true,
+            mocked: true,
+            message: "Email credentials not configured in .env. Logged to console.",
+        };
+    }
+
+    try {
+        const mailOptions = {
+            from: fromAddress,
+            to,
+            subject: `Payment Receipt & Tax Invoice #${invoiceNumber} - ${senderName}`,
+            text: `Hello ${name},\n\nYour payment of ₹${amount} for ${planName} was successful.\nInvoice Number: ${invoiceNumber}\nPayment ID: ${paymentId}\nOrder ID: ${orderId}\n\nYour tax invoice PDF is attached.\n\nThank you,\n${senderName}`,
+            html: htmlContent,
+            attachments: [],
+        };
+
+        if (pdfBuffer) {
+            mailOptions.attachments.push({
+                filename: `${invoiceNumber}.pdf`,
+                content: pdfBuffer,
+                contentType: "application/pdf",
+            });
+        }
+
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`[INVOICE EMAIL SENT] Sent to ${to}. MessageId: ${info.messageId}`);
+        return {
+            success: true,
+            messageId: info.messageId,
+        };
+    } catch (error) {
+        console.error("[INVOICE EMAIL SEND ERROR]", error);
+        return {
+            success: false,
+            error: error.message,
+        };
+    }
+};
+

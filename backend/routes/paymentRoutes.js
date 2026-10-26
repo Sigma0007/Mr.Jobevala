@@ -8,6 +8,7 @@ import {
     getAllPaymentsAdmin,
     getPaymentById,
     recordPaymentFailure,
+    getPaymentInvoice,
 } from "../controllers/paymentController.js";
 import { protect, optionalAuth } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
@@ -30,6 +31,10 @@ router.get("/my-payments", protect, getMyPayments);
 
 // Admin all payments & analytics
 router.get("/all", protect, authorize("admin"), getAllPaymentsAdmin);
+
+// Invoice View / Download routes
+router.get("/invoice/:id", protect, getPaymentInvoice);
+router.get("/:id/invoice", protect, getPaymentInvoice);
 
 // Single payment details
 router.get("/:id", protect, getPaymentById);

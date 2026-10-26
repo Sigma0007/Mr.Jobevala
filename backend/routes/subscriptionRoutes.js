@@ -8,6 +8,7 @@ import {
     validateSubscriptionAction,
     unlockCandidateContact,
     activateFreePlan,
+    getSubscriptionInvoice,
 } from "../controllers/subscriptionController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
@@ -23,6 +24,7 @@ router.get("/all", authorize("admin"), getAllSubscriptionsAdmin);
 router.post("/activate-free", activateFreePlan);
 router.post("/validate-action", validateSubscriptionAction);
 router.post("/unlock-candidate", unlockCandidateContact);
+router.get("/:id/invoice", getSubscriptionInvoice);
 router.get("/:id", getSubscriptionById);
 router.post("/cancel/:id", cancelSubscription);
 

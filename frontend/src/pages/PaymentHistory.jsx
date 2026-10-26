@@ -16,6 +16,7 @@ import {
   User,
   ShieldCheck,
   ChevronRight,
+  FileText,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -36,6 +37,44 @@ export default function PaymentHistory() {
 
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
+
+  const handleDownloadInvoice = async (item, type = "payment") => {
+    try {
+      toast.loading("Fetching invoice PDF...", { id: "inv-toast" });
+      let invoiceUrl =
+        import.meta.env.VITE_API_URL + item.invoiceUrl + item.invoiceUrl;
+
+      if (!invoiceUrl) {
+        const id = item._id;
+        const res =
+          type === "subscription"
+            ? await customerservice.getSubscriptionInvoice(id)
+            : await customerservice.getPaymentInvoice(id);
+
+        if (res?.success && res.invoiceUrl) {
+          invoiceUrl = res.invoiceUrl;
+        } else {
+          throw new Error(
+            res?.message || "Failed to fetch invoice. Please try again.",
+          );
+        }
+      }
+
+      toast.dismiss("inv-toast");
+      if (invoiceUrl) {
+        window.open(invoiceUrl, "_blank", "noopener,noreferrer");
+        toast.success("Invoice opened!");
+      }
+    } catch (err) {
+      toast.dismiss("inv-toast");
+      console.error("Invoice open error:", err);
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Could not retrieve invoice.",
+      );
+    }
+  };
 
   const fetchPayments = async (currentPage = 1) => {
     setLoading(true);
@@ -316,16 +355,28 @@ export default function PaymentHistory() {
                             </span>
                           </td>
                           <td className="py-4 px-6 text-right">
-                            <button
-                              onClick={() => {
-                                setSelectedSubscription(sub);
-                                setIsSubModalOpen(true);
-                              }}
-                              className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                            >
-                              <span>View Modal</span>
-                              <ChevronRight className="w-3.5 h-3.5" />
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() =>
+                                  handleDownloadInvoice(sub, "subscription")
+                                }
+                                className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg border border-emerald-200 transition-colors cursor-pointer"
+                                title="Download Official Tax Receipt PDF"
+                              >
+                                <Download className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Invoice</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedSubscription(sub);
+                                  setIsSubModalOpen(true);
+                                }}
+                                className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                              >
+                                <span>View Modal</span>
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -366,6 +417,7 @@ export default function PaymentHistory() {
                     <th className="py-4 px-6">Order ID</th>
                     <th className="py-4 px-6">Details / Reason</th>
                     <th className="py-4 px-6">Date</th>
+                    <th className="py-4 px-6 text-right">Invoice</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
@@ -392,7 +444,9 @@ export default function PaymentHistory() {
                             {p.currency}
                           </span>
                         </td>
-                        <td className="py-4 px-6">{getStatusBadge(p.status)}</td>
+                        <td className="py-4 px-6">
+                          {getStatusBadge(p.status)}
+                        </td>
                         <td className="py-4 px-6">
                           {p.paymentId ? (
                             <span className="font-mono text-xs bg-slate-100 text-slate-800 px-2 py-1 rounded">
@@ -412,9 +466,12 @@ export default function PaymentHistory() {
                         <td className="py-4 px-6">
                           {isFailed ? (
                             <div className="text-xs text-red-600 bg-red-50 border border-red-200 px-2.5 py-1 rounded-lg">
-                              <span className="font-semibold block">Failed:</span>
+                              <span className="font-semibold block">
+                                Failed:
+                              </span>
                               <span className="text-[11px] leading-tight block">
-                                {p.errorDetails || "Transaction failed or cancelled"}
+                                {p.errorDetails ||
+                                  "Transaction failed or cancelled"}
                               </span>
                             </div>
                           ) : (
@@ -431,6 +488,24 @@ export default function PaymentHistory() {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          {p.status === "paid" ? (
+                            <button
+                              onClick={() =>
+                                handleDownloadInvoice(p, "payment")
+                              }
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg border border-emerald-200 transition-colors cursor-pointer"
+                              title="Download Tax Invoice PDF"
+                            >
+                              <Download className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Invoice</span>
+                            </button>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">
+                              N/A
+                            </span>
+                          )}
                         </td>
                       </tr>
                     );

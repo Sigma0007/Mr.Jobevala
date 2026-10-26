@@ -23,6 +23,7 @@ import {
   UserCheck,
   Calendar,
   ExternalLink,
+  Download,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
@@ -471,6 +472,30 @@ export default function PricingPlans() {
 
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <button
+                onClick={async () => {
+                  try {
+                    toast.loading("Opening invoice PDF...", { id: "banner-inv-toast" });
+                    const res = await customerservice.getSubscriptionInvoice(currentSubscription._id);
+                    toast.dismiss("banner-inv-toast");
+                    if (res?.success && res.invoiceUrl) {
+                      window.open(res.invoiceUrl, "_blank", "noopener,noreferrer");
+                      toast.success("Invoice opened!");
+                    } else {
+                      toast.error("Invoice is being generated. Please retry.");
+                    }
+                  } catch (err) {
+                    toast.dismiss("banner-inv-toast");
+                    toast.error(err?.response?.data?.message || "Could not retrieve invoice.");
+                  }
+                }}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer"
+                title="Download Official Tax Receipt PDF"
+              >
+                <Download className="w-4 h-4 text-emerald-400" />
+                <span>Tax Invoice</span>
+              </button>
+
+              <button
                 onClick={() => {
                   setSelectedSubForModal(currentSubscription);
                   setIsSubModalOpen(true);
@@ -478,7 +503,7 @@ export default function PricingPlans() {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white px-5 py-3 rounded-2xl text-xs sm:text-sm font-semibold transition-all shadow-md cursor-pointer"
               >
                 <Crown className="w-4 h-4 text-amber-300" />
-                <span>View Subscription Modal</span>
+                <span>View Details</span>
               </button>
             </div>
           </div>

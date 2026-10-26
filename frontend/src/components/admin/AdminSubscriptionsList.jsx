@@ -22,12 +22,10 @@ import {
   AlertCircle,
   Eye,
   Ban,
-  Shield,
-  Briefcase,
-  Layers,
   Sparkles,
   ArrowUpRight,
   IndianRupee,
+  Download,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import customerservice from "../../customer/customerservice";
@@ -38,6 +36,43 @@ export default function AdminSubscriptionsList() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const handleDownloadInvoice = async (item, type = "payment") => {
+    try {
+      toast.loading("Fetching invoice PDF...", { id: "admin-inv-toast" });
+      let invoiceUrl = import.meta.env.VITE_API_URL + item.invoiceUrl;
+
+      if (!invoiceUrl) {
+        const id = item._id;
+        const res =
+          type === "subscription"
+            ? await customerservice.getSubscriptionInvoice(id)
+            : await customerservice.getPaymentInvoice(id);
+
+        if (res?.success && res.invoiceUrl) {
+          invoiceUrl = res.invoiceUrl;
+        } else {
+          throw new Error(
+            res?.message || "Invoice is being generated. Please retry.",
+          );
+        }
+      }
+
+      toast.dismiss("admin-inv-toast");
+      if (invoiceUrl) {
+        window.open(invoiceUrl, "_blank", "noopener,noreferrer");
+        toast.success("Invoice opened!");
+      }
+    } catch (err) {
+      toast.dismiss("admin-inv-toast");
+      console.error("Admin invoice open error:", err);
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Could not retrieve invoice.",
+      );
+    }
+  };
 
   // Pagination & Search & Filtering
   const [page, setPage] = useState(1);
@@ -69,7 +104,11 @@ export default function AdminSubscriptionsList() {
 
   // Fetch Subscriptions
   const fetchSubscriptions = useCallback(
-    async (targetPage = 1, currentSearch = search, currentStatus = statusFilter) => {
+    async (
+      targetPage = 1,
+      currentSearch = search,
+      currentStatus = statusFilter,
+    ) => {
       setLoading(true);
       try {
         let query = `?page=${targetPage}&limit=${limit}`;
@@ -96,12 +135,16 @@ export default function AdminSubscriptionsList() {
         setLoading(false);
       }
     },
-    [limit, search, statusFilter]
+    [limit, search, statusFilter],
   );
 
   // Fetch Payments
   const fetchPayments = useCallback(
-    async (targetPage = 1, currentSearch = search, currentStatus = statusFilter) => {
+    async (
+      targetPage = 1,
+      currentSearch = search,
+      currentStatus = statusFilter,
+    ) => {
       setLoading(true);
       try {
         let query = `?page=${targetPage}&limit=${limit}`;
@@ -128,7 +171,7 @@ export default function AdminSubscriptionsList() {
         setLoading(false);
       }
     },
-    [limit, search, statusFilter]
+    [limit, search, statusFilter],
   );
 
   // Trigger fetch on tab, page, filter changes
@@ -160,7 +203,11 @@ export default function AdminSubscriptionsList() {
   };
 
   const handleCancelSub = async (subId) => {
-    if (!window.confirm("Are you sure you want to cancel this user's subscription immediately?")) {
+    if (
+      !window.confirm(
+        "Are you sure you want to cancel this user's subscription immediately?",
+      )
+    ) {
       return;
     }
 
@@ -176,18 +223,31 @@ export default function AdminSubscriptionsList() {
       }
     } catch (err) {
       toast.dismiss("cancel-sub");
-      toast.error(err?.response?.data?.message || "Failed to cancel subscription.");
+      toast.error(
+        err?.response?.data?.message || "Failed to cancel subscription.",
+      );
     }
   };
 
   // Extract Stats helpers
   const activeSubsCount = subStats.find((s) => s._id === "active")?.count || 0;
-  const expiredSubsCount = subStats.find((s) => s._id === "expired")?.count || 0;
-  const cancelledSubsCount = subStats.find((s) => s._id === "cancelled")?.count || 0;
+  const expiredSubsCount =
+    subStats.find((s) => s._id === "expired")?.count || 0;
+  const cancelledSubsCount =
+    subStats.find((s) => s._id === "cancelled")?.count || 0;
 
-  const paidPayments = paymentStats.find((s) => s._id === "paid") || { count: 0, totalAmount: 0 };
-  const failedPayments = paymentStats.find((s) => s._id === "failed") || { count: 0, totalAmount: 0 };
-  const createdPayments = paymentStats.find((s) => s._id === "created") || { count: 0, totalAmount: 0 };
+  const paidPayments = paymentStats.find((s) => s._id === "paid") || {
+    count: 0,
+    totalAmount: 0,
+  };
+  const failedPayments = paymentStats.find((s) => s._id === "failed") || {
+    count: 0,
+    totalAmount: 0,
+  };
+  const createdPayments = paymentStats.find((s) => s._id === "created") || {
+    count: 0,
+    totalAmount: 0,
+  };
 
   // Status Badge Helper
   const getStatusBadge = (status) => {
@@ -197,7 +257,9 @@ export default function AdminSubscriptionsList() {
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="capitalize">{status === "paid" ? "Success / Paid" : "Active"}</span>
+            <span className="capitalize">
+              {status === "paid" ? "Success / Paid" : "Active"}
+            </span>
           </span>
         );
       case "failed":
@@ -242,13 +304,21 @@ export default function AdminSubscriptionsList() {
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-slate-900">{activeSubsCount}</span>
-            <span className="text-xs text-slate-500 font-medium">of {totalAllSubs} total</span>
+            <span className="text-3xl font-bold text-slate-900">
+              {activeSubsCount}
+            </span>
+            <span className="text-xs text-slate-500 font-medium">
+              of {totalAllSubs} total
+            </span>
           </div>
           <div className="mt-3 flex items-center gap-2 text-xs text-slate-500 border-t border-slate-100 pt-2">
-            <span className="text-amber-600 font-medium">{expiredSubsCount} Expired</span>
+            <span className="text-amber-600 font-medium">
+              {expiredSubsCount} Expired
+            </span>
             <span>•</span>
-            <span className="text-red-500 font-medium">{cancelledSubsCount} Cancelled</span>
+            <span className="text-red-500 font-medium">
+              {cancelledSubsCount} Cancelled
+            </span>
           </div>
         </div>
 
@@ -287,14 +357,18 @@ export default function AdminSubscriptionsList() {
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-red-600">{failedPayments.count || 0}</span>
+            <span className="text-3xl font-bold text-red-600">
+              {failedPayments.count || 0}
+            </span>
             <span className="text-xs text-slate-500 font-medium">
               ₹{(failedPayments.totalAmount || 0).toLocaleString("en-IN")}
             </span>
           </div>
           <div className="mt-3 text-xs text-slate-500 border-t border-slate-100 pt-2 flex items-center gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
-            <span className="text-red-600 font-medium">Gateway & signature errors</span>
+            <span className="text-red-600 font-medium">
+              Gateway & signature errors
+            </span>
           </div>
         </div>
 
@@ -309,8 +383,12 @@ export default function AdminSubscriptionsList() {
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-slate-900">{createdPayments.count || 0}</span>
-            <span className="text-xs text-slate-500 font-medium">Checkout sessions</span>
+            <span className="text-3xl font-bold text-slate-900">
+              {createdPayments.count || 0}
+            </span>
+            <span className="text-xs text-slate-500 font-medium">
+              Checkout sessions
+            </span>
           </div>
           <div className="mt-3 text-xs text-slate-500 border-t border-slate-100 pt-2">
             <span>Awaiting gateway completion</span>
@@ -364,7 +442,9 @@ export default function AdminSubscriptionsList() {
                 className="p-2.5 border border-slate-200 hover:border-slate-300 rounded-xl text-slate-600 hover:text-slate-900 transition-colors shadow-2xs cursor-pointer"
                 title="Refresh Table"
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                />
               </button>
             </div>
           </div>
@@ -427,7 +507,9 @@ export default function AdminSubscriptionsList() {
           {loading ? (
             <div className="py-24 text-center text-slate-400">
               <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-indigo-500" />
-              <p className="text-sm font-medium">Loading records from database...</p>
+              <p className="text-sm font-medium">
+                Loading records from database...
+              </p>
             </div>
           ) : activeTab === "subscriptions" ? (
             // ==================== SUBSCRIPTIONS TABLE ====================
@@ -436,7 +518,9 @@ export default function AdminSubscriptionsList() {
                 <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-slate-400">
                   <Crown className="w-7 h-7" />
                 </div>
-                <h3 className="text-base font-bold text-slate-800">No Subscriptions Found</h3>
+                <h3 className="text-base font-bold text-slate-800">
+                  No Subscriptions Found
+                </h3>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
                   {search || statusFilter !== "all"
                     ? "Try adjusting your search criteria or filter options."
@@ -460,19 +544,28 @@ export default function AdminSubscriptionsList() {
                 <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
                   {subscriptions.map((sub) => {
                     const plan = sub.planDetails || {};
-                    const isExpired = sub.status === "expired" || (sub.endDate && new Date() > new Date(sub.endDate));
+                    const isExpired =
+                      sub.status === "expired" ||
+                      (sub.endDate && new Date() > new Date(sub.endDate));
 
                     return (
-                      <tr key={sub._id} className="hover:bg-slate-50/70 transition-colors">
+                      <tr
+                        key={sub._id}
+                        className="hover:bg-slate-50/70 transition-colors"
+                      >
                         {/* User Subscriber Info */}
                         <td className="py-3.5 px-5">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0 border border-indigo-100">
-                              {sub.user?.name ? sub.user.name.charAt(0).toUpperCase() : "U"}
+                              {sub.user?.name
+                                ? sub.user.name.charAt(0).toUpperCase()
+                                : "U"}
                             </div>
                             <div className="min-w-0">
                               <div className="font-semibold text-slate-900 text-sm truncate flex items-center gap-1.5">
-                                <span>{sub.user?.name || "Anonymous User"}</span>
+                                <span>
+                                  {sub.user?.name || "Anonymous User"}
+                                </span>
                                 {sub.user?.role && (
                                   <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
                                     {sub.user.role}
@@ -509,7 +602,9 @@ export default function AdminSubscriptionsList() {
                         </td>
 
                         {/* Status */}
-                        <td className="py-3.5 px-5">{getStatusBadge(sub.status)}</td>
+                        <td className="py-3.5 px-5">
+                          {getStatusBadge(sub.status)}
+                        </td>
 
                         {/* Price Paid */}
                         <td className="py-3.5 px-5">
@@ -524,21 +619,29 @@ export default function AdminSubscriptionsList() {
                             <div>
                               <span className="text-slate-400">Start:</span>{" "}
                               <span className="font-semibold text-slate-700">
-                                {new Date(sub.startDate).toLocaleDateString("en-IN", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })}
+                                {new Date(sub.startDate).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  },
+                                )}
                               </span>
                             </div>
                             <div>
                               <span className="text-slate-400">End:</span>{" "}
-                              <span className={`font-semibold ${isExpired ? "text-red-500" : "text-emerald-700"}`}>
-                                {new Date(sub.endDate).toLocaleDateString("en-IN", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })}
+                              <span
+                                className={`font-semibold ${isExpired ? "text-red-500" : "text-emerald-700"}`}
+                              >
+                                {new Date(sub.endDate).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  },
+                                )}
                               </span>
                             </div>
                           </div>
@@ -559,7 +662,8 @@ export default function AdminSubscriptionsList() {
                               <div className="flex items-center justify-between text-[11px] text-slate-600">
                                 <span>Contacts:</span>
                                 <span className="font-bold text-slate-800">
-                                  {sub.unlockContactsUsed || 0}/{sub.unlockContactsLimit}
+                                  {sub.unlockContactsUsed || 0}/
+                                  {sub.unlockContactsLimit}
                                 </span>
                               </div>
                             )}
@@ -567,13 +671,18 @@ export default function AdminSubscriptionsList() {
                               <div className="flex items-center justify-between text-[11px] text-slate-600">
                                 <span>DMs:</span>
                                 <span className="font-bold text-slate-800">
-                                  {sub.directMessagesUsed || 0}/{sub.directMessagesLimit}
+                                  {sub.directMessagesUsed || 0}/
+                                  {sub.directMessagesLimit}
                                 </span>
                               </div>
                             )}
-                            {sub.jobPostsLimit === 0 && sub.unlockContactsLimit === 0 && sub.directMessagesLimit === 0 && (
-                              <span className="text-slate-400 italic">Unlimited / Base</span>
-                            )}
+                            {sub.jobPostsLimit === 0 &&
+                              sub.unlockContactsLimit === 0 &&
+                              sub.directMessagesLimit === 0 && (
+                                <span className="text-slate-400 italic">
+                                  Unlimited / Base
+                                </span>
+                              )}
                           </div>
                         </td>
 
@@ -602,6 +711,17 @@ export default function AdminSubscriptionsList() {
                         {/* Actions */}
                         <td className="py-3.5 px-5 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() =>
+                                handleDownloadInvoice(sub, "subscription")
+                              }
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg border border-emerald-200 transition-colors cursor-pointer"
+                              title="Download Tax Invoice PDF"
+                            >
+                              <Download className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Invoice</span>
+                            </button>
+
                             <button
                               onClick={() => {
                                 setSelectedSubscription(sub);
@@ -632,190 +752,223 @@ export default function AdminSubscriptionsList() {
                 </tbody>
               </table>
             )
-          ) : (
-            // ==================== PAYMENTS TABLE ====================
-            payments.length === 0 ? (
-              <div className="py-20 text-center">
-                <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-slate-400">
-                  <CreditCard className="w-7 h-7" />
-                </div>
-                <h3 className="text-base font-bold text-slate-800">No Payment Records Found</h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                  {search || statusFilter !== "all"
-                    ? "Try adjusting your search criteria or status filter."
-                    : "No payment transactions have been recorded in the system yet."}
-                </p>
+          ) : // ==================== PAYMENTS TABLE ====================
+          payments.length === 0 ? (
+            <div className="py-20 text-center">
+              <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-slate-400">
+                <CreditCard className="w-7 h-7" />
               </div>
-            ) : (
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/70 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    <th className="py-3.5 px-5">User / Customer</th>
-                    <th className="py-3.5 px-5">Plan Description</th>
-                    <th className="py-3.5 px-5">Amount</th>
-                    <th className="py-3.5 px-5">Payment Status</th>
-                    <th className="py-3.5 px-5">Payment & Order ID</th>
-                    <th className="py-3.5 px-5">Failure Info / Reason</th>
-                    <th className="py-3.5 px-5">Date & Time</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
-                  {payments.map((p) => {
-                    const isFailed = p.status === "failed";
-                    const customerName = p.user?.name || p.customerDetails?.name || "Guest Customer";
-                    const customerEmail = p.user?.email || p.customerDetails?.email || "No email";
-                    const customerPhone = p.user?.phone || p.customerDetails?.phone || "";
+              <h3 className="text-base font-bold text-slate-800">
+                No Payment Records Found
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                {search || statusFilter !== "all"
+                  ? "Try adjusting your search criteria or status filter."
+                  : "No payment transactions have been recorded in the system yet."}
+              </p>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/70 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th className="py-3.5 px-5">User / Customer</th>
+                  <th className="py-3.5 px-5">Plan Description</th>
+                  <th className="py-3.5 px-5">Amount</th>
+                  <th className="py-3.5 px-5">Payment Status</th>
+                  <th className="py-3.5 px-5">Payment & Order ID</th>
+                  <th className="py-3.5 px-5">Failure Info / Reason</th>
+                  <th className="py-3.5 px-5">Date & Time</th>
+                  <th className="py-3.5 px-5 text-right">Invoice</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
+                {payments.map((p) => {
+                  const isFailed = p.status === "failed";
+                  const customerName =
+                    p.user?.name || p.customerDetails?.name || "Guest Customer";
+                  const customerEmail =
+                    p.user?.email || p.customerDetails?.email || "No email";
+                  const customerPhone =
+                    p.user?.phone || p.customerDetails?.phone || "";
 
-                    return (
-                      <tr
-                        key={p._id}
-                        className={`transition-colors ${isFailed ? "bg-red-50/30 hover:bg-red-50/50" : "hover:bg-slate-50/70"}`}
-                      >
-                        {/* Customer */}
-                        <td className="py-3.5 px-5">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 border ${
-                                isFailed
-                                  ? "bg-red-100 text-red-700 border-red-200"
-                                  : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              }`}
-                            >
-                              {customerName.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="font-semibold text-slate-900 text-sm truncate flex items-center gap-1.5">
-                                <span>{customerName}</span>
-                                {p.user?.role && (
-                                  <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                                    {p.user.role}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
-                                <Mail className="w-3 h-3 text-slate-400" />
-                                <span>{customerEmail}</span>
-                              </div>
-                              {customerPhone && (
-                                <div className="text-[11px] text-slate-400 truncate flex items-center gap-1 mt-0.5">
-                                  <Phone className="w-3 h-3 text-slate-300" />
-                                  <span>{customerPhone}</span>
-                                </div>
+                  return (
+                    <tr
+                      key={p._id}
+                      className={`transition-colors ${isFailed ? "bg-red-50/30 hover:bg-red-50/50" : "hover:bg-slate-50/70"}`}
+                    >
+                      {/* Customer */}
+                      <td className="py-3.5 px-5">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 border ${
+                              isFailed
+                                ? "bg-red-100 text-red-700 border-red-200"
+                                : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            }`}
+                          >
+                            {customerName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-slate-900 text-sm truncate flex items-center gap-1.5">
+                              <span>{customerName}</span>
+                              {p.user?.role && (
+                                <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                  {p.user.role}
+                                </span>
                               )}
                             </div>
-                          </div>
-                        </td>
-
-                        {/* Plan Description */}
-                        <td className="py-3.5 px-5">
-                          <div className="font-semibold text-slate-900 text-sm">
-                            {p.purpose || "Job Portal Service"}
-                          </div>
-                          <div className="text-xs text-slate-400 font-mono">
-                            Receipt: {p.receipt || "N/A"}
-                          </div>
-                        </td>
-
-                        {/* Amount */}
-                        <td className="py-3.5 px-5">
-                          <span className="font-bold text-slate-900 text-base">
-                            ₹{p.amount?.toLocaleString("en-IN") || 0}
-                          </span>
-                          <span className="text-[11px] text-slate-400 ml-1 font-semibold uppercase">
-                            {p.currency || "INR"}
-                          </span>
-                        </td>
-
-                        {/* Status */}
-                        <td className="py-3.5 px-5">{getStatusBadge(p.status)}</td>
-
-                        {/* IDs */}
-                        <td className="py-3.5 px-5">
-                          <div className="space-y-1">
-                            {p.paymentId ? (
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-mono text-xs bg-slate-100 text-slate-800 px-2 py-0.5 rounded max-w-[120px] truncate">
-                                  {p.paymentId}
-                                </span>
-                                <button
-                                  onClick={() => handleCopy(p.paymentId)}
-                                  className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600 cursor-pointer"
-                                  title="Copy Payment ID"
-                                >
-                                  {copiedId === p.paymentId ? (
-                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                  ) : (
-                                    <Copy className="w-3.5 h-3.5" />
-                                  )}
-                                </button>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-slate-400 italic">No Payment ID</span>
-                            )}
-
-                            {p.orderId && (
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-mono text-[11px] text-slate-400 max-w-[120px] truncate">
-                                  {p.orderId}
-                                </span>
-                                <button
-                                  onClick={() => handleCopy(p.orderId)}
-                                  className="p-0.5 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600 cursor-pointer"
-                                  title="Copy Order ID"
-                                >
-                                  {copiedId === p.orderId ? (
-                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                  ) : (
-                                    <Copy className="w-3.5 h-3.5" />
-                                  )}
-                                </button>
+                            <div className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
+                              <Mail className="w-3 h-3 text-slate-400" />
+                              <span>{customerEmail}</span>
+                            </div>
+                            {customerPhone && (
+                              <div className="text-[11px] text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                                <Phone className="w-3 h-3 text-slate-300" />
+                                <span>{customerPhone}</span>
                               </div>
                             )}
                           </div>
-                        </td>
+                        </div>
+                      </td>
 
-                        {/* Failure reason if failed */}
-                        <td className="py-3.5 px-5">
-                          {isFailed ? (
-                            <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-2.5 py-1.5 rounded-lg max-w-[200px]">
-                              <div className="font-bold flex items-center gap-1 text-[11px]">
-                                <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                                <span>Failed Error</span>
-                              </div>
-                              <p className="mt-0.5 text-[11px] leading-tight text-red-600 truncate" title={p.errorDetails || "Payment cancelled or rejected"}>
-                                {p.errorDetails || "Transaction failed at payment gateway."}
-                              </p>
+                      {/* Plan Description */}
+                      <td className="py-3.5 px-5">
+                        <div className="font-semibold text-slate-900 text-sm">
+                          {p.purpose || "Job Portal Service"}
+                        </div>
+                        <div className="text-xs text-slate-400 font-mono">
+                          Receipt: {p.receipt || "N/A"}
+                        </div>
+                      </td>
+
+                      {/* Amount */}
+                      <td className="py-3.5 px-5">
+                        <span className="font-bold text-slate-900 text-base">
+                          ₹{p.amount?.toLocaleString("en-IN") || 0}
+                        </span>
+                        <span className="text-[11px] text-slate-400 ml-1 font-semibold uppercase">
+                          {p.currency || "INR"}
+                        </span>
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-3.5 px-5">
+                        {getStatusBadge(p.status)}
+                      </td>
+
+                      {/* IDs */}
+                      <td className="py-3.5 px-5">
+                        <div className="space-y-1">
+                          {p.paymentId ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-xs bg-slate-100 text-slate-800 px-2 py-0.5 rounded max-w-[120px] truncate">
+                                {p.paymentId}
+                              </span>
+                              <button
+                                onClick={() => handleCopy(p.paymentId)}
+                                className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600 cursor-pointer"
+                                title="Copy Payment ID"
+                              >
+                                {copiedId === p.paymentId ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
                             </div>
                           ) : (
-                            <span className="text-xs text-emerald-600 font-medium inline-flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>Verified</span>
+                            <span className="text-xs text-slate-400 italic">
+                              No Payment ID
                             </span>
                           )}
-                        </td>
 
-                        {/* Date */}
-                        <td className="py-3.5 px-5 text-xs text-slate-500">
-                          <div>
-                            {new Date(p.createdAt).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
+                          {p.orderId && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-[11px] text-slate-400 max-w-[120px] truncate">
+                                {p.orderId}
+                              </span>
+                              <button
+                                onClick={() => handleCopy(p.orderId)}
+                                className="p-0.5 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600 cursor-pointer"
+                                title="Copy Order ID"
+                              >
+                                {copiedId === p.orderId ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Failure reason if failed */}
+                      <td className="py-3.5 px-5">
+                        {isFailed ? (
+                          <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-2.5 py-1.5 rounded-lg max-w-[200px]">
+                            <div className="font-bold flex items-center gap-1 text-[11px]">
+                              <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                              <span>Failed Error</span>
+                            </div>
+                            <p
+                              className="mt-0.5 text-[11px] leading-tight text-red-600 truncate"
+                              title={
+                                p.errorDetails ||
+                                "Payment cancelled or rejected"
+                              }
+                            >
+                              {p.errorDetails ||
+                                "Transaction failed at payment gateway."}
+                            </p>
                           </div>
-                          <div className="text-[11px] text-slate-400">
-                            {new Date(p.createdAt).toLocaleTimeString("en-IN", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )
+                        ) : (
+                          <span className="text-xs text-emerald-600 font-medium inline-flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Verified</span>
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Date */}
+                      <td className="py-3.5 px-5 text-xs text-slate-500">
+                        <div>
+                          {new Date(p.createdAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                          {new Date(p.createdAt).toLocaleTimeString("en-IN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </div>
+                      </td>
+
+                      {/* Invoice Action */}
+                      <td className="py-3.5 px-5 text-right">
+                        {p.status === "paid" ? (
+                          <button
+                            onClick={() => handleDownloadInvoice(p, "payment")}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg border border-emerald-200 transition-colors cursor-pointer"
+                            title="Download Tax Invoice PDF"
+                          >
+                            <Download className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Invoice</span>
+                          </button>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">
+                            N/A
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           )}
         </div>
 
@@ -823,8 +976,10 @@ export default function AdminSubscriptionsList() {
         {totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-slate-100 bg-slate-50/50">
             <div className="text-xs text-slate-500">
-              Showing page <span className="font-bold text-slate-800">{page}</span> of{" "}
-              <span className="font-bold text-slate-800">{totalPages}</span> ({totalCount} total results)
+              Showing page{" "}
+              <span className="font-bold text-slate-800">{page}</span> of{" "}
+              <span className="font-bold text-slate-800">{totalPages}</span> (
+              {totalCount} total results)
             </div>
 
             <div className="flex items-center gap-2">

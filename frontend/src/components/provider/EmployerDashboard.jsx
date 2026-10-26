@@ -47,7 +47,7 @@ const EmployerDashboard = () => {
 
   return (
     <div className="min-h-screen pt-24 pb-12 bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-64">
             <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] sticky top-28 space-y-1">

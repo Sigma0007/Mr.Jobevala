@@ -8,6 +8,9 @@ import User from "../models/User.js";
 import AppError from "../utils/AppError.js";
 import catchAsync from "../utils/catchAsync.js";
 import { createAndSendNotification } from "../utils/notificationService.js";
+import { generateAndUploadInvoice, resolveCustomerDetails } from "../utils/invoiceService.js";
+import { sendSubscriptionInvoiceEmail } from "../utils/emailService.js";
+import { getFileStreamFromR2 } from "../utils/r2Storage.js";
 
 /**
  * Helper to create/activate subscription record upon successful payment
@@ -200,6 +203,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
     let finalPurpose = purpose;
     let extraActionType = notes?.actionType || (planId === "extra_company_post" ? "company_post" : "job_post");
     let extraQuantity = Math.max(1, Number(notes?.quantity) || 1);
+    let matchedExtraPlan = null;
 
     if (isExtraPost) {
         if (!req.user?._id) {
@@ -220,7 +224,6 @@ export const createOrder = catchAsync(async (req, res, next) => {
             );
         }
 
-        let matchedExtraPlan = null;
         if (notes?.extraPlanId) {
             try {
                 matchedExtraPlan = await ExtraPostPlan.findById(notes.extraPlanId);
@@ -258,20 +261,36 @@ export const createOrder = catchAsync(async (req, res, next) => {
     const amountInPaise = Math.round(Number(finalAmount) * 100);
     const receipt = `rcpt_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
+    const orderNotes = {
+        purpose: finalPurpose,
+        planId,
+        userId: req.user?._id ? req.user._id.toString() : "guest",
+        type: isExtraPost ? "extra_post" : (notes?.type || "plan_subscription"),
+        ...notes,
+    };
+
+    if (isExtraPost) {
+        orderNotes.actionType = extraActionType;
+        orderNotes.quantity = String(extraQuantity);
+        if (matchedExtraPlan?._id) {
+            orderNotes.extraPlanId = matchedExtraPlan._id.toString();
+        } else if (notes?.extraPlanId) {
+            orderNotes.extraPlanId = notes.extraPlanId.toString();
+        }
+    }
+
+    // Clean undefined values from orderNotes for Razorpay payload
+    Object.keys(orderNotes).forEach((key) => {
+        if (orderNotes[key] === undefined) {
+            delete orderNotes[key];
+        }
+    });
+
     const options = {
         amount: amountInPaise,
         currency: currency.toUpperCase(),
         receipt,
-        notes: {
-            purpose: finalPurpose,
-            planId,
-            userId: req.user?._id ? req.user._id.toString() : "guest",
-            type: isExtraPost ? "extra_post" : (notes?.type || "plan_subscription"),
-            actionType: isExtraPost ? extraActionType : undefined,
-            quantity: isExtraPost ? extraQuantity : undefined,
-            extraPlanId: matchedExtraPlan ? matchedExtraPlan._id.toString() : notes?.extraPlanId,
-            ...notes,
-        },
+        notes: orderNotes,
     };
 
     let order;
@@ -281,6 +300,12 @@ export const createOrder = catchAsync(async (req, res, next) => {
         console.error("Razorpay order creation error:", err);
         return next(new AppError(err?.error?.description || err.message || "Failed to create Razorpay order.", 500));
     }
+
+    // Resolve customer details & address if user is authenticated or provided
+    const resolvedCustomer = await resolveCustomerDetails(
+        { customerDetails },
+        req.user || null
+    );
 
     // Save initial transaction in database
     const paymentRecord = await Payment.create({
@@ -294,9 +319,15 @@ export const createOrder = catchAsync(async (req, res, next) => {
         receipt,
         notes: options.notes,
         customerDetails: {
-            name: customerDetails.name || req.user?.name || "",
-            email: customerDetails.email || req.user?.email || "",
-            phone: customerDetails.phone || req.user?.phone || "",
+            name: customerDetails.name || resolvedCustomer.name || req.user?.name || "",
+            email: customerDetails.email || resolvedCustomer.email || req.user?.email || "",
+            phone: customerDetails.phone || resolvedCustomer.phone || req.user?.phone || "",
+            address: customerDetails.address || resolvedCustomer.address || "",
+            city: customerDetails.city || resolvedCustomer.city || "",
+            state: customerDetails.state || resolvedCustomer.state || "",
+            country: customerDetails.country || resolvedCustomer.country || "India",
+            pincode: customerDetails.pincode || resolvedCustomer.pincode || "",
+            gstin: customerDetails.gstin || resolvedCustomer.gstin || "",
         },
     });
 
@@ -387,6 +418,38 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
         }
     }
 
+    // Generate Tax Invoice PDF, Upload to Cloudflare R2, and Email Customer with PDF
+    let invoiceData = null;
+    if (payment) {
+        try {
+            invoiceData = await generateAndUploadInvoice(payment, subscription);
+
+            // Send confirmation email with attached PDF asynchronously
+            const recipientEmail = payment.customerDetails?.email || req.user?.email;
+            if (recipientEmail) {
+                sendSubscriptionInvoiceEmail({
+                    to: recipientEmail,
+                    name: payment.customerDetails?.name || req.user?.name || "Valued Customer",
+                    planName: subscription?.planDetails?.name || payment.purpose,
+                    amount: payment.amount,
+                    invoiceNumber: invoiceData?.invoiceNumber || payment.invoiceNumber,
+                    paymentId: payment.paymentId,
+                    orderId: payment.orderId,
+                    startDate: subscription?.startDate,
+                    endDate: subscription?.endDate,
+                    invoiceUrl: invoiceData?.invoiceUrl || payment.invoiceUrl,
+                    pdfBuffer: invoiceData?.pdfBuffer || null,
+                    isExtraPost,
+                    quantity: payment.notes?.quantity || 1,
+                }).catch((emailErr) => {
+                    console.error("Warning sending invoice email:", emailErr?.message);
+                });
+            }
+        } catch (invErr) {
+            console.error("Warning generating invoice in verifyPayment:", invErr);
+        }
+    }
+
     res.status(200).json({
         success: true,
         message: isExtraPost
@@ -395,6 +458,8 @@ export const verifyPayment = catchAsync(async (req, res, next) => {
         payment,
         subscription,
         isExtraPost,
+        invoiceNumber: invoiceData?.invoiceNumber || payment?.invoiceNumber,
+        invoiceUrl: invoiceData?.invoiceUrl || payment?.invoiceUrl,
     });
 });
 
@@ -442,10 +507,34 @@ export const handleWebhook = catchAsync(async (req, res, next) => {
                         updatedPayment.planId === "extra_company_post" ||
                         updatedPayment.notes?.type === "extra_post";
 
+                    let sub = null;
                     if (isExtraPost) {
-                        await handleExtraPostPayment(updatedPayment, updatedPayment.user);
+                        sub = await handleExtraPostPayment(updatedPayment, updatedPayment.user);
                     } else {
-                        await createOrActivateSubscription(updatedPayment, updatedPayment.user);
+                        sub = await createOrActivateSubscription(updatedPayment, updatedPayment.user);
+                    }
+
+                    // Generate invoice & upload to R2
+                    const invoiceData = await generateAndUploadInvoice(updatedPayment, sub);
+
+                    // Send invoice email with attachment
+                    const recipientEmail = updatedPayment.customerDetails?.email;
+                    if (recipientEmail) {
+                        sendSubscriptionInvoiceEmail({
+                            to: recipientEmail,
+                            name: updatedPayment.customerDetails?.name || "Customer",
+                            planName: sub?.planDetails?.name || updatedPayment.purpose,
+                            amount: updatedPayment.amount,
+                            invoiceNumber: invoiceData?.invoiceNumber || updatedPayment.invoiceNumber,
+                            paymentId: updatedPayment.paymentId,
+                            orderId: updatedPayment.orderId,
+                            startDate: sub?.startDate,
+                            endDate: sub?.endDate,
+                            invoiceUrl: invoiceData?.invoiceUrl || updatedPayment.invoiceUrl,
+                            pdfBuffer: invoiceData?.pdfBuffer || null,
+                            isExtraPost,
+                            quantity: updatedPayment.notes?.quantity || 1,
+                        }).catch(() => {});
                     }
                 } catch (subErr) {
                     console.error("Webhook subscription creation error:", subErr);
@@ -623,5 +712,93 @@ export const getPaymentById = catchAsync(async (req, res, next) => {
     res.status(200).json({
         success: true,
         data: payment,
+    });
+});
+
+/**
+ * @desc Get / View / Download Payment Invoice PDF
+ * @route GET /api/payment/:id/invoice
+ * @access Private (Owner or Admin)
+ */
+export const getPaymentInvoice = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+    let payment = null;
+
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+        payment = await Payment.findById(id).populate("user", "name email phone role");
+    }
+    if (!payment) {
+        payment = await Payment.findOne({
+            $or: [{ orderId: id }, { paymentId: id }, { invoiceNumber: id }],
+        }).populate("user", "name email phone role");
+    }
+
+    if (!payment) {
+        return next(new AppError("Payment transaction not found.", 404));
+    }
+
+    // Ownership check: user can only see own invoice unless admin
+    if (
+        req.user.role !== "admin" &&
+        payment.user &&
+        payment.user._id.toString() !== req.user._id.toString()
+    ) {
+        return next(new AppError("You are not authorized to view this invoice.", 403));
+    }
+
+    if (payment.status !== "paid") {
+        return next(
+            new AppError(
+                `Invoice is not available for payment with status '${payment.status}'. Only completed payments have official invoices.`,
+                400
+            )
+        );
+    }
+
+    // Check if subscription exists
+    let subscription = await Subscription.findOne({ payment: payment._id });
+
+    // If invoice not generated yet or regenerate requested
+    if (!payment.invoiceUrl || req.query.regenerate === "true") {
+        const invRes = await generateAndUploadInvoice(payment, subscription);
+        if (invRes?.invoiceUrl) {
+            payment = await Payment.findById(payment._id).populate("user", "name email phone role");
+        }
+    }
+
+    // Direct PDF download or stream
+    if (req.query.download === "true") {
+        if (payment.invoiceKey) {
+            try {
+                const r2Object = await getFileStreamFromR2(payment.invoiceKey);
+                res.setHeader("Content-Type", "application/pdf");
+                res.setHeader(
+                    "Content-Disposition",
+                    `attachment; filename="${payment.invoiceNumber || "Invoice"}.pdf"`
+                );
+                if (r2Object.Body && typeof r2Object.Body.pipe === "function") {
+                    return r2Object.Body.pipe(res);
+                } else if (r2Object.Body && typeof r2Object.Body.transformToByteArray === "function") {
+                    const bytes = await r2Object.Body.transformToByteArray();
+                    return res.end(Buffer.from(bytes));
+                }
+            } catch (streamErr) {
+                console.error("Direct stream failed, falling back to URL redirect:", streamErr);
+            }
+        }
+        if (payment.invoiceUrl) {
+            return res.redirect(payment.invoiceUrl);
+        }
+    }
+
+    res.status(200).json({
+        success: true,
+        invoiceNumber: payment.invoiceNumber,
+        invoiceUrl: payment.invoiceUrl,
+        invoiceDate: payment.invoiceDate || payment.createdAt,
+        taxDetails: payment.taxDetails,
+        companyDetails: payment.companyDetails,
+        payment,
+        subscription,
     });
 });

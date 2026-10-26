@@ -22,6 +22,7 @@ import {
   XCircle,
   Flame,
   ArrowRight,
+  Download,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -36,6 +37,45 @@ export default function SubscriptionModal({
   const navigate = useNavigate();
   const [copiedField, setCopiedField] = useState(null);
   const [cancelling, setCancelling] = useState(false);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
+
+  const handleDownloadInvoice = async () => {
+    try {
+      setDownloadingInvoice(true);
+      toast.loading("Opening invoice PDF...", { id: "sub-inv-toast" });
+
+      let invoiceUrl = subscription.invoiceUrl;
+
+      if (!invoiceUrl) {
+        const res = await customerservice.getSubscriptionInvoice(
+          subscription._id
+        );
+        if (res?.success && res.invoiceUrl) {
+          invoiceUrl = res.invoiceUrl;
+        } else {
+          throw new Error(
+            res?.message || "Invoice is being generated. Please retry."
+          );
+        }
+      }
+
+      toast.dismiss("sub-inv-toast");
+      if (invoiceUrl) {
+        window.open(invoiceUrl, "_blank", "noopener,noreferrer");
+        toast.success("Invoice opened!");
+      }
+    } catch (err) {
+      toast.dismiss("sub-inv-toast");
+      console.error("Error downloading subscription invoice:", err);
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to download invoice."
+      );
+    } finally {
+      setDownloadingInvoice(false);
+    }
+  };
 
   if (!isOpen || !subscription) return null;
 
@@ -575,13 +615,23 @@ export default function SubscriptionModal({
 
             <div className="flex items-center gap-3">
               <button
+                onClick={handleDownloadInvoice}
+                disabled={downloadingInvoice}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all cursor-pointer"
+                title="Download Official Tax Invoice PDF"
+              >
+                <Download className="w-4 h-4 text-emerald-600" />
+                <span>{downloadingInvoice ? "Fetching..." : "Tax Invoice"}</span>
+              </button>
+
+              <button
                 onClick={() => {
                   onClose();
                   navigate("/pricing");
                 }}
                 className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-all cursor-pointer"
               >
-                <span>Upgrade / Change Plan</span>
+                <span>Upgrade Plan</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
 

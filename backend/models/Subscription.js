@@ -50,6 +50,19 @@ const subscriptionSchema = new mongoose.Schema(
             trim: true,
             index: true,
         },
+        invoiceNumber: {
+            type: String,
+            default: null,
+            index: true,
+        },
+        invoiceUrl: {
+            type: String,
+            default: null,
+        },
+        invoiceKey: {
+            type: String,
+            default: null,
+        },
         startDate: {
             type: Date,
             default: Date.now,
