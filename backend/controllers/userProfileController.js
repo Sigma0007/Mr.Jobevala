@@ -245,7 +245,29 @@ export const getAllUserProfile = catchAsync(async (req, res, next) => {
 // @route   POST /api/userprofile/upload-image
 // @access  Private (User)
 export const uploadProfileImage = catchAsync(async (req, res, next) => {
-    if (!req.file) {
+    let fileBuffer = null;
+    let contentType = "image/jpeg";
+    let ext = "jpg";
+
+    if (req.file) {
+        fileBuffer = req.file.buffer;
+        contentType = req.file.mimetype || "image/jpeg";
+        ext = (req.file.originalname?.split(".").pop() || "jpg").toLowerCase();
+    } else if (req.body?.image || req.body?.base64 || req.body?.profileImage) {
+        const raw = req.body.image || req.body.base64 || req.body.profileImage;
+        if (typeof raw === "string") {
+            const matches = raw.match(/^data:([A-Za-z0-9\/+.-]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                contentType = matches[1];
+                ext = (contentType.split("/")[1] || "jpg").toLowerCase();
+                fileBuffer = Buffer.from(matches[2], "base64");
+            } else {
+                fileBuffer = Buffer.from(raw, "base64");
+            }
+        }
+    }
+
+    if (!fileBuffer) {
         return next(new AppError("Please provide an image file to upload.", 400));
     }
 
@@ -257,16 +279,20 @@ export const uploadProfileImage = catchAsync(async (req, res, next) => {
 
     // Delete old profile image if exists on R2
     if (profile.profileImage) {
-        await deleteFromR2(profile.profileImage);
+        try {
+            await deleteFromR2(profile.profileImage);
+        } catch (delErr) {
+            console.warn("Notice: Old profile image could not be deleted from R2:", delErr.message);
+        }
     }
 
-    const ext = req.file.originalname.split(".").pop() || "jpg";
-    const key = `profiles/${userId}-${Date.now()}.${ext}`;
+    const cleanExt = ext === "jpeg" ? "jpg" : ext;
+    const key = `profiles/${userId}-${Date.now()}.${cleanExt}`;
 
     const { url } = await uploadToR2({
-        buffer: req.file.buffer,
+        buffer: fileBuffer,
         key,
-        contentType: req.file.mimetype || "image/jpeg",
+        contentType,
     });
 
     profile.profileImage = url;
@@ -284,7 +310,30 @@ export const uploadProfileImage = catchAsync(async (req, res, next) => {
 // @route   POST /api/userprofile/upload-resume
 // @access  Private (User)
 export const uploadResume = catchAsync(async (req, res, next) => {
-    if (!req.file) {
+    let fileBuffer = null;
+    let contentType = "application/pdf";
+    let originalName = `resume_${Date.now()}.pdf`;
+
+    if (req.file) {
+        fileBuffer = req.file.buffer;
+        contentType = req.file.mimetype || "application/pdf";
+        originalName = req.file.originalname || originalName;
+    } else if (req.body?.base64 || req.body?.resume) {
+        const raw = req.body.base64 || req.body.resume;
+        originalName = req.body.fileName || originalName;
+        contentType = req.body.mimeType || contentType;
+        if (typeof raw === "string") {
+            const matches = raw.match(/^data:([A-Za-z0-9\/+.-]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                contentType = matches[1];
+                fileBuffer = Buffer.from(matches[2], "base64");
+            } else {
+                fileBuffer = Buffer.from(raw, "base64");
+            }
+        }
+    }
+
+    if (!fileBuffer) {
         return next(new AppError("Please select a resume file (PDF, DOC, DOCX) to upload.", 400));
     }
 
@@ -296,9 +345,9 @@ export const uploadResume = catchAsync(async (req, res, next) => {
         "application/octet-stream",
     ];
     const allowedExtensions = ["pdf", "doc", "docx"];
-    const ext = (req.file.originalname.split(".").pop() || "").toLowerCase();
+    const ext = (originalName.split(".").pop() || "").toLowerCase();
 
-    if (!allowedExtensions.includes(ext) && !allowedMimeTypes.includes(req.file.mimetype)) {
+    if (!allowedExtensions.includes(ext) && !allowedMimeTypes.includes(contentType)) {
         return next(
             new AppError("Invalid file type. Please upload a valid PDF or Word document (.pdf, .doc, .docx).", 400)
         );
@@ -306,7 +355,7 @@ export const uploadResume = catchAsync(async (req, res, next) => {
 
     // Validate file size (max 10MB)
     const MAX_SIZE = 10 * 1024 * 1024;
-    if (req.file.size > MAX_SIZE) {
+    if (fileBuffer.length > MAX_SIZE) {
         return next(
             new AppError("Resume file size is too large. Maximum allowed size is 10MB.", 400)
         );
@@ -327,13 +376,13 @@ export const uploadResume = catchAsync(async (req, res, next) => {
         }
     }
 
-    const safeOriginalName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const safeOriginalName = originalName.replace(/[^a-zA-Z0-9.-]/g, "_");
     const key = `resumes/${userId}-${Date.now()}-${safeOriginalName}`;
 
     const { url } = await uploadToR2({
-        buffer: req.file.buffer,
+        buffer: fileBuffer,
         key,
-        contentType: req.file.mimetype || "application/pdf",
+        contentType: contentType || "application/pdf",
     });
 
     profile.resume = url;

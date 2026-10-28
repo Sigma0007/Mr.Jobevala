@@ -42,7 +42,18 @@ router.post(
     "/upload-image",
     protect,
     authorize("user"),
-    uploadImage.single("image"),
+    (req, res, next) => {
+        uploadImage.single("image")(req, res, (err) => {
+            if (err) {
+                // If multipart failed but a base64/JSON payload exists, proceed to controller
+                if (req.body && (req.body.image || req.body.base64 || req.body.profileImage)) {
+                    return next();
+                }
+                return next(err);
+            }
+            next();
+        });
+    },
     uploadProfileImage
 );
 
@@ -51,7 +62,17 @@ router.post(
     "/upload-resume",
     protect,
     authorize("user"),
-    uploadResumeFile.single("resume"),
+    (req, res, next) => {
+        uploadResumeFile.single("resume")(req, res, (err) => {
+            if (err) {
+                if (req.body && (req.body.resume || req.body.base64)) {
+                    return next();
+                }
+                return next(err);
+            }
+            next();
+        });
+    },
     uploadResume
 );
 
