@@ -290,3 +290,58 @@ export const deletePost = catchAsync(async (req, res, next) => {
         message: "Post deleted successfully",
     });
 });
+
+
+// @desc    Update post
+// @route   PUT /api/posts/:id
+// @access  Private (Provider owner or Admin)
+export const updatePost = catchAsync(async (req, res, next) => {
+    const userId = (req.user.id || req.user._id).toString();
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+        return next(new AppError("Post not found", 404));
+    }
+
+    // Only provider owner or admin can update
+    if (post.provider.toString() !== userId && req.user.role !== "admin") {
+        return next(new AppError("You are not authorized to update this post", 403));
+    }
+
+    if (req.body.description !== undefined) {
+        post.description = (req.body.description || "").trim();
+    }
+
+    if (req.body.image !== undefined) {
+        post.image = (req.body.image || "").trim();
+    }
+
+    // Delete image from R2 if present
+    if (post.image) {
+        await deleteFromR2(post.image);
+    }
+
+    if (req.file) {
+        const ext = req.file.originalname.split(".").pop() || "jpg";
+        const key = `posts/${userId}-${Date.now()}.${ext}`;
+        const { url } = await uploadToR2({
+            buffer: req.file.buffer,
+            key,
+            contentType: req.file.mimetype || "image/jpeg",
+        });
+        post.image = url;
+    }
+
+    await post.save();
+
+    const updatedPost = await Post.findById(post._id)
+        .populate("provider", "name email role")
+        .populate("companyProfile", "companyName logo industry location website")
+        .lean();
+
+    res.status(200).json({
+        success: true,
+        message: "Post updated successfully",
+        data: updatedPost,
+    });
+});

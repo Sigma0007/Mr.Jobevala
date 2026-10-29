@@ -162,8 +162,30 @@ export const getCompanyProfile = catchAsync(async (req, res, next) => {
 // @route   POST /api/companyprofile/upload-logo
 // @access  Private (Provider)
 export const uploadCompanyLogo = catchAsync(async (req, res, next) => {
-    if (!req.file) {
-        return next(new AppError("Please provide an image file to upload.", 400));
+    let fileBuffer = null;
+    let contentType = "image/jpeg";
+    let ext = "jpg";
+
+    if (req.file) {
+        fileBuffer = req.file.buffer;
+        contentType = req.file.mimetype || "image/jpeg";
+        ext = (req.file.originalname?.split(".").pop() || "jpg").toLowerCase();
+    } else if (req.body?.image || req.body?.base64 || req.body?.logo) {
+        const raw = req.body.image || req.body.base64 || req.body.logo;
+        if (typeof raw === "string") {
+            const matches = raw.match(/^data:([A-Za-z0-9\/+.-]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                contentType = matches[1];
+                ext = (contentType.split("/")[1] || "jpg").toLowerCase();
+                fileBuffer = Buffer.from(matches[2], "base64");
+            } else {
+                fileBuffer = Buffer.from(raw, "base64");
+            }
+        }
+    }
+
+    if (!fileBuffer) {
+        return next(new AppError("Please provide an image file or base64 data to upload.", 400));
     }
 
     const providerId = req.user.id || req.user._id;
@@ -181,13 +203,12 @@ export const uploadCompanyLogo = catchAsync(async (req, res, next) => {
         await deleteFromR2(profile.logo);
     }
 
-    const ext = req.file.originalname.split(".").pop() || "jpg";
     const key = `company-logos/${providerId}-${Date.now()}.${ext}`;
 
     const { url } = await uploadToR2({
-        buffer: req.file.buffer,
+        buffer: fileBuffer,
         key,
-        contentType: req.file.mimetype || "image/jpeg",
+        contentType,
     });
 
     profile.logo = url;

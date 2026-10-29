@@ -7,6 +7,7 @@ import {
     toggleLikePost,
     sharePost,
     deletePost,
+    updatePost,
 } from "../controllers/postController.js";
 import { protect, optionalAuth } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
@@ -21,7 +22,7 @@ router.get("/:id", optionalAuth, getPostById);
 router.post("/:id/share", sharePost);
 router.post("/:id/like", protect, toggleLikePost);
 
-// Provider & Admin only routes for creating and deleting company posts
+// Provider & Admin only routes for creating, updating, and deleting company posts
 router.post(
     "/",
     protect,
@@ -29,8 +30,13 @@ router.post(
     uploadImage.single("image"),
     createPost
 );
+router.put(
+    "/:id",
+    protect,
+    authorize("provider", "admin"),
+    uploadImage.single("image"),
+    updatePost
+);
 router.delete("/:id", protect, authorize("provider", "admin"), deletePost);
 
 export default router;
-
-
