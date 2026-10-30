@@ -470,7 +470,7 @@ export default function PaymentHistory() {
                                 Failed:
                               </span>
                               <span className="text-[11px] leading-tight block">
-                                {p.errorDetails ||
+                                {p.errorDetails?.message ||
                                   "Transaction failed or cancelled"}
                               </span>
                             </div>

@@ -646,24 +646,6 @@ export default function EmployerApplicants() {
 
                   {/* Quick Contact & View Profile Action */}
                   <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                    {candidateEmail && (
-                      <a
-                        href={`mailto:${candidateEmail}`}
-                        className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition"
-                        title={`Email: ${candidateEmail}`}
-                      >
-                        <Mail className="w-4 h-4" />
-                      </a>
-                    )}
-                    {candidatePhone && (
-                      <a
-                        href={`tel:${candidatePhone}`}
-                        className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition"
-                        title={`Call: ${candidatePhone}`}
-                      >
-                        <Phone className="w-4 h-4" />
-                      </a>
-                    )}
                     <button
                       onClick={() => setSelectedApplicant(applicant)}
                       className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-50 hover:bg-brand-100 text-brand-600 hover:text-brand-700 text-xs font-bold rounded-xl transition shadow-sm"

@@ -32,7 +32,11 @@ export const createPost = catchAsync(async (req, res, next) => {
         );
     }
 
-    // Handle image file upload if multipart form-data is sent
+    // Handle image upload from multipart form-data (req.file) or Base64 (req.body.image / req.body.base64)
+    let fileBuffer = null;
+    let contentType = "image/jpeg";
+    let ext = "jpg";
+
     if (req.file) {
         // Validate MIME type
         const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -49,12 +53,38 @@ export const createPost = catchAsync(async (req, res, next) => {
             );
         }
 
-        const ext = req.file.originalname.split(".").pop() || "jpg";
+        fileBuffer = req.file.buffer;
+        contentType = req.file.mimetype || "image/jpeg";
+        ext = (req.file.originalname?.split(".").pop() || "jpg").toLowerCase();
+    } else if (req.body?.image || req.body?.base64) {
+        const raw = req.body.image || req.body.base64;
+        if (typeof raw === "string") {
+            const matches = raw.match(/^data:([A-Za-z0-9\/+.-]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                contentType = matches[1];
+                ext = (contentType.split("/")[1] || "jpg").toLowerCase();
+                if (ext === "jpeg") ext = "jpg";
+                fileBuffer = Buffer.from(matches[2], "base64");
+            } else if (raw.length > 500 && !raw.startsWith("http://") && !raw.startsWith("https://")) {
+                fileBuffer = Buffer.from(raw, "base64");
+            } else if (raw.startsWith("http://") || raw.startsWith("https://")) {
+                imageUrl = raw;
+            }
+        }
+    }
+
+    if (fileBuffer) {
+        if (fileBuffer.length > 10 * 1024 * 1024) {
+            return next(
+                new AppError("Image size cannot exceed 10MB.", 400)
+            );
+        }
+
         const key = `posts/${providerId}-${Date.now()}.${ext}`;
         const { url } = await uploadToR2({
-            buffer: req.file.buffer,
+            buffer: fileBuffer,
             key,
-            contentType: req.file.mimetype || "image/jpeg",
+            contentType,
         });
         imageUrl = url;
     }
@@ -312,22 +342,50 @@ export const updatePost = catchAsync(async (req, res, next) => {
         post.description = (req.body.description || "").trim();
     }
 
-    if (req.body.image !== undefined) {
-        post.image = (req.body.image || "").trim();
-    }
-
-    // Delete image from R2 if present
-    if (post.image) {
-        await deleteFromR2(post.image);
-    }
+    let fileBuffer = null;
+    let contentType = "image/jpeg";
+    let ext = "jpg";
 
     if (req.file) {
-        const ext = req.file.originalname.split(".").pop() || "jpg";
+        fileBuffer = req.file.buffer;
+        contentType = req.file.mimetype || "image/jpeg";
+        ext = (req.file.originalname?.split(".").pop() || "jpg").toLowerCase();
+    } else if (req.body?.image || req.body?.base64) {
+        const raw = req.body.image || req.body.base64;
+        if (typeof raw === "string") {
+            const matches = raw.match(/^data:([A-Za-z0-9\/+.-]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                contentType = matches[1];
+                ext = (contentType.split("/")[1] || "jpg").toLowerCase();
+                if (ext === "jpeg") ext = "jpg";
+                fileBuffer = Buffer.from(matches[2], "base64");
+            } else if (raw.length > 500 && !raw.startsWith("http://") && !raw.startsWith("https://")) {
+                fileBuffer = Buffer.from(raw, "base64");
+            } else if (raw.startsWith("http://") || raw.startsWith("https://")) {
+                if (post.image && post.image !== raw) {
+                    await deleteFromR2(post.image);
+                }
+                post.image = raw;
+            }
+        }
+    }
+
+    if (fileBuffer) {
+        if (fileBuffer.length > 10 * 1024 * 1024) {
+            return next(
+                new AppError("Image size cannot exceed 10MB.", 400)
+            );
+        }
+
+        if (post.image) {
+            await deleteFromR2(post.image);
+        }
+
         const key = `posts/${userId}-${Date.now()}.${ext}`;
         const { url } = await uploadToR2({
-            buffer: req.file.buffer,
+            buffer: fileBuffer,
             key,
-            contentType: req.file.mimetype || "image/jpeg",
+            contentType,
         });
         post.image = url;
     }
